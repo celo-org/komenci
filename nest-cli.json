@@ -1,0 +1,30 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/onboarding/src",
+  "monorepo": true,
+  "root": "apps/onboarding",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/onboarding/tsconfig.app.json"
+  },
+  "projects": {
+    "onboarding": {
+      "type": "application",
+      "root": "apps/onboarding",
+      "entryFile": "main",
+      "sourceRoot": "apps/onboarding/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/onboarding/tsconfig.app.json"
+      }
+    },
+    "relayer": {
+      "type": "application",
+      "root": "apps/relayer",
+      "entryFile": "main",
+      "sourceRoot": "apps/relayer/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/relayer/tsconfig.app.json"
+      }
+    }
+  }
+}
