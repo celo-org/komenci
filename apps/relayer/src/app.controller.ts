@@ -1,18 +1,23 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { RelayerService, SignPersonalMessageResponse, SubmitTransactionResponse } from './relayer.service';
+import {
+  RelayerService,
+  SignPersonalMessageInput,
+  SignPersonalMessageResponse, SubmitTransactionInput,
+  SubmitTransactionResponse,
+} from './relayer.service';
 
 @Controller()
 export class AppController {
   constructor(private readonly relayerService: RelayerService) {}
 
   @MessagePattern({ cmd: 'signPersonalMessage' })
-  async signPersonalMessage(data: Buffer): Promise<SignPersonalMessageResponse> {
-    return this.relayerService.signPersonalMessage(data)
+  async signPersonalMessage(input: SignPersonalMessageInput): Promise<SignPersonalMessageResponse> {
+    return this.relayerService.signPersonalMessage(input)
   }
 
   @MessagePattern({cmd: 'submitTransaction'})
-  async submitTransaction(tx: unknown): Promise<SubmitTransactionResponse> {
-    return this.relayerService.submitTransaction(tx)
+  async submitTransaction(input: SubmitTransactionInput): Promise<SubmitTransactionResponse> {
+    return this.relayerService.submitTransaction(input)
   }
 }

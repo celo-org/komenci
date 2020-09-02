@@ -1,5 +1,4 @@
 import { Controller, Get, Inject, Post } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { RelayerProxyService } from './relayer_proxy.service';
 import { AppService } from './app.service';
 
@@ -17,11 +16,13 @@ export class AppController {
 
   @Get("distributedBlindedPepper")
   async distributedBlindedPepper() {
-    return this.relayerProxyService.signPersonalMessage(Buffer.alloc(0))
+    return this.relayerProxyService.signPersonalMessage({
+      data: Buffer.alloc(0)
+    })
   }
 
   @Get("startAttestation")
   async startAttestation() {
-    return this.relayerProxyService.submitTransaction({})
+    return this.relayerProxyService.submitTransaction({tx: {}})
   }
 }

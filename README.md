@@ -17,13 +17,13 @@ In our case we have:
 
 In order to play around with load-balancing the relayers I've also included a toy haproxy config and a docker-compose that spins up a network which looks like:
 ```
-                                        *-----------*
-                                   o----| Relayer 1 |
-*-------------*      *---------*   |    *-----------*   
+                                        *-------------------*
+                                   o----| Relayer 1: 0xaaaa |
+*-------------*      *---------*   |    *-------------------*   
 | Onboarding  |------| HAProxy |---o
-|  Service    |      *---------*   |    *-----------*
-*-------------*                    o----| Relayer 2 |
-                                        *-----------*
+|  Service    |      *---------*   |    *-------------------*
+*-------------*                    o----| Relayer 2: 0xbbbb |
+                                        *-------------------*
 ```
 
 To test it out run:
