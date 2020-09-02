@@ -1,19 +1,23 @@
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
-import { HttpConfig } from 'apps/onboarding/src/config/http.config';
+import { AppConfig } from 'apps/onboarding/src/config/app.config';
 import { AppModule } from './app.module';
+import { Logger } from "nestjs-pino";
 
-const logger = new Logger("bootstrap");
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter()
+    new FastifyAdapter(),
+    {
+      logger: false
+    }
   );
-  const httpConfig = app.get(ConfigService).get<HttpConfig>("http")
-  logger.log(`Starting HTTP server on  ${httpConfig.host}:${httpConfig.port}`)
-  await app.listen(httpConfig.port, httpConfig.host);
+  const logger = app.get(Logger)
+  app.useLogger(logger)
+  const appConfig = app.get(ConfigService).get<AppConfig>("app")
+  logger.log(`Starting HTTP server on  ${appConfig.host}:${appConfig.port}`)
+  await app.listen(appConfig.port, appConfig.host);
 }
 bootstrap();

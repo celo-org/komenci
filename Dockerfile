@@ -14,6 +14,6 @@ ENV _SERVICE=$SERVICE
 ENV PORT 3000
 
 RUN yarn run build $SERVICE
-CMD node dist/apps/$_SERVICE/main
+CMD node dist/apps/$_SERVICE/main | npx pino-pretty
 
 

@@ -1,25 +1,25 @@
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { TcpOptions, Transport } from '@nestjs/microservices';
-import { ServiceConfig } from 'apps/relayer/src/config/service.config';
+import { AppConfig } from 'apps/relayer/src/config/app.config';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
-
-const logger = new Logger("bootstrap");
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
-  const serviceConfig = app.get(ConfigService).get<ServiceConfig>("service")
+  const appConfig = app.get(ConfigService).get<AppConfig>("app")
   app.connectMicroservice<TcpOptions>({
     transport: Transport.TCP,
     options: {
-      host: serviceConfig.host,
-      port: serviceConfig.port,
+      host: appConfig.host,
+      port: appConfig.port,
     }
   })
 
+  const logger = app.get(Logger)
+  app.useLogger(logger)
   app.startAllMicroservices(() => {
-    logger.log(`Microservice is listening on ${serviceConfig.host}:${serviceConfig.port}`)
+    logger.log(`Microservice is listening on ${appConfig.host}:${appConfig.port}`)
   });
 }
 bootstrap();
