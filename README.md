@@ -15,7 +15,16 @@ In our case we have:
 
 #### Load balancing
 
-In order to play around with load-balancing the relayers I've also included a toy haproxy config and a docker-compose that spins up a network with one onboarding service pointing to an haproxy that's load-balancing between two relayers.
+In order to play around with load-balancing the relayers I've also included a toy haproxy config and a docker-compose that spins up a network which looks like:
+```
+                                        *-----------*
+                                   o----| Relayer 1 |
+*-------------*      *---------*   |    *-----------*   
+| Onboarding  |------| HAProxy |---o
+|  Service    |      *---------*   |    *-----------*
+*-------------*                    o----| Relayer 2 |
+                                        *-----------*
+```
 
 To test it out run:
 
