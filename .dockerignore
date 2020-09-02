@@ -1,0 +1,4 @@
+node_modules/
+Dockerfile
+dist/
+docker-compose.proxy.yml

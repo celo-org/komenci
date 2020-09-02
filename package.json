@@ -66,7 +66,12 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/"
-    ]
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
+    "moduleNameMapper": {
+      "@app/blockchain/(.*)": "<rootDir>/libs/blockchain/src/$1",
+      "@app/blockchain": "<rootDir>/libs/blockchain/src"
+    }
   }
 }
