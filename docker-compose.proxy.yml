@@ -25,7 +25,7 @@ services:
             args:
                 SERVICE: relayer
         environment:
-            ADDRESS: "0x1"
+            ADDRESS: "0xaaaa"
         networks:
             - "private"
     relayer2:
@@ -34,7 +34,7 @@ services:
             args:
                 SERVICE: relayer
         environment:
-            ADDRESS: "0x2"
+            ADDRESS: "0xbbbb"
         networks:
             - "private"
 

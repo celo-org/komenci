@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
+export type SignPersonalMessageInput = {
+  data: Buffer
+}
 export type SignPersonalMessageResponse = {
   signature: Buffer
   relayerAddress: string
+}
+
+export type SubmitTransactionInput = {
+  tx: any
 }
 
 export type SubmitTransactionResponse = {
@@ -10,19 +17,24 @@ export type SubmitTransactionResponse = {
   relayerAddress: string
 }
 
+export interface IRelayerService {
+  signPersonalMessage(input: SignPersonalMessageInput): Promise<SignPersonalMessageResponse>
+  submitTransaction(input: SubmitTransactionInput): Promise<SubmitTransactionResponse>
+}
+
 @Injectable()
-export class RelayerService {
-  async signPersonalMessage(message: Buffer): Promise<SignPersonalMessageResponse> {
-    return Promise.resolve({
+export class RelayerService implements IRelayerService {
+  async signPersonalMessage(input: SignPersonalMessageInput) {
+    return {
       signature: Buffer.alloc(0),
       relayerAddress: process.env.ADDRESS
-    })
+    }
   }
 
-  async submitTransaction(tx: any): Promise<SubmitTransactionResponse> {
-    return Promise.resolve({
+  async submitTransaction(input: SubmitTransactionInput) {
+    return {
       txHash: "<tx-hash>",
       relayerAddress: process.env.ADDRESS
-    })
+    }
   }
 }
