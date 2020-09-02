@@ -17,7 +17,8 @@ async function bootstrap() {
       port: serviceConfig.port,
     }
   })
-  await app.startAllMicroservices(() => {
+
+  app.startAllMicroservices(() => {
     logger.log(`Microservice is listening on ${serviceConfig.host}:${serviceConfig.port}`)
   });
 }
