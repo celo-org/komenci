@@ -14,6 +14,11 @@ export class AppController {
     return {id: 'new-session'}
   }
 
+  @Post("deployWallet")
+  deployWallet(): any {
+    return {id: 'new-session'}
+  }
+
   @Get("distributedBlindedPepper")
   async distributedBlindedPepper() {
     return this.relayerProxyService.signPersonalMessage({
@@ -21,8 +26,13 @@ export class AppController {
     })
   }
 
-  @Get("startAttestation")
+  @Post("startAttestations")
   async startAttestation() {
+    return this.relayerProxyService.submitTransaction({tx: {}})
+  }
+
+  @Post("completeAttestation")
+  async completeAttestation() {
     return this.relayerProxyService.submitTransaction({tx: {}})
   }
 }
