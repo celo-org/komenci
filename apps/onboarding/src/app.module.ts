@@ -26,6 +26,7 @@ import noir from "pino-noir"
             serializers: {
               req: (req) => {
                 return {
+                  id: req.id,
                   method: req.method,
                   url: req.url,
                   hostname: req.hostname,
