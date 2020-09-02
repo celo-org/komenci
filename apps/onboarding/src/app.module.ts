@@ -21,6 +21,7 @@ import relayerConfig from './config/relayer.config';
       provide: 'RELAYER_SERVICE',
       useFactory: (configService: ConfigService) => {
         const relayerSvcOptions = configService.get<TcpClientOptions>('relayer');
+        console.log(relayerSvcOptions)
         return ClientProxyFactory.create(relayerSvcOptions)
       },
       inject: [ConfigService]

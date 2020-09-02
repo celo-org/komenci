@@ -11,6 +11,13 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "paths": {}
+    "paths": {
+      "@app/blockchain": [
+        "libs/blockchain/src"
+      ],
+      "@app/blockchain/*": [
+        "libs/blockchain/src/*"
+      ]
+    }
   }
 }

@@ -25,6 +25,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/relayer/tsconfig.app.json"
       }
+    },
+    "blockchain": {
+      "type": "library",
+      "root": "libs/blockchain",
+      "entryFile": "index",
+      "sourceRoot": "libs/blockchain/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/blockchain/tsconfig.lib.json"
+      }
     }
   }
 }
