@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import appConfig from "./config/app.config"
 
 export type SignPersonalMessageInput = {
   data: Buffer
@@ -24,17 +26,21 @@ export interface IRelayerService {
 
 @Injectable()
 export class RelayerService implements IRelayerService {
+  constructor(
+    @Inject(appConfig.KEY)
+    private config: ConfigType<typeof appConfig>
+  ) {}
   async signPersonalMessage(input: SignPersonalMessageInput) {
     return {
       signature: Buffer.alloc(0),
-      relayerAddress: process.env.ADDRESS
+      relayerAddress: this.config.address
     }
   }
 
   async submitTransaction(input: SubmitTransactionInput) {
     return {
       txHash: "<tx-hash>",
-      relayerAddress: process.env.ADDRESS
+      relayerAddress: this.config.address
     }
   }
 }
