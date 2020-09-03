@@ -6,7 +6,9 @@ export interface GatewayContext {
 }
 
 export interface Rule<TRuleConfig, TError> {
-  verify(req: FastifyRequest, config: TRuleConfig, context: GatewayContext): Promise<boolean>
   getID(): string
+  verify(req: FastifyRequest, config: TRuleConfig, context: GatewayContext): Promise<boolean>
+  validateConfig(config: unknown): TRuleConfig
+  defaultConfig(): TRuleConfig
 }
 
