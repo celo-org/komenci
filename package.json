@@ -28,6 +28,7 @@
     "@nestjs/microservices": "^7.4.4",
     "@nestjs/platform-express": "^7.0.0",
     "@nestjs/platform-fastify": "^7.4.4",
+    "fastify": "^3.3.0",
     "nestjs-pino": "^1.2.0",
     "pino-noir": "^2.2.1",
     "reflect-metadata": "^0.1.13",

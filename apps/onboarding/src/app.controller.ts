@@ -1,4 +1,6 @@
-import { Controller, Get, Inject, Post } from '@nestjs/common';
+import { Controller, Get, Inject, Post, Req } from '@nestjs/common';
+import { GatewayService } from 'apps/onboarding/src/gateway/gateway.service';
+import { FastifyRequest } from 'fastify';
 import { RelayerProxyService } from './relayer_proxy.service';
 import { AppService } from './app.service';
 
@@ -7,11 +9,16 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly relayerProxyService: RelayerProxyService,
+    private readonly gatewayService: GatewayService,
   ) {}
 
   @Post("startSession")
-  startSession(): any {
-    return {id: 'new-session'}
+  async startSession(@Req() request: FastifyRequest): Promise<any> {
+    if (await this.gatewayService.verify(request) === true) {
+      return {id: 'new-session'}
+    } else {
+      return {error: 'gateway-not-passed'}
+    }
   }
 
   @Post("deployWallet")
