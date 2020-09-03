@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DeviceCheckService } from 'apps/onboarding/src/gateway/device-check/device-check.service';
-import { Rule } from 'apps/onboarding/src/gateway/rule';
+import { Rule } from 'apps/onboarding/src/gateway/rules/rule';
 import { SafetyNetService } from 'apps/onboarding/src/gateway/safety-net/safety-net.service';
 import { FastifyRequest } from 'fastify';
 
@@ -31,5 +31,13 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
       return this.deviceCheckService.verifyDevice(input)
     }
     return false
+  }
+
+  validateConfig(config: unknown): unknown {
+    return config;
+  }
+
+  defaultConfig(): unknown {
+    return null
   }
 }
