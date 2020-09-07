@@ -11,7 +11,9 @@ export class CaptchaRule implements Rule<unknown, unknown> {
   }
 
   async verify(req, config, context) {
-    const input = {} // extract from req
+    const input = {
+      token: req.body['g-recaptcha-response'],
+    }
     return this.captchaService.verifyCaptcha(input)
   }
 
