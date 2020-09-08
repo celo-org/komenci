@@ -13,13 +13,12 @@ export class SafetyNetService {
   // TODO determine what the propper input is for this
   async verifyDevice(input: { signedAttestation:string }): Promise<boolean> {
     const verifyUrl = `https://www.googleapis.com/androidcheck/v1/attestations/verify?key=${this.config.androidSafetyNetToken}`
-    const response =   fetch(verifyUrl, {
+    const response = await fetch(verifyUrl, {
       body: JSON.stringify({ data: input.signedAttestation || '' }),
       compress: false,
       method: 'POST',
     })
-    const {success, 'error-codes': errors} = await response.json()
-
-    return success
+    const {isValidSignature} = await response.json()
+    return isValidSignature
   }
 }
