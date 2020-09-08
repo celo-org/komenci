@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AppConfig } from 'apps/onboarding/src/config/app.config';
-import relayerConfig from 'apps/onboarding/src/config/relayer.config';
+import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
+import AppConfig from '../../onboarding/src/config/app.config';
+import relayerConfig from '../../onboarding/src/config/relayer.config';
 import { LoggerModule } from 'nestjs-pino/dist';
 import { AppController } from './app.controller';
 import { RelayerService } from './relayer.service';
@@ -17,7 +17,7 @@ import appConfig from './config/app.config';
       providers: [ConfigService],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const appConfig = config.get<AppConfig>('app')
+        const appConfig = config.get<ConfigType<typeof AppConfig>>('app')
         return {
           pinoHttp: {
             level: appConfig.log_level,

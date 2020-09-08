@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { DeviceCheckService } from 'apps/onboarding/src/gateway/device-check/device-check.service';
-import { Rule } from 'apps/onboarding/src/gateway/rules/rule';
-import { SafetyNetService } from 'apps/onboarding/src/gateway/safety-net/safety-net.service';
+import { DeviceCheckService } from '../device-check/device-check.service';
+import { Rule } from '../rules/rule';
+import { SafetyNetService } from '../safety-net/safety-net.service';
 import { FastifyRequest } from 'fastify';
 
 @Injectable()

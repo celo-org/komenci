@@ -1,9 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { CaptchaRule } from 'apps/onboarding/src/gateway/rules/captcha.rule';
-import { DailyCapRule } from 'apps/onboarding/src/gateway/rules/daily-cap.rule';
-import { DeviceAttestationRule } from 'apps/onboarding/src/gateway/rules/device-attestation.rule';
-import { GatewayContext, Rule } from 'apps/onboarding/src/gateway/rules/rule';
+import { CaptchaRule } from './rules/captcha.rule';
+import { DailyCapRule } from './rules/daily-cap.rule';
+import { DeviceAttestationRule } from './rules/device-attestation.rule';
+import { GatewayContext, Rule } from './rules/rule';
 import { FastifyRequest } from "fastify"
 
 @Injectable()

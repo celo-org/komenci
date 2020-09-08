@@ -1,11 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CaptchaService } from 'apps/onboarding/src/gateway/captcha/captcha.service';
+import { CaptchaService } from './captcha.service';
+import { AppModule } from '../../app.module';
 
 describe('CaptchaService', () => {
   let service: CaptchaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
       providers: [CaptchaService],
     }).compile();
 
