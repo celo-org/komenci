@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
-import appConfig from "./config/app.config"
+import { Inject, Injectable } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
+import appConfig from './config/app.config'
 
 export type SignPersonalMessageInput = {
   data: Buffer

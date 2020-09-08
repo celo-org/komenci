@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
-import thirdPartyConfig from '../../config/third-party.config';
+import { Inject, Injectable } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
+import thirdPartyConfig from '../../config/third-party.config'
 import fetch from 'node-fetch';
 
 @Injectable()

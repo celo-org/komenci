@@ -1,9 +1,9 @@
-import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
-import { TcpOptions, Transport } from '@nestjs/microservices';
-import { AppConfig } from 'apps/relayer/src/config/app.config';
-import { Logger } from 'nestjs-pino';
-import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config'
+import { NestFactory } from '@nestjs/core'
+import { TcpOptions, Transport } from '@nestjs/microservices'
+import { AppConfig } from './config/app.config'
+import { Logger } from 'nestjs-pino'
+import { AppModule } from './app.module'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)

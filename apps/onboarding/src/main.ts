@@ -1,9 +1,9 @@
-import { ConfigService, ConfigType } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
-import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
-import appConfig from './config/app.config';
-import { AppModule } from './app.module';
-import { Logger } from "nestjs-pino";
+import { ConfigService, ConfigType } from '@nestjs/config'
+import { NestFactory } from '@nestjs/core'
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
+import appConfig from './config/app.config'
+import { Logger } from 'nestjs-pino'
+import { AppModule } from './app.module'
 
 
 async function bootstrap() {
@@ -21,4 +21,6 @@ async function bootstrap() {
   logger.log(`Starting HTTP server on  ${cfg.host}:${cfg.port}`)
   await app.listen(cfg.port, cfg.host);
 }
+
+// tslint:disable-next-line: no-floating-promises
 bootstrap()
