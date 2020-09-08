@@ -1,11 +1,11 @@
-import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { Controller } from '@nestjs/common'
+import { MessagePattern } from '@nestjs/microservices'
 import {
   RelayerService,
   SignPersonalMessageInput,
   SignPersonalMessageResponse, SubmitTransactionInput,
   SubmitTransactionResponse,
-} from './relayer.service';
+} from './relayer.service'
 
 @Controller()
 export class AppController {

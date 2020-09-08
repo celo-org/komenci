@@ -1,4 +1,4 @@
-import { FastifyRequest } from 'fastify';
+import { StartSessionDto } from '../../dto/StartSessionDto'
 
 export interface GatewayContext {
   // XXX TODO
@@ -7,7 +7,7 @@ export interface GatewayContext {
 
 export interface Rule<TRuleConfig, TError> {
   getID(): string
-  verify(req: FastifyRequest, config: TRuleConfig, context: GatewayContext): Promise<boolean>
+  verify(startSessionDto: StartSessionDto, config: TRuleConfig, context: GatewayContext): Promise<boolean>
   validateConfig(config: unknown): TRuleConfig
   defaultConfig(): TRuleConfig
 }

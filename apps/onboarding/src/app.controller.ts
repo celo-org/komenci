@@ -1,7 +1,8 @@
-import { Controller, Get, Inject, Post, Req } from '@nestjs/common';
+import { Controller, Get, Inject, Post, Req, Body } from '@nestjs/common';
 import { GatewayService } from './gateway/gateway.service';
 import { FastifyRequest } from 'fastify';
 import { RelayerProxyService } from './relayer_proxy.service';
+import { StartSessionDto } from './dto/StartSessionDto';
 import { AppService } from './app.service';
 
 @Controller()
@@ -13,8 +14,8 @@ export class AppController {
   ) {}
 
   @Post("startSession")
-  async startSession(@Req() request: FastifyRequest): Promise<any> {
-    if (await this.gatewayService.verify(request) === true) {
+  async startSession(@Body() startSessionDto: StartSessionDto): Promise<any> {
+    if (await this.gatewayService.verify(startSessionDto) === true) {
       return {id: 'new-session'}
     } else {
       return {error: 'gateway-not-passed'}

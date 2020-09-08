@@ -1,11 +1,9 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
-import AppConfig from '../../onboarding/src/config/app.config';
-import relayerConfig from '../../onboarding/src/config/relayer.config';
-import { LoggerModule } from 'nestjs-pino/dist';
-import { AppController } from './app.controller';
-import { RelayerService } from './relayer.service';
-import appConfig from './config/app.config';
+import { HttpModule, Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { LoggerModule } from 'nestjs-pino/dist'
+import { AppController } from './app.controller'
+import appConfig, { AppConfig } from './config/app.config'
+import { RelayerService } from './relayer.service'
 
 @Module({
   imports: [
@@ -17,15 +15,16 @@ import appConfig from './config/app.config';
       providers: [ConfigService],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const appConfig = config.get<ConfigType<typeof AppConfig>>('app')
+        const relayerConfig = config.get<AppConfig>('app')
         return {
           pinoHttp: {
-            level: appConfig.log_level,
+            level: relayerConfig.log_level,
             prettyPrint: process.env.NODE_ENV !== 'production',
           }
         }
       }
-    })
+    }),
+    HttpModule
   ],
   controllers: [AppController],
   providers: [RelayerService],

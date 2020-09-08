@@ -1,19 +1,14 @@
-import { Logger, Module } from '@nestjs/common';
-import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
-import { ClientProxyFactory, ClientsModule, TcpClientOptions } from '@nestjs/microservices';
-import { GatewayService } from './gateway/gateway.service';
-import { RelayerProxyService } from './relayer_proxy.service';
-import { LoggerModule } from 'nestjs-pino/dist';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import relayerConfig from './config/relayer.config';
-import thirdPartyConfig from "./config/third-party.config";
-import appConfig from './config/app.config';
-import { GatewayModule } from './gateway/gateway.module';
-import { CaptchaService } from './gateway/captcha/captcha.service';
-import { DeviceCheckService } from './gateway/device-check/device-check.service';
-import { SafetyNetService } from './gateway/safety-net/safety-net.service';
-import noir from "pino-noir"
+import { Logger, Module, HttpModule } from '@nestjs/common'
+import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
+import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
+import { RelayerProxyService } from './relayer_proxy.service'
+import { LoggerModule } from 'nestjs-pino/dist'
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
+import appConfig from './config/app.config'
+import relayerConfig from './config/relayer.config'
+import thirdPartyConfig from './config/third-party.config'
+import { GatewayModule } from './gateway/gateway.module'
 
 @Module({
   controllers: [AppController],
@@ -48,6 +43,7 @@ import noir from "pino-noir"
       }
     }),
     GatewayModule,
+    HttpModule,
   ],
   providers: [
     AppService,
