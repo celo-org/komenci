@@ -1,14 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { FastifyRequest } from "fastify"
 import { CaptchaRule } from './rules/captcha.rule';
 import { DailyCapRule } from './rules/daily-cap.rule';
 import { DeviceAttestationRule } from './rules/device-attestation.rule';
 import { GatewayContext, Rule } from './rules/rule';
-import { FastifyRequest } from "fastify"
+import { StartSessionDto } from '../dto/StartSessionDto';
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
-  private rules: Rule<any, any>[];
+  private rules: Array<Rule<any, any>>;
   private ruleEnabled: Record<string, boolean>
   // TODO: Better types here
   private ruleConfigs: Record<string, unknown>
@@ -38,11 +39,11 @@ export class GatewayService implements OnModuleInit {
     }, {})
   }
 
-  async verify(req: FastifyRequest): Promise<boolean> {
+  async verify(startSessionDto: StartSessionDto): Promise<boolean> {
     const enabledRules = this.rules.filter(rule => this.ruleEnabled[rule.getID()])
     const context = {todo: 'TODO'} // must build context
     const results = await Promise.all(enabledRules.map(rule => {
-      return rule.verify(req, this.ruleConfigs[rule.getID()], context)
+      return rule.verify(startSessionDto, this.ruleConfigs[rule.getID()], context)
     }))
 
     return results.every(result => result === true)
