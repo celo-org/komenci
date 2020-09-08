@@ -24,7 +24,9 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
   }
   async verify(req, config, context) {
     if (this.isAndroidRequest(req)) {
-      const input = {} // extract input
+      const input = {
+        signedAttestation: req.body['attestationJws'],
+      }
       return this.safetyNetService.verifyDevice(input)
     } else if (this.isIOSRequest(req)) {
       const input = {}
