@@ -1,5 +1,5 @@
 import { Controller, Get, Inject, Post, Req } from '@nestjs/common';
-import { GatewayService } from 'apps/onboarding/src/gateway/gateway.service';
+import { GatewayService } from './gateway/gateway.service';
 import { FastifyRequest } from 'fastify';
 import { RelayerProxyService } from './relayer_proxy.service';
 import { AppService } from './app.service';

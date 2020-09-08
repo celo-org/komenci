@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
-import fetch from 'node-fetch';
-
-import thirdPartyConfig from 'apps/onboarding/src/config/third-party.config';
+import thirdPartyConfig from '../../config/third-party.config';
 
 @Injectable()
 export class CaptchaService {

@@ -1,7 +1,7 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication, FastifyAdapter } from '@nestjs/platform-fastify';
-import appConfig from 'apps/onboarding/src/config/app.config';
+import appConfig from './config/app.config';
 import { AppModule } from './app.module';
 import { Logger } from "nestjs-pino";
 
