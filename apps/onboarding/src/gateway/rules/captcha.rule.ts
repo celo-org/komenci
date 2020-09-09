@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { CaptchaService } from '../captcha/captcha.service';
-import { Rule } from './rule';
+import { Injectable } from '@nestjs/common'
 import { StartSessionDto } from '../../dto/StartSessionDto'
+import { CaptchaService } from '../captcha/captcha.service'
+import { Rule } from './rule'
 
 @Injectable()
 export class CaptchaRule implements Rule<unknown, unknown> {

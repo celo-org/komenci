@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { DeviceCheckService } from '../device-check/device-check.service';
-import { Rule } from '../rules/rule';
-import { SafetyNetService } from '../safety-net/safety-net.service';
-import { FastifyRequest } from 'fastify';
+import { Injectable } from '@nestjs/common'
+import { DeviceCheckService } from '../device-check/device-check.service'
+import { Rule } from '../rules/rule'
+import { SafetyNetService } from '../safety-net/safety-net.service'
+import { FastifyRequest } from 'fastify'
 
 @Injectable()
 export class DeviceAttestationRule implements Rule<unknown, unknown> {
