@@ -1,8 +1,8 @@
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
 import { ClientProxyFactory, ClientsModule, TcpClientOptions } from '@nestjs/microservices';
-import { GatewayService } from 'apps/onboarding/src/gateway/gateway.service';
-import { RelayerProxyService } from 'apps/onboarding/src/relayer_proxy.service';
+import { GatewayService } from './gateway/gateway.service';
+import { RelayerProxyService } from './relayer_proxy.service';
 import { LoggerModule } from 'nestjs-pino/dist';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';

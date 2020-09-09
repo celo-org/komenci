@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Rule } from 'apps/onboarding/src/gateway/rules/rule';
+import { Rule } from './rule';
 
 interface DailyCapConfig {
   total: number

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CaptchaService } from 'apps/onboarding/src/gateway/captcha/captcha.service';
-import { Rule } from 'apps/onboarding/src/gateway/rules/rule';
+import { CaptchaService } from '../captcha/captcha.service';
+import { Rule } from './rule';
 
 @Injectable()
 export class CaptchaRule implements Rule<unknown, unknown> {
@@ -12,7 +12,7 @@ export class CaptchaRule implements Rule<unknown, unknown> {
 
   async verify(req, config, context) {
     const input = {
-      token: req.body['g-recaptcha-response'],
+      token: (req?.body || {})['g-recaptcha-response'],
     }
     return this.captchaService.verifyCaptcha(input)
   }
