@@ -1,0 +1,24 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: Install dependencies
+        run: |
+          npm i
+      - name: Run linters
+        run: npm run lint
+      - name: Run unit tests
+        run:  npm run test:cov
+      - name: Run integration tests
+        run: |
+          npm run test:e2e
