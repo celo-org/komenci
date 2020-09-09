@@ -18,6 +18,9 @@ export class SafetyNetService {
       compress: false,
       method: 'POST',
     })
+    if(response.status != 200){
+      console.log('The Android attestation request failed.')
+    }
     const {isValidSignature} = await response.json()
     return isValidSignature
   }
