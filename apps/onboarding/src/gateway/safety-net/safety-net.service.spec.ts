@@ -14,7 +14,17 @@ describe('SafetyNetService', () => {
     service = module.get<SafetyNetService>(SafetyNetService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('should be true when the attestation is valid', async () => {
+    const result = true;
+    jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result);
+
+    expect(await service.verifyDevice({signedAttestation:"valid"})).toBe(true);
+  });
+
+  it('should be false when the attestation is invalid', async () => {
+    const result = false;
+    jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result);
+
+    expect(await service.verifyDevice({signedAttestation:"invalid"})).toBe(false);
   });
 });
