@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { SafetyNetService } from './safety-net.service';
-import { AppModule } from '../../app.module';
-import { HttpModule } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing'
+import { SafetyNetService } from './safety-net.service'
+import { AppModule } from '../../app.module'
+import { HttpModule } from '@nestjs/common'
 
 describe('SafetyNetService', () => {
   let service: SafetyNetService;

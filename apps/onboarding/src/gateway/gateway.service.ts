@@ -1,11 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+import { Injectable, OnModuleInit } from '@nestjs/common'
+import { ModuleRef } from '@nestjs/core'
 import { FastifyRequest } from "fastify"
-import { CaptchaRule } from './rules/captcha.rule';
-import { DailyCapRule } from './rules/daily-cap.rule';
-import { DeviceAttestationRule } from './rules/device-attestation.rule';
-import { GatewayContext, Rule } from './rules/rule';
-import { StartSessionDto } from '../dto/StartSessionDto';
+import { CaptchaRule } from './rules/captcha.rule'
+import { DailyCapRule } from './rules/daily-cap.rule'
+import { DeviceAttestationRule } from './rules/device-attestation.rule'
+import { GatewayContext, Rule } from './rules/rule'
+import { StartSessionDto } from '../dto/StartSessionDto'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {

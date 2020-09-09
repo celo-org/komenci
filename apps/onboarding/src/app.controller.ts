@@ -1,9 +1,8 @@
-import { Controller, Get, Inject, Post, Req, Body } from '@nestjs/common';
-import { GatewayService } from './gateway/gateway.service';
-import { FastifyRequest } from 'fastify';
-import { RelayerProxyService } from './relayer_proxy.service';
-import { StartSessionDto } from './dto/StartSessionDto';
-import { AppService } from './app.service';
+import { Body, Controller, Get, Post } from '@nestjs/common'
+import { GatewayService } from 'apps/onboarding/src/gateway/gateway.service'
+import { AppService } from './app.service'
+import { StartSessionDto } from './dto/StartSessionDto'
+import { RelayerProxyService } from './relayer_proxy.service'
 
 @Controller()
 export class AppController {

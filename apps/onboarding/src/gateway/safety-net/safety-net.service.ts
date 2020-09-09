@@ -1,8 +1,8 @@
 import { HttpService, Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import thirdPartyConfig from '../../config/third-party.config'
-import { ReCAPTCHAResponseDto } from '../../dto/ReCAPTCHAResponseDto';
-import { SafetyNetDto } from '../../dto/SafetyNetDto';
+import { ReCAPTCHAResponseDto } from '../../dto/ReCAPTCHAResponseDto'
+import { SafetyNetDto } from '../../dto/SafetyNetDto'
 
 @Injectable()
 export class SafetyNetService {
