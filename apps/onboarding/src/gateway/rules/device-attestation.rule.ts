@@ -27,7 +27,7 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
       const input = {
         signedAttestation: req.body['signedAttestation'],
       }
-      return this.safetyNetService.verifyDevice(input)
+      return (await this.safetyNetService.verifyDevice(input)).isValidSignature
     } else if (this.isIOSRequest(req)) {
       const input = {}
       return this.deviceCheckService.verifyDevice(input)
