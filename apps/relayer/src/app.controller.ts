@@ -1,9 +1,11 @@
 import { Controller } from '@nestjs/common'
 import { MessagePattern } from '@nestjs/microservices'
+import { DistributedBlindedPepperDto } from 'apps/onboarding/src/dto/DistributedBlindedPepperDto'
 import {
-  RelayerService,
-  SignPersonalMessageInput,
-  SignPersonalMessageResponse, SubmitTransactionInput,
+  GetPhoneNumberIdResponse,
+  RelayerService, SignPersonalMessageInput,
+  SignPersonalMessageResponse,
+  SubmitTransactionInput,
   SubmitTransactionResponse,
 } from './relayer.service'
 
@@ -14,6 +16,11 @@ export class AppController {
   @MessagePattern({ cmd: 'signPersonalMessage' })
   async signPersonalMessage(input: SignPersonalMessageInput): Promise<SignPersonalMessageResponse> {
     return this.relayerService.signPersonalMessage(input)
+  }
+
+  @MessagePattern({ cmd: 'signPersonalMessage' })
+  async getPhoneNumberIdentifier(input: DistributedBlindedPepperDto): Promise<GetPhoneNumberIdResponse> {
+    return this.relayerService.getPhoneNumberIdentifier(input)
   }
 
   @MessagePattern({cmd: 'submitTransaction'})
