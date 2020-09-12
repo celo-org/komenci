@@ -1,24 +1,43 @@
-import { INestApplication } from '@nestjs/common'
+import { ValidationPipe } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
-import * as request from 'supertest'
-import { AppModule } from './../src/app.module'
+import request from 'supertest'
+import { AppModule } from '../src/app.module'
+import { assert } from 'console'
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication;
+  let app
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    }).compile()
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+    app = moduleFixture.createNestApplication()
+    app.useGlobalPipes(new ValidationPipe())
+    await app.init()
+  })
 
-  xit('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
-});
+  describe('/ (POST) distributedBlindedPepper', () => {
+    it('Returns 400 with empty body', async () => {
+      return request(app.getHttpServer())
+        .post('/distributedBlindedPepper')
+        .expect(400)
+    })
+
+    it('Returns 400 with invalid phone number', async () => {
+      return request(app.getHttpServer())
+      .post('/distributedBlindedPepper')
+      .send({
+          "e164Number": "invalid"
+      })
+      .expect(400)
+      .then(res => {
+        assert(res.body.message, ["e164Number must be a valid phone number"])
+      })
+    })
+  })
+
+  afterAll(async () => {
+    await app.close()
+  })
+})

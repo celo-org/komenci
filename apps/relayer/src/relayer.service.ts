@@ -3,7 +3,7 @@ import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phon
 import { AuthSigner, ServiceContext } from '@celo/contractkit/lib/identity/odis/query'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
-import { DistributedBlindedPepperDto } from 'apps/onboarding/src/dto/DistributedBlindedPepperDto'
+import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
 import appConfig from './config/app.config'
 import { ContractKitManager } from './wallet/contractkit-manager'
 
@@ -15,7 +15,6 @@ export type SignPersonalMessageResponse = {
   signature: string
   relayerAddress: string
 }
-
 
 export type GetPhoneNumberIdResponse = {
   identifier: string
@@ -82,24 +81,35 @@ export class RelayerService implements IRelayerService {
       odisPubKey,
     }
 
-    try {
-      // FAILS
-      const phoneHashDetails = await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
-        input.e164Number,
-        RelayerService.config.address,
-        authSigner,
-        serviceContext,
-        undefined,
-        input.clientVersion
-      )
-      return { 
-        identifier: phoneHashDetails.phoneHash 
+    // Query the phone number identifier
+    // Re-attempt once if the 
+    let attempts = 0
+    while (attempts++ <= 1) {
+      try {
+        const phoneHashDetails = await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
+          input.e164Number,
+          RelayerService.config.address,
+          authSigner,
+          serviceContext,
+          undefined,
+          input.clientVersion
+        )
+        return { 
+          identifier: phoneHashDetails.phoneHash 
+        }
+      }
+      catch (e) {
+        // Increase the quota if it's hit
+        if (e.message.includes("odisQuotaError")) {
+          // TODO: once common lib is updated, this can be used
+          // replenishQuota(RelayerService.config.address, contractKit)
+        }
+        else {
+          throw new Error("Unable to query ODIS due to unexpected error")
+        }
       }
     }
-    catch (e) {
-      // TODO: handle failures
-      console.log(e)
-    }
+    throw new Error("Unable to query ODIS due to out of quota error")
   }
 
   async submitTransaction(input: SubmitTransactionInput) {
