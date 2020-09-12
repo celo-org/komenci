@@ -1,5 +1,4 @@
 import { OdisUtils } from '@celo/contractkit'
-import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import { AuthSigner, ServiceContext } from '@celo/contractkit/lib/identity/odis/query'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
@@ -54,7 +53,7 @@ export class RelayerService implements IRelayerService {
     RelayerService.config = config
   }
 
-  async signPersonalMessage(input: SignPersonalMessageInput) {
+  async signPersonalMessage(input: SignPersonalMessageInput): Promise<SignPersonalMessageResponse> {
     const relayerAddress = RelayerService.config.address
     const contractKitManager = await RelayerService.getContractKitManager()
     const contractKit = await contractKitManager.kit
@@ -112,7 +111,7 @@ export class RelayerService implements IRelayerService {
     throw new Error("Unable to query ODIS due to out of quota error")
   }
 
-  async submitTransaction(input: SubmitTransactionInput) {
+  async submitTransaction(input: SubmitTransactionInput): Promise<SubmitTransactionResponse> {
     return {
       txHash: "<tx-hash>",
       relayerAddress: this.config.address

@@ -1,7 +1,6 @@
-import { Logger, Module, HttpModule } from '@nestjs/common'
+import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
-import { RelayerProxyService } from './relayer_proxy.service'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -9,6 +8,7 @@ import appConfig from './config/app.config'
 import relayerConfig from './config/relayer.config'
 import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
+import { RelayerProxyService } from './relayer_proxy.service'
 
 @Module({
   controllers: [AppController],
@@ -52,8 +52,8 @@ import { GatewayModule } from './gateway/gateway.module'
       provide: 'RELAYER_SERVICE',
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const relayerSvcOptions = configService.get<TcpClientOptions>('relayer');
-        const logger = new Logger("RelayerService");
+        const relayerSvcOptions = configService.get<TcpClientOptions>('relayer')
+        const logger = new Logger("RelayerService")
         logger.log(`Pointing RelayerProxy to: ${relayerSvcOptions.options.host}:${relayerSvcOptions.options.port}`)
         return ClientProxyFactory.create(relayerSvcOptions)
       },

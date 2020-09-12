@@ -28,7 +28,7 @@ export class ContractKitManager {
     }
   }
 
-  get web3() {
+  get web3(): Web3 {
     if (!this._web3) {
       this._web3 =
       this._nodeUrl && this._nodeUrl.endsWith('.ipc')
@@ -38,7 +38,7 @@ export class ContractKitManager {
     return this._web3
   }
 
-  get kit() {
+  get kit(): ContractKit {
     if (!this._kit) {
       this._kit = newKitFromWeb3(this.web3, this.getWallet())
     }
