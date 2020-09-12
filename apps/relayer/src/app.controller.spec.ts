@@ -1,28 +1,38 @@
-import { hasProperty } from '@celo/contractkit/lib/utils/provider-utils'
+import { OdisUtils } from '@celo/contractkit'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
-import { ReadOnlyWallet } from '@celo/contractkit/lib/wallets/wallet'
+import { ValidationPipe } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { ApplicationConfig } from '@nestjs/core'
+import { NestFactory } from '@nestjs/core'
+import { TcpOptions, Transport } from '@nestjs/microservices'
 import { Test, TestingModule } from '@nestjs/testing'
-import { DistributedBlindedPepperDto } from 'apps/onboarding/src/dto/DistributedBlindedPepperDto'
-import fetch from 'cross-fetch'
+import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
 import { AppController } from './app.controller'
-import appConfig, { AppConfig } from './config/app.config'
-import { ACCOUNT_ADDRESS, ODIS_URL, PHONE_NUMBER, PRIVATE_KEY } from './config/testing-constants'
+import { AppModule } from './app.module'
+import appConfig from './config/app.config'
+import { ACCOUNT_ADDRESS, MOCK_ODIS_RESPONSE, ODIS_URL, PHONE_NUMBER, PRIVATE_KEY } from './config/testing-constants'
 import { RelayerService } from './relayer.service'
 import { ContractKitManager } from './wallet/contractkit-manager'
 
-// Jest.mock('./wallet/contractkit-manager.ts')
-const mockContractKitManagerWallet = jest.fn()
-ContractKitManager.prototype.getWallet = mockContractKitManagerWallet
+const mockGetWallet = jest.fn()
+ContractKitManager.prototype.getWallet = mockGetWallet
 const mockWallet: LocalWallet = new LocalWallet()
 mockWallet.addAccount(PRIVATE_KEY)
-mockContractKitManagerWallet.mockReturnValue(mockWallet)
+mockGetWallet.mockReturnValue(mockWallet)
 ContractKitManager.prototype.init = jest.fn()
+
+jest.mock('@celo/contractkit/lib/identity/odis/bls-blinding-client', () => {
+  class WasmBlsBlindingClient {
+    blindMessage = (m: string) => m
+    unblindAndVerifyMessage = (m: string) => m
+  }
+  return {
+    WasmBlsBlindingClient,
+  }
+})
 
 // Override the relayer address
 process.env.ADDRESS = ACCOUNT_ADDRESS
-const odisURL = ODIS_URL + "/getBlindedMessageSig"
+const odisUrl = ODIS_URL + "/getBlindedMessageSig"
 
 describe('AppController', () => {
   let appController: AppController
@@ -41,48 +51,39 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController)
   })
 
-  describe('root', () => {
-    xit('should return "Hello World!"', () => {
-      // Expect(appController.getHello()).toBe('Hello World!');
-    })
-  })
-
   describe('getPhoneNumberIdentifier', () => {
     afterEach(() => {
       fetchMock.reset()
     })
-
-    xit('should return 400 when input is improperly formatted', () => {
-      const input: DistributedBlindedPepperDto = undefined
-      expect(appController.getPhoneNumberIdentifier(input)).toThrowError("BadRequestException")
-    })
     
-    xit('should retry after increasing quota when out of quota error is hit', () => {
-      // TODO
-    })
+    it('should retry after increasing quota when out of quota error is hit', async () => {
+      fetchMock.post(odisUrl, 403)
 
-    it('should return the identifier when input is correct', async () => {
-      console.log(odisURL)
-      fetchMock.post("https://us-central1-celo-phone-number-privacy-stg.cloudfunctions.net/getBlindedMessageSig", {
-        success: true,
-        combinedSignature: '0Uj+qoAu7ASMVvm6hvcUGx2eO/cmNdyEgGn0mSoZH8/dujrC1++SZ1N6IP6v2I8A',
-      })
+      const getPhoneNumberIdentifierSpy = jest.spyOn(OdisUtils.PhoneNumberIdentifier, 'getPhoneNumberIdentifier')
 
-      // WORKS
-      const res = await fetch(odisURL, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: "hjkl",
-      })
-      const response = await res.json()
       const input: DistributedBlindedPepperDto = {
         e164Number: PHONE_NUMBER,
         clientVersion: "v1.0.0"
       }
-      appController.getPhoneNumberIdentifier(input)
+
+      await expect(appController.getPhoneNumberIdentifier(input)).rejects
+        .toThrow("Unable to query ODIS due to out of quota error")
+
+      expect(getPhoneNumberIdentifierSpy).toBeCalledTimes(2)
+    })
+
+    it('should return the identifier when input is correct', async () => {
+      fetchMock.post(odisUrl, {
+        success: true,
+        combinedSignature: MOCK_ODIS_RESPONSE,
+      })
+
+      const input: DistributedBlindedPepperDto = {
+        e164Number: PHONE_NUMBER,
+        clientVersion: "v1.0.0"
+      }
+      const result = await appController.getPhoneNumberIdentifier(input)
+      expect(result.identifier).toBe("0xf3ddadd1f488cdd42b9fa10354fdcae67c303ce182e71b30855733b50dce8301")
     })
   })
 })

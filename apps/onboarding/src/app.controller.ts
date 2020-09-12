@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common'
-import { GatewayService } from 'apps/onboarding/src/gateway/gateway.service'
 import { AppService } from './app.service'
+import { GatewayService } from './gateway/gateway.service'
+
 import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 import { StartSessionDto } from './dto/StartSessionDto'
 import { RelayerProxyService } from './relayer_proxy.service'
@@ -27,7 +28,7 @@ export class AppController {
     return {id: 'new-session'}
   }
 
-  @Get("distributedBlindedPepper")
+  @Post("distributedBlindedPepper")
   async distributedBlindedPepper(@Body() distributedBlindedPepperDto: DistributedBlindedPepperDto) {
     return this.relayerProxyService.getPhoneNumberIdentifier(distributedBlindedPepperDto)
   }

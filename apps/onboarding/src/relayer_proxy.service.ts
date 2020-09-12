@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
+import { DistributedBlindedPepperDto } from 'apps/onboarding/src/dto/DistributedBlindedPepperDto'
 import {
   GetPhoneNumberIdResponse,
   IRelayerService, SignPersonalMessageInput,
@@ -7,7 +8,6 @@ import {
   SubmitTransactionInput,
   SubmitTransactionResponse,
 } from 'apps/relayer/src/relayer.service'
-import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 
 @Injectable()
 export class RelayerProxyService implements IRelayerService {
