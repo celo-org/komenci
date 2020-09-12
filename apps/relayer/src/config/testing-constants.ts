@@ -1,5 +1,6 @@
 
 import { normalizeAddressWith0x, privateKeyToAddress } from '@celo/utils/lib/address'
+
 const thresholdBls = require('blind-threshold-bls')
 
 export const ODIS_URL = 'https://us-central1-celo-phone-number-privacy-stg.cloudfunctions.net'

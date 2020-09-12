@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common'
+import { Body, Controller, Post } from '@nestjs/common'
 import { AppService } from './app.service'
 import { GatewayService } from './gateway/gateway.service'
 
+import { GetPhoneNumberIdResponse } from '../../relayer/src/relayer.service'
 import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 import { StartSessionDto } from './dto/StartSessionDto'
 import { RelayerProxyService } from './relayer_proxy.service'
@@ -29,7 +30,7 @@ export class AppController {
   }
 
   @Post("distributedBlindedPepper")
-  async distributedBlindedPepper(@Body() distributedBlindedPepperDto: DistributedBlindedPepperDto) {
+  async distributedBlindedPepper(@Body() distributedBlindedPepperDto: DistributedBlindedPepperDto): Promise<GetPhoneNumberIdResponse> {
     return this.relayerProxyService.getPhoneNumberIdentifier(distributedBlindedPepperDto)
   }
 
