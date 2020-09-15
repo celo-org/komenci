@@ -1,4 +1,5 @@
 
+import { getBlindedPhoneNumber } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { normalizeAddressWith0x, privateKeyToAddress } from '@celo/utils/lib/address'
 
 const thresholdBls = require('blind-threshold-bls')
@@ -17,18 +18,3 @@ export const BLINDING_FACTOR = new Buffer('0IsBvRfkBrkKCIW6HV0/T1zrzjQSe8wRyU3PK
 export const BLINDED_PHONE_NUMBER = getBlindedPhoneNumber(PHONE_NUMBER, BLINDING_FACTOR)
 
 export const MOCK_ODIS_RESPONSE = '0Uj+qoAu7ASMVvm6hvcUGx2eO/cmNdyEgGn0mSoZH8/dujrC1++SZ1N6IP6v2I8A'
-
-// TODO: Use ODIS Common once new version is published
-export function getBlindedPhoneNumber(phoneNumber: string, blindingFactor: Buffer): string {
-    const blindedPhoneNumber = thresholdBls.blind(Buffer.from(phoneNumber), blindingFactor).message
-    return uint8ArrayToBase64(blindedPhoneNumber)
-}
-
-// TODO: Use ODIS Common once new version is published
-function uint8ArrayToBase64(bytes: Uint8Array) {
-  let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
-}
