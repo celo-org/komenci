@@ -1,5 +1,6 @@
 import { OdisUtils } from '@celo/contractkit'
 import { AuthSigner, ServiceContext } from '@celo/contractkit/lib/identity/odis/query'
+import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
@@ -100,8 +101,7 @@ export class RelayerService implements IRelayerService {
       catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes("odisQuotaError")) {
-          // TODO: once common lib is updated, this can be used
-          // replenishQuota(RelayerService.config.address, contractKit)
+          replenishQuota(RelayerService.config.address, contractKit)
         }
         else {
           throw new Error("Unable to query ODIS due to unexpected error")
