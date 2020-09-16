@@ -31,10 +31,12 @@
     "@nestjs/platform-fastify": "^7.4.4",
     "axios": "^0.20.0",
     "fastify": "^3.3.0",
+    "jsonwebtoken": "^8.5.1",
     "nestjs-pino": "^1.2.0",
     "pino-noir": "^2.2.1",
     "reflect-metadata": "^0.1.13",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.0.0",
