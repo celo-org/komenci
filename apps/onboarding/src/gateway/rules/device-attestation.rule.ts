@@ -16,7 +16,7 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
   }
 
   isAndroidRequest(req: FastifyRequest): boolean {
-    return true
+    return false
   }
 
   isIOSRequest(req: FastifyRequest): boolean {
