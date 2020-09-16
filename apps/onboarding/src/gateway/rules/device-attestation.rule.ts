@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DeviceCheckService } from '../device-check/device-check.service';
-import { Rule } from '../rules/rule';
+import { Rule } from './rule';
 import { SafetyNetService } from '../safety-net/safety-net.service';
 import { FastifyRequest } from 'fastify';
 
@@ -16,7 +16,7 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
   }
 
   isAndroidRequest(req: FastifyRequest): boolean {
-    return false
+    return true
   }
 
   isIOSRequest(req: FastifyRequest): boolean {
@@ -29,8 +29,10 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
       }
       return (await this.safetyNetService.verifyDevice(input)).isValidSignature
     } else if (this.isIOSRequest(req)) {
-      const input = {}
-      return this.deviceCheckService.verifyDevice(input)
+      const input = {
+        deviceToken: req.body['deviceToken']
+      }
+      return (await this.deviceCheckService.verifyDevice(input)).isValidSignature
     }
     return false
   }
