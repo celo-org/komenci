@@ -32,7 +32,7 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
       const input = {
         deviceToken: req.body['deviceToken']
       }
-      return (await this.deviceCheckService.verifyDevice(input)).isValidSignature
+      return (await this.deviceCheckService.verifyDevice(input))
     }
     return false
   }
