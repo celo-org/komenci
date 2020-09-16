@@ -1,20 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DeviceCheckService } from './device-check.service';
 import { AppModule } from '../../app.module';
+import { HttpModule } from '@nestjs/common';
 
 describe('DeviceCheckService', () => {
   let service: DeviceCheckService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule, HttpModule],
       providers: [DeviceCheckService],
     }).compile();
 
     service = module.get<DeviceCheckService>(DeviceCheckService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('should be defineshould be true when the attestation is validd', async() => {
+    const result = {isValidSignature: true, status: 200};
+    jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result);
+
+    expect((await service.verifyDevice({deviceToken:"valid"})).isValidSignature).toBe(true);
+  });
+
+  it('should be false when the attestation is invalid', async () => {
+    const result = {isValidSignature: false, status: 400};
+    jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result);
+
+    expect((await service.verifyDevice({deviceToken:"invalid"})).isValidSignature).toBe(false);
   });
 });
