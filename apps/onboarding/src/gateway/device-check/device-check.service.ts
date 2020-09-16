@@ -40,6 +40,7 @@ export class DeviceCheckService {
     }).toPromise()
     if (deviceCheckResponse.status !== 200) {
       throw new Error(`Device check api returned ${deviceCheckResponse.status}: ${await deviceCheckResponse.data}`);
+      return false
   }
     return true
   }
