@@ -8,7 +8,7 @@ export default registerAs('thirdParty', () => ({
   appleDeviceCheckToken: process.env.APPLE_DEVICE_CHECK_TOKEN,
   appleDeviceCheckTeamID: process.env.TEAM_ID,
   appleDeviceCheckKeyID: process.env.APPLE_DEVICE_KEY_ID,
-  appleDeviceCheckKeyFilename: process.env.APPLE_DEVICE_KEY_FILENAME,
+  appleDeviceCheckCert: process.env.APPLE_DEVICE_CERT,
   androidSafetyNetUrl: "https://www.googleapis.com/androidcheck/v1/attestations/verify",
   androidSafetyNetToken: process.env.ANDROID_SAFETYNET_TOKEN //API_KEY
 }))
