@@ -1,11 +1,8 @@
-import { HttpService, Inject, Injectable } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
-import thirdPartyConfig from '../../config/third-party.config';
-import { DeviceCheckDto } from '../../dto/DeviceCheckDto';
-import jwt from "jsonwebtoken";
-import fs from "fs";
-import uuidv4 from "uuid";
-
+import { HttpService, Inject, Injectable } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
+import jwt from "jsonwebtoken"
+import uuidv4 from "uuid"
+import thirdPartyConfig from '../../config/third-party.config'
 
 @Injectable()
 export class DeviceCheckService {
@@ -21,7 +18,7 @@ export class DeviceCheckService {
     /* A 10-character key identifier, obtained from your developer account (https://developer.apple.com/account/) */
     const keyIdentifier = this.config.appleDeviceCheckKeyID
     /* A file name of p8 format private key download from Certificates, Identifiers & Profiles (https://developer.apple.com/account/ios/certificate) */
-    const cert =this.config.appleDeviceCheckCert
+    const cert = this.config.appleDeviceCheckCert
 
     const JWT = jwt.sign({}, cert, { algorithm: "ES256", keyid: keyIdentifier, issuer: teamID })
 
@@ -31,18 +28,20 @@ export class DeviceCheckService {
       method: 'POST',
       headers: {
         "Authorization": `Bearer ${JWT}`,
-        'Content-Type':'application/json'
+        'Content-Type': 'application/json'
       },
-      data: { 
-        "device_token" : input.deviceToken ,
-        "transaction_id" : uuidv4(),
-        "timestamp" : Date.now() 
-     },
+      data: {
+        "device_token": input.deviceToken,
+        "transaction_id": uuidv4(),
+        "timestamp": Date.now()
+      },
     }).toPromise()
+
     if (deviceCheckResponse.status !== 200) {
-      throw new Error(`Device check api returned ${deviceCheckResponse.status}: ${await deviceCheckResponse.data}`);
+      return true
+    } else {
       return false
+    }
   }
-    return true
-  }
+
 }

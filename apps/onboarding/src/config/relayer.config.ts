@@ -5,7 +5,6 @@ export default registerAs<() => TcpClientOptions>('relayer', () => ({
   transport: Transport.TCP,
   options: {
     host: process.env.RELAYER_HOST,
-    port: parseInt(process.env.RELAYER_PORT, 10),
+    port: parseInt(process.env.RELAYER_PORT, 10)
   }
 }))
-

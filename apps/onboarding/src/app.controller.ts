@@ -1,46 +1,53 @@
-import { Controller, Get, Inject, Post, Req, Body } from '@nestjs/common';
-import { GatewayService } from './gateway/gateway.service';
-import { FastifyRequest } from 'fastify';
-import { RelayerProxyService } from './relayer_proxy.service';
-import { StartSessionDto } from './dto/StartSessionDto';
-import { AppService } from './app.service';
+import { Body, Controller, Post, Req } from '@nestjs/common'
+import { AppService } from './app.service'
+import { GatewayService } from './gateway/gateway.service'
+
+import { GetPhoneNumberIdResponse } from '../../relayer/src/relayer.service'
+import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
+import { StartSessionDto } from './dto/StartSessionDto'
+import { RelayerProxyService } from './relayer_proxy.service'
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly relayerProxyService: RelayerProxyService,
-    private readonly gatewayService: GatewayService,
+    private readonly gatewayService: GatewayService
   ) {}
 
-  @Post("startSession")
-  async startSession(@Body() startSessionDto: StartSessionDto, @Req() req): Promise<any> {
-    if (await this.gatewayService.verify(startSessionDto, req) === true) {
-      return {id: 'new-session'}
+  @Post('startSession')
+  async startSession(
+    @Body() startSessionDto: StartSessionDto,
+    @Req() req
+  ): Promise<any> {
+    if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
+      return { id: 'new-session' }
     } else {
-      return {error: 'gateway-not-passed'}
+      return { error: 'gateway-not-passed' }
     }
   }
 
-  @Post("deployWallet")
+  @Post('deployWallet')
   deployWallet(): any {
-    return {id: 'new-session'}
+    return { id: 'new-session' }
   }
 
-  @Get("distributedBlindedPepper")
-  async distributedBlindedPepper() {
-    return this.relayerProxyService.signPersonalMessage({
-      data: Buffer.alloc(0)
-    })
+  @Post('distributedBlindedPepper')
+  async distributedBlindedPepper(
+    @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto
+  ): Promise<GetPhoneNumberIdResponse> {
+    return this.relayerProxyService.getPhoneNumberIdentifier(
+      distributedBlindedPepperDto
+    )
   }
 
-  @Post("startAttestations")
+  @Post('startAttestations')
   async startAttestation() {
-    return this.relayerProxyService.submitTransaction({tx: {}})
+    return this.relayerProxyService.submitTransaction({ tx: {} })
   }
 
-  @Post("completeAttestation")
+  @Post('completeAttestation')
   async completeAttestation() {
-    return this.relayerProxyService.submitTransaction({tx: {}})
+    return this.relayerProxyService.submitTransaction({ tx: {} })
   }
 }
