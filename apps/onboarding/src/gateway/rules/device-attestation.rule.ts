@@ -56,10 +56,6 @@ export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationErr
         // This should wrap the error returned from safetynet
         return Err(new VerificationFailedError())
       }
-<<<<<<< HEAD
-=======
-      return (await this.deviceCheckService.verifyDevice(input))
->>>>>>> Fix tests
     }
     return Err(new InvalidDeviceError())
   }
