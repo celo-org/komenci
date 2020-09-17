@@ -56,12 +56,6 @@ export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationErr
         // This should wrap the error returned from safetynet
         return Err(new VerificationFailedError())
       }
-      return (await this.safetyNetService.verifyDevice(input)).isValidSignature
-    } else if (this.isIOSRequest(req)) {
-      const input = {
-        deviceToken: req.body['deviceToken']
-      }
-      return (await this.deviceCheckService.verifyDevice(input))
     }
     return Err(new InvalidDeviceError())
   }
