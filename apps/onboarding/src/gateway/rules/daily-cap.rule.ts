@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Rule } from './rule';
+import { Failed, Rule } from './rule';
 
 interface DailyCapConfig {
   total: number
 }
 
 @Injectable()
-export class DailyCapRule implements Rule<DailyCapConfig, any> {
+export class DailyCapRule implements Rule<DailyCapConfig, string> {
   getID() {
     return "DailyCapRule"
   }
 
   async verify(req, config, context) {
-    return true
+    return Failed("cap-reached")
   }
 
   validateConfig(config: unknown): DailyCapConfig {

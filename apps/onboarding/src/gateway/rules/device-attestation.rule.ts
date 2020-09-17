@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DeviceCheckService } from '../device-check/device-check.service';
-import { Rule } from '../rules/rule';
+import { Failed, Passed, Rule } from '../rules/rule';
 import { SafetyNetService } from '../safety-net/safety-net.service';
 import { FastifyRequest } from 'fastify';
 
+enum DeviceAttestationRuleFailureReasons {
+  InvalidDevice = "invalid-device",
+  VerificationFailed = "verification-failed"
+}
+
 @Injectable()
-export class DeviceAttestationRule implements Rule<unknown, unknown> {
+export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationRuleFailureReasons> {
   constructor(
     private deviceCheckService: DeviceCheckService,
     private safetyNetService: SafetyNetService
@@ -27,12 +32,20 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
       const input = {
         signedAttestation: req.body['signedAttestation'],
       }
-      return (await this.safetyNetService.verifyDevice(input)).isValidSignature
+      const result = (await this.safetyNetService.verifyDevice(input))
+      // TODO: Add propper error handling in safetyNet
+      if (result.isValidSignature) {
+        return Passed()
+      }
     } else if (this.isIOSRequest(req)) {
       const input = {}
-      return this.deviceCheckService.verifyDevice(input)
+      const result = await this.deviceCheckService.verifyDevice(input)
+      // TODO: Add propper error handling in deviceCheck
+      if (result) {
+        return Passed()
+      }
     }
-    return false
+    return Failed(DeviceAttestationRuleFailureReasons.InvalidDevice)
   }
 
   validateConfig(config: unknown): unknown {

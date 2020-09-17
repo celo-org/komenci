@@ -46,6 +46,6 @@ export class GatewayService implements OnModuleInit {
       return rule.verify(startSessionDto, this.ruleConfigs[rule.getID()], context)
     }))
 
-    return results.every(result => result === true)
+    return results.every(result => result.passed)
   }
 }
