@@ -19,7 +19,7 @@ describe('DeviceCheckService', () => {
     const result = true
     jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result)
 
-    expect((await service.verifyDevice({deviceToken:"valid"}))).toEqual(true)
+    expect((await service.verifyDevice({deviceToken:"valid"}))).toBe(true)
   })
 
   it('should be false when the attestation is invalid', async () => {
