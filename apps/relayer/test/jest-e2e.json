@@ -5,5 +5,11 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "apps/relayer/src/(.*)": "<rootDir>/../src/$1",
+    "apps/onboarding/src/(.*)": "<rootDir>/../../onboarding/src/$1",
+    "@app/blockchain/(.*)": "<rootDir>/libs/blockchain/src/$1",
+    "@app/blockchain": "<rootDir>/libs/blockchain/src"
   }
 }

@@ -22,6 +22,7 @@ export class DeviceCheckService {
     const keyIdentifier = this.config.appleDeviceCheckKeyID
     /* A file name of p8 format private key download from Certificates, Identifiers & Profiles (https://developer.apple.com/account/ios/certificate) */
     const cert =this.config.appleDeviceCheckCert
+
     const JWT = jwt.sign({}, cert, { algorithm: "ES256", keyid: keyIdentifier, issuer: teamID })
 
     const verifyUrl = `${this.config.appleDeviceCheckUrl}/v1/validate_device_token`

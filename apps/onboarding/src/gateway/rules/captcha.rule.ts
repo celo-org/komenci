@@ -1,21 +1,27 @@
+import { Err, Ok } from '@celo/base/lib/result';
 import { Injectable } from '@nestjs/common';
-import { CaptchaService } from '../captcha/captcha.service';
+import { ErrorCode } from 'apps/onboarding/src/gateway/captcha/ReCAPTCHAResponseDto';
+import { HttpErrorTypes } from '../../errors/http';
+import { StartSessionDto } from '../../dto/StartSessionDto';
+import { CaptchaService, CaptchaServiceErrors, ReCAPTCHAErrorTypes } from '../captcha/captcha.service';
 import { Rule } from './rule';
-import { StartSessionDto } from '../../dto/StartSessionDto'
 
 @Injectable()
-export class CaptchaRule implements Rule<unknown, unknown> {
+export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
   constructor(private captchaService: CaptchaService) {
   }
+
   getID() {
     return "CaptchaRule"
   }
 
-  async verify(startSessionDto: StartSessionDto, config, context) {
-    const input = {
-      token: startSessionDto.captchaResponse,
+  async verify(payload: Pick<StartSessionDto, "captchaResponseToken">, config, context) {
+    const result = await this.captchaService.verifyCaptcha(payload.captchaResponseToken)
+    if (result.ok) {
+      return Ok(true)
+    } else if (result.ok === false) {
+      return Err(result.error)
     }
-    return (await this.captchaService.verifyCaptcha(input)).success
   }
 
   validateConfig(config: unknown): unknown {
