@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",
+    "@celo/base": "^0.0.2",
     "@celo/contractkit": "0.4.13",
     "@celo/phone-number-privacy-common": "^1.0.8",
     "@celo/typescript": "^0.0.1",
@@ -90,6 +91,7 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
+      "apps/(.*)": "<rootDir>/apps/$1",
       "@app/blockchain/(.*)": "<rootDir>/libs/blockchain/src/$1",
       "@app/blockchain": "<rootDir>/libs/blockchain/src"
     }

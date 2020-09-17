@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing'
-import { GatewayService } from './gateway.service'
+import { Test, TestingModule } from '@nestjs/testing';
+import { GatewayService } from './gateway.service';
 
 describe('GatewayService', () => {
   let service: GatewayService;
