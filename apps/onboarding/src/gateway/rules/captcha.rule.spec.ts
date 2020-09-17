@@ -1,10 +1,8 @@
 import { Ok } from '@celo/base/lib/result';
 import { HttpModule } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Passed } from 'apps/onboarding/src/gateway/rules/rule';
 import { CaptchaRule } from './captcha.rule';
 import { CaptchaService } from '../captcha/captcha.service';
-import { AppModule } from '../../app.module';
 
 describe('CaptchaRule', () => {
   let rule: CaptchaRule;
@@ -32,8 +30,10 @@ describe('CaptchaRule', () => {
   it('should verify the token', async() => {
     captchaServiceMock.verifyCaptcha.mockReturnValue(Ok(true))
     expect(
-      await rule.verify({captchaResponse: 'token-test'}, undefined, undefined)
-    ).toStrictEqual(Passed())
-    expect(captchaServiceMock.verifyCaptcha).toHaveBeenCalledWith({token: 'token-test'})
+      await rule.verify({
+        captchaResponseToken: 'token-test'
+      }, undefined, undefined)
+    ).toStrictEqual(Ok(true))
+    expect(captchaServiceMock.verifyCaptcha).toHaveBeenCalledWith('token-test')
   });
 });

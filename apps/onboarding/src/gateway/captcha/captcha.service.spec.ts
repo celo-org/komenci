@@ -62,7 +62,7 @@ describe('CaptchaService', () => {
 
   it('should verify the token', async() => {
     const httpServiceSpy = spyOn(httpService, 'get').and.returnValue(okResponse)
-    expect(await service.verifyCaptcha({token: 'token-test'})).toEqual(Ok(true))
+    expect(await service.verifyCaptcha('token-test')).toEqual(Ok(true))
     expect(httpServiceSpy).toHaveBeenCalledWith(expect.any(String), {params: expect.objectContaining({
       response: 'token-test',
     })})
@@ -70,7 +70,7 @@ describe('CaptchaService', () => {
 
   it('should fail with a http request error when an http error occurs', async() => {
     const httpServiceSpy = spyOn(httpService, 'get').and.returnValue(httpError)
-    const result = await service.verifyCaptcha({token: 'token-test'})
+    const result = await service.verifyCaptcha('token-test')
     expect(result.ok).toEqual(false)
     if (result.ok == false) { // type inference for result
       expect(result.error.errorType).toEqual(HttpErrorTypes.RequestError)
@@ -82,7 +82,7 @@ describe('CaptchaService', () => {
     const httpServiceSpy = spyOn(httpService, 'get').and.returnValue(
       makeReCaptchaError(...errorCodes)
     )
-    const result = await service.verifyCaptcha({token: 'token-test'})
+    const result = await service.verifyCaptcha('token-test')
     expect(result.ok).toEqual(false)
     if (result.ok == false) { // type inference for result
       expect(result.error.errorType).toEqual(ReCAPTCHAErrorTypes.VerificationFailed)

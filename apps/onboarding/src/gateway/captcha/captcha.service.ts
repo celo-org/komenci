@@ -25,11 +25,11 @@ export class CaptchaService {
     private httpService: HttpService
   ) {}
 
-  async verifyCaptcha(input: {token: string}): Promise<Result<boolean, CaptchaServiceErrors>> {
+  async verifyCaptcha(token: string): Promise<Result<boolean, CaptchaServiceErrors>> {
    return this.httpService.get<ReCAPTCHAResponseDto>(this.config.recaptchaUri, {
       params: {
         secret: this.config.recaptchaToken,
-        response: input.token
+        response: token
       }
    }).toPromise().then(({data}) => {
      if (data.success == true) {

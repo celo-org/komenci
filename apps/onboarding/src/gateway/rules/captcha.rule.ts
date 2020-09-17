@@ -1,12 +1,13 @@
+import { Err, Ok } from '@celo/base/lib/result';
 import { Injectable } from '@nestjs/common';
+import { ErrorCode } from 'apps/onboarding/src/gateway/captcha/ReCAPTCHAResponseDto';
 import { HttpErrorTypes } from '../../errors/http';
 import { StartSessionDto } from '../../dto/StartSessionDto';
-import { CaptchaService, ReCAPTCHAErrorTypes } from '../captcha/captcha.service';
-import { Rule, Passed, Failed } from './rule';
-
+import { CaptchaService, CaptchaServiceErrors, ReCAPTCHAErrorTypes } from '../captcha/captcha.service';
+import { Rule } from './rule';
 
 @Injectable()
-export class CaptchaRule implements Rule<unknown, string> {
+export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
   constructor(private captchaService: CaptchaService) {
   }
 
@@ -14,21 +15,12 @@ export class CaptchaRule implements Rule<unknown, string> {
     return "CaptchaRule"
   }
 
-  async verify(startSessionDto: StartSessionDto, config, context) {
-    const result = await this.captchaService.verifyCaptcha({
-      token: startSessionDto.captchaResponse
-    })
+  async verify(payload: Pick<StartSessionDto, "captchaResponseToken">, config, context) {
+    const result = await this.captchaService.verifyCaptcha(payload.captchaResponseToken)
     if (result.ok) {
-      return Passed()
+      return Ok(true)
     } else if (result.ok === false) {
-      const { error } = result
-      if (error.errorType == HttpErrorTypes.RequestError) {
-        return Failed("http-error")
-      } else if (error.errorType == ReCAPTCHAErrorTypes.VerificationFailed) {
-        return Failed(...error.errorCodes)
-      } else {
-        return Failed("unexpected-error")
-      }
+      return Err(result.error)
     }
   }
 
