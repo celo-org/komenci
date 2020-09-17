@@ -1,38 +1,74 @@
-import { Injectable } from '@nestjs/common'
-import { DeviceCheckService } from '../device-check/device-check.service'
-import { Rule } from '../rules/rule'
-import { SafetyNetService } from '../safety-net/safety-net.service'
-import { FastifyRequest } from 'fastify'
+import { Err, Ok, RootError } from '@celo/base/lib/result';
+import { Injectable } from '@nestjs/common';
+import {
+  DeviceType,
+  StartSessionDto,
+} from 'apps/onboarding/src/dto/StartSessionDto';
+import { DeviceCheckService } from '../device-check/device-check.service';
+import { GatewayContext, Rule } from '../rules/rule';
+import { SafetyNetService } from '../safety-net/safety-net.service';
+
+enum DeviceAttestationErrorTypes {
+  InvalidDevice = 'invalid-device',
+  VerificationFailed = 'verification-failed',
+}
+
+export class InvalidDeviceError extends RootError<DeviceAttestationErrorTypes> {
+  constructor() {
+    super(DeviceAttestationErrorTypes.InvalidDevice);
+  }
+}
+
+export class VerificationFailedError extends RootError<
+  DeviceAttestationErrorTypes
+> {
+  constructor() {
+    super(DeviceAttestationErrorTypes.VerificationFailed);
+  }
+}
+
+type DeviceAttestationErrors = InvalidDeviceError | VerificationFailedError;
 
 @Injectable()
-export class DeviceAttestationRule implements Rule<unknown, unknown> {
+export class DeviceAttestationRule
+  implements Rule<unknown, DeviceAttestationErrors> {
   constructor(
     private deviceCheckService: DeviceCheckService,
-    private safetyNetService: SafetyNetService
+    private safetyNetService: SafetyNetService,
   ) {}
 
   getID(): string {
-    return "DeviceAttestationRule"
+    return 'DeviceAttestationRule';
   }
 
-  isAndroidRequest(req: FastifyRequest): boolean {
-    return false
-  }
-
-  isIOSRequest(req: FastifyRequest): boolean {
-    return false
-  }
-  async verify(req, config, context) {
-    if (this.isAndroidRequest(req)) {
-      const input = {
-        signedAttestation: req.body['signedAttestation'],
+  async verify(
+    input: StartSessionDto,
+    config: unknown,
+    context: GatewayContext,
+  ) {
+    if (input.deviceType == DeviceType.Android) {
+      const result = await this.safetyNetService.verifyDevice({
+        signedAttestation: input.androidSignedAttestation,
+      });
+      // TODO: Add propper error handling in safetyNet
+      if (result.isValidSignature) {
+        return Ok(true);
+      } else {
+        // This should wrap the error returned from safetynet
+        return Err(new VerificationFailedError());
       }
-      return (await this.safetyNetService.verifyDevice(input)).isValidSignature
-    } else if (this.isIOSRequest(req)) {
-      const input = {}
-      return this.deviceCheckService.verifyDevice(input)
+    } else if (input.deviceType == DeviceType.iOS) {
+      const input = {};
+      const result = await this.deviceCheckService.verifyDevice(input);
+      // TODO: Add propper error handling in deviceCheck
+      if (result) {
+        return Ok(true);
+      } else {
+        // This should wrap the error returned from safetynet
+        return Err(new VerificationFailedError());
+      }
     }
-    return false
+    return Err(new InvalidDeviceError());
   }
 
   validateConfig(config: unknown): unknown {
@@ -40,6 +76,6 @@ export class DeviceAttestationRule implements Rule<unknown, unknown> {
   }
 
   defaultConfig(): unknown {
-    return null
+    return null;
   }
 }
