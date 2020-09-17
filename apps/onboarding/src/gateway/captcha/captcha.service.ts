@@ -1,7 +1,21 @@
-import { HttpService, Inject, Injectable } from '@nestjs/common'
+import { Err, Ok, Result, RootError } from '@celo/base/lib/result';
+import { HttpService, Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config'
+import { HttpRequestError } from '../../errors/http';
 import thirdPartyConfig from '../../config/third-party.config'
-import { ReCAPTCHAResponseDto } from '../../dto/ReCAPTCHAResponseDto'
+import { ErrorCode, ReCAPTCHAResponseDto } from './ReCAPTCHAResponseDto';
+
+export enum ReCAPTCHAErrorTypes {
+  VerificationFailed = "VerificationFailed"
+}
+
+class VerificationFailed extends RootError<ReCAPTCHAErrorTypes> {
+  constructor(public errorCodes: ErrorCode[]) {
+    super(ReCAPTCHAErrorTypes.VerificationFailed);
+  }
+}
+
+export type CaptchaServiceErrors = VerificationFailed | HttpRequestError
 
 @Injectable()
 export class CaptchaService {
@@ -11,13 +25,20 @@ export class CaptchaService {
     private httpService: HttpService
   ) {}
 
-  async verifyCaptcha(input: {token: string}): Promise<ReCAPTCHAResponseDto> {
-    const reCAPTCHAResponse = await this.httpService.get<ReCAPTCHAResponseDto>(this.config.recaptchaUri, {
+  async verifyCaptcha(token: string): Promise<Result<boolean, CaptchaServiceErrors>> {
+   return this.httpService.get<ReCAPTCHAResponseDto>(this.config.recaptchaUri, {
       params: {
         secret: this.config.recaptchaToken,
-        response: input.token
+        response: token
       }
-    }).toPromise()
-    return reCAPTCHAResponse.data
+   }).toPromise().then(({data}) => {
+     if (data.success == true) {
+       return Ok(true)
+     } else {
+       return Err(new VerificationFailed(data['error-codes']))
+     }
+   }).catch((error) => {
+     return Err(new HttpRequestError(error))
+   })
   }
 }

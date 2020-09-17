@@ -39,13 +39,13 @@ export class GatewayService implements OnModuleInit {
     }, {})
   }
 
-  async verify(startSessionDto: StartSessionDto): Promise<boolean> {
+  async verify(startSessionDto: StartSessionDto, req: FastifyRequest): Promise<boolean> {
     const enabledRules = this.rules.filter(rule => this.ruleEnabled[rule.getID()])
-    const context = {todo: 'TODO'} // must build context
+    const context = {req} // must build context
     const results = await Promise.all(enabledRules.map(rule => {
       return rule.verify(startSessionDto, this.ruleConfigs[rule.getID()], context)
     }))
 
-    return results.every(result => result === true)
+    return results.every(result => result.ok)
   }
 }
