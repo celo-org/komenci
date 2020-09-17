@@ -33,6 +33,7 @@
     "@nestjs/platform-express": "^7.0.0",
     "@nestjs/platform-fastify": "^7.4.4",
     "axios": "^0.20.0",
+    "btoa": "^1.2.1",
     "class-validator": "^0.12.2",
     "fastify": "^3.3.0",
     "jsonwebtoken": "^8.5.1",
@@ -40,8 +41,8 @@
     "pino-noir": "^2.2.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "web3": "1.2.4",
-    "uuid": "^8.3.0"
+    "uuid": "^8.3.0",
+    "web3": "1.2.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.0.0",
