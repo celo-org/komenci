@@ -15,19 +15,19 @@ export class DeviceCheckService {
     private httpService: HttpService
   ) {}
 
-  async verifyDevice(input: {deviceToken: string}): Promise<DeviceCheckDto> {
+  async verifyDevice(input: {deviceToken: string}): Promise<Boolean> {
     console.log(input.deviceToken)
     /* A 10-character Team ID, obtained from your developer account (https://developer.apple.com/account/) */
     const teamID = this.config.appleDeviceCheckTeamID
     /* A 10-character key identifier, obtained from your developer account (https://developer.apple.com/account/) */
     const keyIdentifier = this.config.appleDeviceCheckKeyID
     /* A file name of p8 format private key download from Certificates, Identifiers & Profiles (https://developer.apple.com/account/ios/certificate) */
-    const keyFileName = this.config.appleDeviceCheckKeyFilename
+    const keyFileName = this.config.appleDeviceCheckCert
     const cert = fs.readFileSync(keyFileName).toString()
     const JWT = jwt.sign({}, cert, { algorithm: "ES256", keyid: keyIdentifier, issuer: teamID })
 
     const verifyUrl = `${this.config.appleDeviceCheckUrl}/v1/validate_device_token`
-    const deviceCheckResponse = await this.httpService.post<DeviceCheckDto>(verifyUrl, {
+    const deviceCheckResponse = await this.httpService.post<unknown>(verifyUrl, {
       compress: false,
       method: 'POST',
       headers: {
@@ -42,7 +42,8 @@ export class DeviceCheckService {
     }).toPromise()
     if(deviceCheckResponse.status != 200){
       console.log('The Ios attestation request failed.')
+      return false
     }
-    return deviceCheckResponse.data
+    return true
   }
 }

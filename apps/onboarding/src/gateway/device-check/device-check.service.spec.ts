@@ -15,15 +15,15 @@ describe('DeviceCheckService', () => {
     service = module.get<DeviceCheckService>(DeviceCheckService);
   });
 
-  it('should be defineshould be true when the attestation is validd', async() => {
-    const result = {isValidSignature: true, status: 200};
+  it('should be true when the attestation is valid', async() => {
+    const result = true;
     jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result);
 
     expect((await service.verifyDevice({deviceToken:"valid"})).isValidSignature).toBe(true);
   });
 
   it('should be false when the attestation is invalid', async () => {
-    const result = {isValidSignature: false, status: 400};
+    const result = false;
     jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result);
 
     expect((await service.verifyDevice({deviceToken:"invalid"})).isValidSignature).toBe(false);
