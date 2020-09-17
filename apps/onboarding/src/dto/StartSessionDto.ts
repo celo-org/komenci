@@ -1,22 +1,22 @@
-import { IsNotEmpty, ValidateIf } from 'class-validator';
+import { IsNotEmpty, ValidateIf } from 'class-validator'
 
 export enum DeviceType {
   Android = 'android',
-  iOS = 'ios',
+  iOS = 'ios'
 }
 
 export class StartSessionDto {
   @IsNotEmpty()
-  captchaResponseToken: string;
+  captchaResponseToken: string
 
   @IsNotEmpty()
-  deviceType: DeviceType;
+  deviceType: DeviceType
 
-  @ValidateIf(o => o.deviceType == DeviceType.iOS)
+  @ValidateIf(o => o.deviceType === DeviceType.iOS)
   @IsNotEmpty()
-  iosDeviceToken?: string;
+  iosDeviceToken?: string
 
-  @ValidateIf(o => o.deviceType == DeviceType.Android)
+  @ValidateIf(o => o.deviceType === DeviceType.Android)
   @IsNotEmpty()
-  androidSignedAttestation?: string;
+  androidSignedAttestation?: string
 }

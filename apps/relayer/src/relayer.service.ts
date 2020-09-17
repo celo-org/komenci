@@ -1,47 +1,47 @@
-import { OdisUtils } from '@celo/contractkit';
+import { OdisUtils } from '@celo/contractkit'
 import {
   AuthSigner,
-  ServiceContext,
-} from '@celo/contractkit/lib/identity/odis/query';
-import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils';
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
-import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto';
-import appConfig from './config/app.config';
-import { ContractKitManager } from './wallet/contractkit-manager';
+  ServiceContext
+} from '@celo/contractkit/lib/identity/odis/query'
+import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
+import { Inject, Injectable } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
+import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
+import appConfig from './config/app.config'
+import { ContractKitManager } from './wallet/contractkit-manager'
 
 export type SignPersonalMessageInput = {
-  data: string;
-};
+  data: string
+}
 
 export type SignPersonalMessageResponse = {
-  signature: string;
-  relayerAddress: string;
-};
+  signature: string
+  relayerAddress: string
+}
 
 export type GetPhoneNumberIdResponse = {
-  identifier: string;
-};
+  identifier: string
+}
 
 export type SubmitTransactionInput = {
-  tx: any;
-};
+  tx: any
+}
 
 export type SubmitTransactionResponse = {
-  txHash: string;
-  relayerAddress: string;
-};
+  txHash: string
+  relayerAddress: string
+}
 
 export interface IRelayerService {
   signPersonalMessage(
-    input: SignPersonalMessageInput,
-  ): Promise<SignPersonalMessageResponse>;
+    input: SignPersonalMessageInput
+  ): Promise<SignPersonalMessageResponse>
   getPhoneNumberIdentifier(
-    input: DistributedBlindedPepperDto,
-  ): Promise<GetPhoneNumberIdResponse>;
+    input: DistributedBlindedPepperDto
+  ): Promise<GetPhoneNumberIdResponse>
   submitTransaction(
-    input: SubmitTransactionInput,
-  ): Promise<SubmitTransactionResponse>;
+    input: SubmitTransactionInput
+  ): Promise<SubmitTransactionResponse>
 }
 
 @Injectable()
@@ -49,59 +49,59 @@ export class RelayerService implements IRelayerService {
   static async getContractKitManager(): Promise<ContractKitManager> {
     if (!RelayerService.contractKitManager) {
       RelayerService.contractKitManager = new ContractKitManager(
-        RelayerService.config,
-      );
-      await RelayerService.contractKitManager.init();
+        RelayerService.config
+      )
+      await RelayerService.contractKitManager.init()
     }
-    return RelayerService.contractKitManager;
+    return RelayerService.contractKitManager
   }
-  private static contractKitManager: ContractKitManager;
-  private static config: ConfigType<typeof appConfig>;
+  private static contractKitManager: ContractKitManager
+  private static config: ConfigType<typeof appConfig>
 
   constructor(
     @Inject(appConfig.KEY)
-    private config: ConfigType<typeof appConfig>,
+    private config: ConfigType<typeof appConfig>
   ) {
-    RelayerService.config = config;
+    RelayerService.config = config
   }
 
   async signPersonalMessage(
-    input: SignPersonalMessageInput,
+    input: SignPersonalMessageInput
   ): Promise<SignPersonalMessageResponse> {
-    const relayerAddress = RelayerService.config.address;
-    const contractKitManager = await RelayerService.getContractKitManager();
-    const contractKit = await contractKitManager.kit;
+    const relayerAddress = RelayerService.config.address
+    const contractKitManager = await RelayerService.getContractKitManager()
+    const contractKit = await contractKitManager.kit
     const signature = await contractKit.web3.eth.sign(
       input.data,
-      relayerAddress,
-    );
+      relayerAddress
+    )
     return {
       signature,
-      relayerAddress: relayerAddress,
-    };
+      relayerAddress: relayerAddress
+    }
   }
 
   // TODO: Relocate this to the onboarding service once we update the ContractKit interface
   // to accept pre-signed auth header (then we can just expose signPersonalMessage)
   async getPhoneNumberIdentifier(
-    input: DistributedBlindedPepperDto,
+    input: DistributedBlindedPepperDto
   ): Promise<GetPhoneNumberIdResponse> {
-    const contractKitManager = await RelayerService.getContractKitManager();
-    const contractKit = await contractKitManager.kit;
+    const contractKitManager = await RelayerService.getContractKitManager()
+    const contractKit = await contractKitManager.kit
     const authSigner: AuthSigner = {
       authenticationMethod: OdisUtils.Query.AuthenticationMethod.WALLET_KEY,
-      contractKit,
-    };
+      contractKit
+    }
 
-    const { odisPubKey, odisUrl } = RelayerService.config.networkConfig;
+    const { odisPubKey, odisUrl } = RelayerService.config.networkConfig
     const serviceContext: ServiceContext = {
       odisUrl,
-      odisPubKey,
-    };
+      odisPubKey
+    }
 
     // Query the phone number identifier
     // Re-attempt once if the
-    let attempts = 0;
+    let attempts = 0
     while (attempts++ <= 1) {
       try {
         const phoneHashDetails = await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
@@ -110,29 +110,29 @@ export class RelayerService implements IRelayerService {
           authSigner,
           serviceContext,
           undefined,
-          input.clientVersion,
-        );
+          input.clientVersion
+        )
         return {
-          identifier: phoneHashDetails.phoneHash,
-        };
+          identifier: phoneHashDetails.phoneHash
+        }
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {
-          replenishQuota(RelayerService.config.address, contractKit);
+          await replenishQuota(RelayerService.config.address, contractKit)
         } else {
-          throw new Error('Unable to query ODIS due to unexpected error');
+          throw new Error('Unable to query ODIS due to unexpected error')
         }
       }
     }
-    throw new Error('Unable to query ODIS due to out of quota error');
+    throw new Error('Unable to query ODIS due to out of quota error')
   }
 
   async submitTransaction(
-    input: SubmitTransactionInput,
+    input: SubmitTransactionInput
   ): Promise<SubmitTransactionResponse> {
     return {
       txHash: '<tx-hash>',
-      relayerAddress: this.config.address,
-    };
+      relayerAddress: this.config.address
+    }
   }
 }

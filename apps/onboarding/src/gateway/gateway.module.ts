@@ -1,8 +1,8 @@
-import { Module, HttpModule } from '@nestjs/common';
-import { CaptchaService } from './captcha/captcha.service';
-import { DeviceCheckService } from './device-check/device-check.service';
-import { SafetyNetService } from './safety-net/safety-net.service';
-import { GatewayService } from './gateway.service';
+import { HttpModule, Module } from '@nestjs/common'
+import { CaptchaService } from './captcha/captcha.service'
+import { DeviceCheckService } from './device-check/device-check.service'
+import { GatewayService } from './gateway.service'
+import { SafetyNetService } from './safety-net/safety-net.service'
 
 @Module({
   imports: [HttpModule],
@@ -10,8 +10,8 @@ import { GatewayService } from './gateway.service';
     GatewayService,
     CaptchaService,
     DeviceCheckService,
-    SafetyNetService,
+    SafetyNetService
   ],
-  exports: [GatewayService],
+  exports: [GatewayService]
 })
 export class GatewayModule {}

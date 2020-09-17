@@ -4,14 +4,14 @@ export enum ErrorCode {
   MissingInputResponse = 'missing-input-response',
   InvalidInputResponse = 'invalid-input-response',
   BadRequest = 'bad-request',
-  TimeoutOrDuplicate = 'timeout-or-duplicate',
+  TimeoutOrDuplicate = 'timeout-or-duplicate'
 }
 
 export interface ReCAPTCHAResponseDto {
-  success: boolean;
-  challenge_ts: string;
-  hostname?: string;
-  action?: string;
-  apk_package_name?: string;
-  'error-codes': ErrorCode[];
+  success: boolean
+  challenge_ts: string
+  hostname?: string
+  action?: string
+  apk_package_name?: string
+  'error-codes': ErrorCode[]
 }
