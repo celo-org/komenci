@@ -5,4 +5,3 @@ export default registerAs('app', () => ({
   port: parseInt(process.env.PORT, 10) || 3000,
   log_level: process.env.LOG_LEVEL || 'debug'
 }))
-

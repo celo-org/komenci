@@ -9,7 +9,7 @@ import { RelayerService } from './relayer.service'
   imports: [
     ConfigModule.forRoot({
       load: [appConfig],
-      envFilePath: ['apps/onboarding/.env.local'],
+      envFilePath: ['apps/onboarding/.env.local']
     }),
     LoggerModule.forRootAsync({
       providers: [ConfigService],
@@ -19,7 +19,7 @@ import { RelayerService } from './relayer.service'
         return {
           pinoHttp: {
             level: relayerConfig.log_level,
-            prettyPrint: process.env.NODE_ENV !== 'production',
+            prettyPrint: process.env.NODE_ENV !== 'production'
           }
         }
       }
@@ -27,6 +27,6 @@ import { RelayerService } from './relayer.service'
     HttpModule
   ],
   controllers: [AppController],
-  providers: [RelayerService],
+  providers: [RelayerService]
 })
 export class AppModule {}

@@ -1,5 +1,5 @@
-import { Result, RootError } from '@celo/base/lib/result';
-import { FastifyRequest } from 'fastify';
+import { Result, RootError } from '@celo/base/lib/result'
+import { FastifyRequest } from 'fastify'
 import { StartSessionDto } from '../../dto/StartSessionDto'
 
 export interface GatewayContext {
@@ -16,4 +16,3 @@ export interface Rule<TRuleConfig, TErrorTypes extends Error> {
   validateConfig(config: unknown): TRuleConfig
   defaultConfig(): TRuleConfig
 }
-
