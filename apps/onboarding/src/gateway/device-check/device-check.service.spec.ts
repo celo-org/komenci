@@ -15,7 +15,7 @@ describe('DeviceCheckService', () => {
     service = module.get<DeviceCheckService>(DeviceCheckService);
   });
 
-  it('should be defineshould be true when the attestation is validd', async() => {
+  it('should be true when the attestation is valid', async() => {
     const result = true;
     jest.spyOn(service, 'verifyDevice').mockImplementation(async () => result);
 
