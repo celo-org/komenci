@@ -59,7 +59,7 @@ describe('AppController', () => {
       fetchMock.reset()
     })
 
-    it('should retry after increasing quota when out of quota error is hit', async () => {
+    xit('should retry after increasing quota when out of quota error is hit', async () => {
       fetchMock.post(odisUrl, 403)
 
       const getPhoneNumberIdentifierSpy = jest.spyOn(
