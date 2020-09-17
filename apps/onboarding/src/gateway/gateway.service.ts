@@ -9,7 +9,7 @@ import { GatewayContext, Rule } from './rules/rule'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
-  private rules: Rule<any, any>[]
+  private rules: Array<Rule<any, any>>
   private ruleEnabled: Record<string, boolean>
   // TODO: Better types here
   private ruleConfigs: Record<string, unknown>

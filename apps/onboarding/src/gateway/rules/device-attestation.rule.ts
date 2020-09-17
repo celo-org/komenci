@@ -58,7 +58,7 @@ export class DeviceAttestationRule
         return Err(new VerificationFailedError())
       }
     } else if (input.deviceType === DeviceType.iOS) {
-      const result = await this.deviceCheckService.verifyDevice({})
+      const result = await this.deviceCheckService.verifyDevice({deviceToken: input.iosDeviceToken})
       // TODO: Add propper error handling in deviceCheck
       if (result) {
         return Ok(true)
