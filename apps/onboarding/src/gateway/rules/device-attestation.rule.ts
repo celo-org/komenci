@@ -48,8 +48,7 @@ export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationErr
         return Err(new VerificationFailedError())
       }
     } else if (input.deviceType == DeviceType.iOS) {
-      const input = {}
-      const result = await this.deviceCheckService.verifyDevice(input)
+      const result = await this.deviceCheckService.verifyDevice({deviceToken: input.iosDeviceToken})
       // TODO: Add propper error handling in deviceCheck
       if (result) {
         return Ok(true)
@@ -57,6 +56,10 @@ export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationErr
         // This should wrap the error returned from safetynet
         return Err(new VerificationFailedError())
       }
+<<<<<<< HEAD
+=======
+      return (await this.deviceCheckService.verifyDevice(input))
+>>>>>>> Fix tests
     }
     return Err(new InvalidDeviceError())
   }
