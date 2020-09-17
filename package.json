@@ -31,6 +31,7 @@
     "@nestjs/platform-express": "^7.0.0",
     "@nestjs/platform-fastify": "^7.4.4",
     "axios": "^0.20.0",
+    "class-validator": "^0.12.2",
     "fastify": "^3.3.0",
     "nestjs-pino": "^1.2.0",
     "pino-noir": "^2.2.1",
