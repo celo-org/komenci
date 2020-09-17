@@ -1,8 +1,8 @@
+import { FastifyRequest } from 'fastify';
 import { StartSessionDto } from '../../dto/StartSessionDto'
 
 export interface GatewayContext {
-  // XXX TODO
-  todo: string
+  req: FastifyRequest
 }
 
 export interface RulePassed {
@@ -21,7 +21,7 @@ export const Failed = <TReason>(...reasons: TReason[]): RuleFailed<TReason> => (
 
 export interface Rule<TRuleConfig, TReason> {
   getID(): string
-  verify(startSessionDto: StartSessionDto, config: TRuleConfig, context: GatewayContext): Promise<RuleResult<TReason>>
+  verify(startSessionDto: StartSessionDto, req: FastifyRequest, config: TRuleConfig, context: GatewayContext): Promise<RuleResult<TReason>>
   validateConfig(config: unknown): TRuleConfig
   defaultConfig(): TRuleConfig
 }
