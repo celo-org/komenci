@@ -1,43 +1,43 @@
-import { Err, Ok } from '@celo/base/lib/result';
-import { Injectable } from '@nestjs/common';
-import { ErrorCode } from 'apps/onboarding/src/gateway/captcha/ReCAPTCHAResponseDto';
-import { HttpErrorTypes } from '../../errors/http';
-import { StartSessionDto } from '../../dto/StartSessionDto';
+import { Err, Ok } from '@celo/base/lib/result'
+import { Injectable } from '@nestjs/common'
+import { ErrorCode } from 'apps/onboarding/src/gateway/captcha/ReCAPTCHAResponseDto'
+import { StartSessionDto } from '../../dto/StartSessionDto'
+import { HttpErrorTypes } from '../../errors/http'
 import {
   CaptchaService,
   CaptchaServiceErrors,
-  ReCAPTCHAErrorTypes,
-} from '../captcha/captcha.service';
-import { Rule } from './rule';
+  ReCAPTCHAErrorTypes
+} from '../captcha/captcha.service'
+import { Rule } from './rule'
 
 @Injectable()
 export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
   constructor(private captchaService: CaptchaService) {}
 
   getID() {
-    return 'CaptchaRule';
+    return 'CaptchaRule'
   }
 
   async verify(
     payload: Pick<StartSessionDto, 'captchaResponseToken'>,
     config,
-    context,
+    context
   ) {
     const result = await this.captchaService.verifyCaptcha(
-      payload.captchaResponseToken,
-    );
+      payload.captchaResponseToken
+    )
     if (result.ok) {
-      return Ok(true);
+      return Ok(true)
     } else if (result.ok === false) {
-      return Err(result.error);
+      return Err(result.error)
     }
   }
 
   validateConfig(config: unknown): unknown {
-    return config;
+    return config
   }
 
   defaultConfig(): unknown {
-    return null;
+    return null
   }
 }

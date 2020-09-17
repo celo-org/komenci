@@ -19,7 +19,8 @@
       "comment-format": [true, "check-space", "allow-trailing-lowercase"],
       "one-line": [true, "check-open-brace"],
       "whitespace": [true, "check-preblock"],
-      "ordered-imports": true
+      "ordered-imports": true,
+      "max-classes-per-file": false
     }
   }
   
