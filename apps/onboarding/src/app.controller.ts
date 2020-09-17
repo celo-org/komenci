@@ -14,8 +14,8 @@ export class AppController {
   ) {}
 
   @Post("startSession")
-  async startSession(@Body() startSessionDto: StartSessionDto): Promise<any> {
-    if (await this.gatewayService.verify(startSessionDto) === true) {
+  async startSession(@Body() startSessionDto: StartSessionDto, @Req() req): Promise<any> {
+    if (await this.gatewayService.verify(startSessionDto, req) === true) {
       return {id: 'new-session'}
     } else {
       return {error: 'gateway-not-passed'}

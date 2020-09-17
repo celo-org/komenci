@@ -1,3 +1,4 @@
+import { Result, RootError } from '@celo/base/lib/result';
 import { FastifyRequest } from 'fastify';
 import { StartSessionDto } from '../../dto/StartSessionDto'
 
@@ -5,23 +6,13 @@ export interface GatewayContext {
   req: FastifyRequest
 }
 
-export interface RulePassed {
-  passed: true
-}
-
-export interface RuleFailed<TReason> {
-  passed: false
-  reasons: TReason[]
-}
-
-export type RuleResult<TReason> = RulePassed | RuleFailed<TReason>
-
-export const Passed = (): RulePassed => ({passed: true})
-export const Failed = <TReason>(...reasons: TReason[]): RuleFailed<TReason> => ({passed: false, reasons})
-
-export interface Rule<TRuleConfig, TReason> {
+export interface Rule<TRuleConfig, TErrorTypes extends Error> {
   getID(): string
-  verify(startSessionDto: StartSessionDto, req: FastifyRequest, config: TRuleConfig, context: GatewayContext): Promise<RuleResult<TReason>>
+  verify(
+    payload: Partial<StartSessionDto>,
+    config: TRuleConfig,
+    context: GatewayContext
+  ): Promise<Result<boolean, TErrorTypes>>
   validateConfig(config: unknown): TRuleConfig
   defaultConfig(): TRuleConfig
 }

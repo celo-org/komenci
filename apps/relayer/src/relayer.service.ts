@@ -30,14 +30,14 @@ export class RelayerService implements IRelayerService {
     @Inject(appConfig.KEY)
     private config: ConfigType<typeof appConfig>
   ) {}
-  async signPersonalMessage(): Promise<SignPersonalMessageResponse> {
+  async signPersonalMessage(input: SignPersonalMessageInput): Promise<SignPersonalMessageResponse> {
     return {
       signature: Buffer.alloc(0),
       relayerAddress: this.config.address
     }
   }
 
-  async submitTransaction(): Promise<SubmitTransactionResponse> {
+  async submitTransaction(input: SubmitTransactionInput): Promise<SubmitTransactionResponse> {
     return {
       txHash: "<tx-hash>",
       relayerAddress: this.config.address

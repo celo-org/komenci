@@ -1,16 +1,31 @@
+import { Err, Ok, RootError } from '@celo/base/lib/result';
 import { Injectable } from '@nestjs/common';
 import { DeviceType, StartSessionDto } from 'apps/onboarding/src/dto/StartSessionDto';
 import { DeviceCheckService } from '../device-check/device-check.service';
-import { Failed, GatewayContext, Passed, Rule } from '../rules/rule';
+import { GatewayContext, Rule } from '../rules/rule';
 import { SafetyNetService } from '../safety-net/safety-net.service';
 
-enum DeviceAttestationRuleFailureReasons {
+enum DeviceAttestationErrorTypes {
   InvalidDevice = "invalid-device",
   VerificationFailed = "verification-failed"
 }
 
+export class InvalidDeviceError extends RootError<DeviceAttestationErrorTypes> {
+  constructor() {
+    super(DeviceAttestationErrorTypes.InvalidDevice);
+  }
+}
+
+export class VerificationFailedError extends RootError<DeviceAttestationErrorTypes> {
+  constructor() {
+    super(DeviceAttestationErrorTypes.VerificationFailed);
+  }
+}
+
+type DeviceAttestationErrors = InvalidDeviceError | VerificationFailedError
+
 @Injectable()
-export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationRuleFailureReasons> {
+export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationErrors> {
   constructor(
     private deviceCheckService: DeviceCheckService,
     private safetyNetService: SafetyNetService
@@ -27,21 +42,23 @@ export class DeviceAttestationRule implements Rule<unknown, DeviceAttestationRul
       })
       // TODO: Add propper error handling in safetyNet
       if (result.isValidSignature) {
-        return Passed()
+        return Ok(true)
       } else {
-        return Failed(DeviceAttestationRuleFailureReasons.VerificationFailed)
+        // This should wrap the error returned from safetynet
+        return Err(new VerificationFailedError())
       }
     } else if (input.deviceType == DeviceType.iOS) {
       const input = {}
       const result = await this.deviceCheckService.verifyDevice(input)
       // TODO: Add propper error handling in deviceCheck
       if (result) {
-        return Passed()
+        return Ok(true)
       } else {
-        return Failed(DeviceAttestationRuleFailureReasons.VerificationFailed)
+        // This should wrap the error returned from safetynet
+        return Err(new VerificationFailedError())
       }
     }
-    return Failed(DeviceAttestationRuleFailureReasons.InvalidDevice)
+    return Err(new InvalidDeviceError())
   }
 
   validateConfig(config: unknown): unknown {
