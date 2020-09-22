@@ -17,11 +17,11 @@ jobs:
           npm i
       - name: Run linters
         run: npm run lint
-      - name: Run unit tests
-        run:  npm run test:cov
       - name: Run postgres for testing
         run: |
           docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
+      - name: Run unit tests
+        run:  npm run test:cov
       - name: Run integration tests
         run: |
           npm run test:e2e
