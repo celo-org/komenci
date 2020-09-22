@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { Session } from './session.entity'
+import { SessionRepository } from './session.repository'
 import { SessionService } from './session.service'
 
 
 @Module({
     imports: [
-    TypeOrmModule.forFeature([Session]),
+    TypeOrmModule.forFeature([SessionRepository]),
     ],
     providers: [SessionService],
-    exports: [TypeOrmModule, SessionService]
+    exports: [TypeOrmModule]
 })
 export class SessionModule {}
