@@ -11,8 +11,8 @@ export class Session {
         return session
       }
 
-    @PrimaryGeneratedColumn()
-    id: number
+    @PrimaryGeneratedColumn('uuid')
+    id: string
 
     @Column()
     externalAccount: string
@@ -23,17 +23,17 @@ export class Session {
     @Column()
     completedAttestations: number
 
-    @Column()
-    meta: object
+    // @Column("simple-json")
+    // meta: object
 
-    @Column()
-    createdAt: number
+    @Column('date')
+    createdAt: string
 
-    @Column()
-    expiredAt: number
+    @Column('date')
+    expiredAt: string
 
-    @Column()
-    completedAt: number
+    @Column('date')
+    completedAt: string
 }
     
 export class SessionRepositoryFake {

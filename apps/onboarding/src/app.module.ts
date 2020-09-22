@@ -1,6 +1,7 @@
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
+import { TypeOrmModule } from "@nestjs/typeorm"
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -9,6 +10,7 @@ import relayerConfig from './config/relayer.config'
 import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
+import { SessionModule } from './session/session.module'
 
 @Module({
   controllers: [AppController],
@@ -43,7 +45,19 @@ import { RelayerProxyService } from './relayer_proxy.service'
       }
     }),
     GatewayModule,
-    HttpModule
+    HttpModule,
+    SessionModule,
+    TypeOrmModule.forRoot({
+      "type": "postgres",
+      "host": "localhost",
+      "port": 5432,
+      "username": "postgres",
+      "password": "docker",
+      "database": "postgres",
+      "autoLoadEntities": true,
+      "keepConnectionAlive": true,
+      "synchronize": true, // Only for DEV
+  }),
   ],
   providers: [
     AppService,
