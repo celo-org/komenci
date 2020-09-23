@@ -32,7 +32,6 @@ describe('SessionService', () => {
 
     const res = await service.createSession('test')
 
-    // expect(createSessionSpy).toBeCalledWith(result)
     expect(res).toBe(session)
 
     jest.spyOn(service, 'findOne').mockResolvedValue(session)
@@ -43,7 +42,7 @@ describe('SessionService', () => {
     jest.spyOn(service, 'findAll').mockResolvedValue([session])
 
     const re = await service.findAll()
-    console.log(re)
+    expect(re.length).toBe(1)
 
   })
 
