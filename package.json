@@ -14,11 +14,11 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "tslint -c tslint.json --project tsconfig.json",
-    "test": "jest",
+    "test": "jest  --forceExit --detectOpenHandles",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    "test:cov": "jest --coverage  --forceExit --detectOpenHandles",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/onboarding/test/jest-e2e.json"
+    "test:e2e": "jest --config ./apps/onboarding/test/jest-e2e.json  --forceExit --detectOpenHandles"
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",

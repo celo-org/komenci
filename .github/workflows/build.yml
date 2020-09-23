@@ -21,7 +21,7 @@ jobs:
         run: |
           docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
       - name: Run unit tests
-        run:  npm run test:cov --forceExit --detectOpenHandles
+        run:  npm run test:cov
       - name: Run integration tests
         run: |
-          npm run test:e2e --forceExit --detectOpenHandles
+          npm run test:e2e
