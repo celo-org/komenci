@@ -23,8 +23,8 @@ export class Session {
     @Column()
     completedAttestations: number
 
-    // @Column("simple-json")
-    // meta: object
+    @Column('simple-json')
+    meta?: object
 
     @Column('date')
     createdAt: string

@@ -1,12 +1,11 @@
 import { registerAs } from '@nestjs/config'
-import { TypeOrmModuleOptions } from '@nestjs/typeorm'
 
-export default registerAs<() => TypeOrmModuleOptions>('session', () => ({
+export default registerAs('session', () => ({
   host: process.env.DB_HOST || '0.0.0.0',
   port: parseInt(process.env.DB_PORT, 10) || 5432,
-  type: 'postgres',
+  type: 'postgres' as const,
   username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
+  password: process.env.DB_PASSWORD || 'docker',
   database: process.env.DB_DATABASE || 'postgres',
   autoLoadEntities: true,
   keepConnectionAlive: true,

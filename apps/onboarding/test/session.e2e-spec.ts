@@ -43,6 +43,7 @@ describe('AppController (e2e)', () => {
     it('Create a new Session object in the database', async () => {
       const session = await service.createSession('test')
       expect((await service.findOne(session.id)).externalAccount).toBe('test')
+      expect(await (await service.findAll()).length).toBe(1)
       await service.removeSession(session.id)
     })
 

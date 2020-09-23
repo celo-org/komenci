@@ -7,6 +7,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import appConfig from './config/app.config'
 import relayerConfig from './config/relayer.config'
+import sessionConfig from './config/session.config'
 import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
@@ -17,7 +18,7 @@ import { SessionModule } from './session/session.module'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [relayerConfig, appConfig, thirdPartyConfig],
+      load: [relayerConfig, appConfig, thirdPartyConfig, sessionConfig],
       envFilePath: ['apps/onboarding/.env.local']
     }),
     LoggerModule.forRootAsync({
@@ -47,16 +48,20 @@ import { SessionModule } from './session/session.module'
     GatewayModule,
     HttpModule,
     SessionModule,
-    TypeOrmModule.forRoot({
-      "type": "postgres",
-      "host": "localhost",
-      "port": 5432,
-      "username": "postgres",
-      "password": "docker",
-      "database": "postgres",
-      "autoLoadEntities": true,
-      "keepConnectionAlive": true,
-      "synchronize": true, // Only for DEV
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigService],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        type: 'postgres' as 'postgres',
+        host: config.get<ConfigType<typeof sessionConfig>>('session').host,
+        port: config.get<ConfigType<typeof sessionConfig>>('session').port,
+        username: config.get<ConfigType<typeof sessionConfig>>('session').username,
+        password: config.get<ConfigType<typeof sessionConfig>>('session').password,
+        database: config.get<ConfigType<typeof sessionConfig>>('session').database,
+        autoLoadEntities: config.get<ConfigType<typeof sessionConfig>>('session').autoLoadEntities,
+        keepConnectionAlive: config.get<ConfigType<typeof sessionConfig>>('session').keepConnectionAlive,
+        synchronize: config.get<ConfigType<typeof sessionConfig>>('session').synchronize, // Only for DEV
+      })
   }),
   ],
   providers: [

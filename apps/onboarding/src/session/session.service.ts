@@ -17,9 +17,8 @@ export class SessionService {
     session.expiredAt = new Date(Date.now()+ 3600).toISOString()
     session.completedAttestations = 0
     session.requestedAttestations = 0
-    // session.meta = {"metadata": "test"}
+    session.meta = {"metadata": "TBD"}
     session.completedAt = new Date(Date.now() + 36000).toISOString()
-    console.log(session)
     const s = this.sessionRepository.create(session)
     const createdSession = await this.sessionRepository.save(session)
     return createdSession
