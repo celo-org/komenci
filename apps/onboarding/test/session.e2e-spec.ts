@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module'
 import { SessionModule } from '../src/session/session.module'
 import { SessionService } from '../src/session/session.service'
 
-describe('AppController (e2e)', () => {
+describe('SessionController (e2e)', () => {
   let app
   let service: SessionService
 

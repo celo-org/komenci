@@ -20,7 +20,6 @@ export class SessionService {
       meta: {"metadata": "TBD"},
       completedAt: new Date(Date.now() + 36000).toISOString()
     })
-    this.sessionRepository.create(session)
     return this.sessionRepository.save(session)
   }
 
