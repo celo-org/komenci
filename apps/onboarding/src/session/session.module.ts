@@ -5,9 +5,7 @@ import { SessionService } from './session.service'
 
 
 @Module({
-    imports: [
-    TypeOrmModule.forFeature([SessionRepository]),
-    ],
+    imports: [TypeOrmModule.forFeature([SessionRepository])],
     providers: [SessionService],
     exports: [TypeOrmModule]
 })
