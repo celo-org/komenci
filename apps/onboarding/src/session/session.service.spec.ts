@@ -32,7 +32,6 @@ describe('SessionService', () => {
     const session = Session.of({externalAccount:'test', id: '1'})
 
     jest.spyOn(repository, 'save').mockResolvedValue(session)
-    jest.spyOn(repository, 'create').mockReturnValue(session)
 
     expect(await service.createSession('test')).toEqual(session)
 
