@@ -36,13 +36,3 @@ export class Session {
     completedAt: string
 }
     
-export class SessionRepositoryFake {
-    // tslint:disable-next-line: no-empty
-    public createSession(): void {}
-    // tslint:disable-next-line: no-empty
-    public async findOne(): Promise<void> {}
-    // tslint:disable-next-line: no-empty
-    public async findAll(): Promise<void> {}
-    // tslint:disable-next-line: no-empty
-    public async removeSession(): Promise<void> {}
-  }

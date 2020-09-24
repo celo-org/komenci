@@ -1,23 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
-import{ Session, SessionRepositoryFake } from './session.entity'
+import { Repository } from 'typeorm'
+import{ Session } from './session.entity'
+import { SessionRepository } from './session.repository'
 import { SessionService } from './session.service'
 
 
 describe('SessionService', () => {
   let service: SessionService
+  let repository: SessionRepository
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule(
-   {
+    const module: TestingModule = await Test.createTestingModule({
       providers: [SessionService,
         {
           provide: getRepositoryToken(Session),
-          useValue: SessionRepositoryFake,
+          useClass: Repository,
         },
       ]
-  }).compile()
+    }).compile()
 
+    repository = module.get<Repository<Session>>(getRepositoryToken(Session))
     service = module.get<SessionService>(SessionService)
   })
 
@@ -25,21 +28,40 @@ describe('SessionService', () => {
     expect(service).toBeDefined()
   })
 
-  it('should create a session object', async () => {
+  it('should return for create', async () => {
     const session = Session.of({externalAccount:'test', id: '1'})
 
-    jest.spyOn(service, 'createSession').mockResolvedValue(session)
+    jest.spyOn(repository, 'save').mockResolvedValue(session)
+    jest.spyOn(repository, 'create').mockReturnValue(session)
 
-    expect(await service.createSession('test')).toBe(session)
-
-    jest.spyOn(service, 'findOne').mockResolvedValue(session)
-
-    expect(await service.findOne(session.id)).toBe(session)
-
-    jest.spyOn(service, 'findAll').mockResolvedValue([session])
-
-    expect((await service.findAll()).length).toBe(1)
+    expect(await service.createSession('test')).toEqual(session)
 
   })
+
+  it('should return for findAll', async () => {
+    const session = Session.of({externalAccount:'test', id: '1'})
+
+    jest.spyOn(repository, 'find').mockResolvedValueOnce([session])
+
+    expect(await service.findAll()).toEqual([session])
+
+  })
+
+  it('should return for findOne', async () => {
+    const session = Session.of({externalAccount:'test', id: '1'})
+
+    jest.spyOn(repository, 'findOne').mockResolvedValueOnce(session)
+
+    expect(await service.findOne('1')).toEqual(session)
+
+  })
+
+  it('should return for removeSession', async () => {
+    jest.spyOn(repository, 'delete').mockResolvedValue(null)
+
+    expect(await service.removeSession('1')).toBe(null)
+
+  })
+  
 
 })

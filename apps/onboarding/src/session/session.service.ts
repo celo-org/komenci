@@ -10,18 +10,18 @@ export class SessionService {
   constructor(private readonly sessionRepository: SessionRepository,) {}
 
   async createSession(externalAccount: string): Promise<Session> {
-    const session = new Session()
-    session.id = uuidv4()
-    session.externalAccount = externalAccount
-    session.createdAt = new Date(Date.now()).toISOString()
-    session.expiredAt = new Date(Date.now()+ 3600).toISOString()
-    session.completedAttestations = 0
-    session.requestedAttestations = 0
-    session.meta = {"metadata": "TBD"}
-    session.completedAt = new Date(Date.now() + 36000).toISOString()
-    const s = this.sessionRepository.create(session)
-    const createdSession = await this.sessionRepository.save(session)
-    return createdSession
+    const session = Session.of({
+      id: uuidv4(),
+      externalAccount: externalAccount,
+      createdAt: new Date(Date.now()).toISOString(),
+      expiredAt: new Date(Date.now()+ 3600).toISOString(),
+      completedAttestations: 0,
+      requestedAttestations: 0,
+      meta: {"metadata": "TBD"},
+      completedAt: new Date(Date.now() + 36000).toISOString()
+    })
+    this.sessionRepository.create(session)
+    return this.sessionRepository.save(session)
   }
 
   findOne(id: string): Promise<Session> {

@@ -6,8 +6,8 @@ import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import appConfig from './config/app.config'
+import databaseConfig from './config/database.config'
 import relayerConfig from './config/relayer.config'
-import sessionConfig from './config/session.config'
 import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
@@ -18,7 +18,7 @@ import { SessionModule } from './session/session.module'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [relayerConfig, appConfig, thirdPartyConfig, sessionConfig],
+      load: [relayerConfig, appConfig, thirdPartyConfig, databaseConfig],
       envFilePath: ['apps/onboarding/.env.local']
     }),
     LoggerModule.forRootAsync({
@@ -51,18 +51,8 @@ import { SessionModule } from './session/session.module'
     TypeOrmModule.forRootAsync({
       imports: [ConfigService],
       inject: [ConfigService],
-      useFactory: async (config: ConfigService) => ({
-        type: 'postgres' as 'postgres',
-        host: config.get<ConfigType<typeof sessionConfig>>('session').host,
-        port: config.get<ConfigType<typeof sessionConfig>>('session').port,
-        username: config.get<ConfigType<typeof sessionConfig>>('session').username,
-        password: config.get<ConfigType<typeof sessionConfig>>('session').password,
-        database: config.get<ConfigType<typeof sessionConfig>>('session').database,
-        autoLoadEntities: config.get<ConfigType<typeof sessionConfig>>('session').autoLoadEntities,
-        keepConnectionAlive: config.get<ConfigType<typeof sessionConfig>>('session').keepConnectionAlive,
-        synchronize: config.get<ConfigType<typeof sessionConfig>>('session').synchronize, // Only for DEV
-      })
-  }),
+      useFactory: async (config: ConfigService) => config.get<ConfigType<typeof databaseConfig>>('database')
+    }),
   ],
   providers: [
     AppService,
