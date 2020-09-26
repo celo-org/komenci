@@ -1,4 +1,5 @@
-import { OdisUtils } from '@celo/contractkit'
+import { CONTRACT_KIT } from '@app/blockchain';
+import { ContractKit, OdisUtils } from '@celo/contractkit'
 import {
   AuthSigner,
   ServiceContext
@@ -46,38 +47,21 @@ export interface IRelayerService {
 
 @Injectable()
 export class RelayerService implements IRelayerService {
-  static async getContractKitManager(): Promise<ContractKitManager> {
-    if (!RelayerService.contractKitManager) {
-      RelayerService.contractKitManager = new ContractKitManager(
-        RelayerService.config
-      )
-      await RelayerService.contractKitManager.init()
-    }
-    return RelayerService.contractKitManager
-  }
-  private static contractKitManager: ContractKitManager
-  private static config: ConfigType<typeof appConfig>
-
   constructor(
-    @Inject(appConfig.KEY)
-    private config: ConfigType<typeof appConfig>
-  ) {
-    RelayerService.config = config
-  }
+    @Inject(CONTRACT_KIT) private contractKit: ContractKit,
+    @Inject(appConfig.KEY) private config: ConfigType<typeof appConfig>
+  ) {}
 
   async signPersonalMessage(
     input: SignPersonalMessageInput
   ): Promise<SignPersonalMessageResponse> {
-    const relayerAddress = RelayerService.config.address
-    const contractKitManager = await RelayerService.getContractKitManager()
-    const contractKit = await contractKitManager.kit
-    const signature = await contractKit.web3.eth.sign(
+    const signature = await this.contractKit.web3.eth.sign(
       input.data,
-      relayerAddress
+      this.config.address
     )
     return {
       signature,
-      relayerAddress: relayerAddress
+      relayerAddress: this.config.address
     }
   }
 
@@ -86,14 +70,12 @@ export class RelayerService implements IRelayerService {
   async getPhoneNumberIdentifier(
     input: DistributedBlindedPepperDto
   ): Promise<GetPhoneNumberIdResponse> {
-    const contractKitManager = await RelayerService.getContractKitManager()
-    const contractKit = await contractKitManager.kit
     const authSigner: AuthSigner = {
       authenticationMethod: OdisUtils.Query.AuthenticationMethod.WALLET_KEY,
-      contractKit
+      contractKit: this.contractKit
     }
 
-    const { odisPubKey, odisUrl } = RelayerService.config.networkConfig
+    const { odisPubKey, odisUrl } = this.config.networkConfig
     const serviceContext: ServiceContext = {
       odisUrl,
       odisPubKey
@@ -106,7 +88,7 @@ export class RelayerService implements IRelayerService {
       try {
         const phoneHashDetails = await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
           input.e164Number,
-          RelayerService.config.address,
+          this.config.address,
           authSigner,
           serviceContext,
           undefined,
@@ -118,7 +100,7 @@ export class RelayerService implements IRelayerService {
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {
-          await replenishQuota(RelayerService.config.address, contractKit)
+          await replenishQuota(this.config.address, this.contractKit)
         } else {
           throw new Error('Unable to query ODIS due to unexpected error')
         }
