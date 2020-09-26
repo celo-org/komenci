@@ -49,6 +49,7 @@
     "@nestjs/cli": "^7.5.1",
     "@nestjs/schematics": "^7.0.0",
     "@nestjs/testing": "^7.0.0",
+    "@truffle/contract": "^4.2.23",
     "@types/express": "^4.17.3",
     "@types/jest": "25.2.3",
     "@types/node": "^13.9.1",
@@ -100,7 +101,9 @@
       "apps/(.*)": "<rootDir>/apps/$1",
       "@app/blockchain/(.*)": "<rootDir>/libs/blockchain/src/$1",
       "@app/blockchain": "<rootDir>/libs/blockchain/src",
-      "@celo/(.*)": "<rootDir>/libs/celo/packages/$1"
+      "@celo/(.*)": "<rootDir>/libs/celo/packages/$1",
+      "@app/nest-utils/(.*)": "<rootDir>/libs/nest-utils/src/$1",
+      "@app/nest-utils": "<rootDir>/libs/nest-utils/src"
     }
   }
 }

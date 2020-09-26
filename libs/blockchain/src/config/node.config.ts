@@ -1,7 +1,16 @@
 import { ConfigType, registerAs } from '@nestjs/config';
 
-export const nodeConfigParser = registerAs('nodeConfig', () => ({
-  rpcURL: process.env.NODE_RPC_URL
-}))
+export enum NodeProviderType {
+  IPC = "ipc",
+  HTTP = "http",
+  WS = "ws",
+}
 
-export type NodeConfig = ConfigType<typeof nodeConfigParser>
+export const nodeConfig = registerAs('node', () => {
+  return {
+    providerType: process.env.NODE_PROVIDER_TYPE as NodeProviderType,
+    url: process.env.NODE_URL
+  }
+})
+
+export type NodeConfig = ConfigType<typeof nodeConfig>

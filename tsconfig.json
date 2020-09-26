@@ -3,6 +3,7 @@
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
+    "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
@@ -19,11 +20,23 @@
       "@app/blockchain/*": [
         "libs/blockchain/src/*"
       ],
+      "@app/onboarding": [
+        "apps/onboarding/src"
+      ],
+      "@app/onboarding/*": [
+        "apps/onboarding/src/*"
+      ],
       "@celo/phone-number-privacy-common/lib/*": [
         "libs/celo/packages/phone-number-privacy/common/lib/*"
       ],
       "@celo/*": [
         "libs/celo/packages/*"
+      ],
+      "@app/nest-utils": [
+        "libs/nest-utils/src"
+      ],
+      "@app/nest-utils/*": [
+        "libs/nest-utils/src/*"
       ]
     }
   }

@@ -1,12 +1,16 @@
-import { RpcWallet } from '@celo/contractkit/lib/wallets/rpc-wallet';
-import { Wallet } from '@celo/contractkit/lib/wallets/wallet';
-import { Module, DynamicModule, Provider, ModuleMetadata, Type } from '@nestjs/common';
-import { options } from 'tsconfig-paths/lib/options';
-import Web3 from 'web3';
-import { HttpProvider, provider } from 'web3-core'
-import { BlockchainService } from './blockchain.service'
-import { NodeConfig } from './config/node.config';
+import {
+  WalletConfig,
+  WalletType,
+} from '@app/blockchain/config/wallet.config';
 import { ContractKit } from '@celo/contractkit';
+import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet';
+import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet';
+import { Wallet } from '@celo/contractkit/lib/wallets/wallet';
+import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer';
+import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common';
+import Web3 from 'web3';
+import { provider } from 'web3-core';
+import { NodeConfig, NodeProviderType } from './config/node.config';
 
 export const CONTRACT_KIT = 'CONTRACT_KIT'
 export const BLOCKCHAIN_MODULE_OPTIONS = 'BLOCKCHAIN_MODULE_OPTIONS'
@@ -15,70 +19,62 @@ export const WEB3_PROVIDER = 'WEB3_PROVIDER'
 export const WALLET = 'WALLET'
 
 export interface BlockchainOptions {
-  nodeConfig: NodeConfig
+  node: NodeConfig
+  wallet: WalletConfig
 }
 
-interface AsyncOptions<TOptions> extends Pick<ModuleMetadata, 'imports'> {
+export interface AsyncOptions<TOptions> extends Pick<ModuleMetadata, 'imports'> {
   useFactory?: (...args: any[] ) => Promise<TOptions> | TOptions;
   inject?: any[];
-  imports?: any[];
 }
 
-interface ProvidersWithOptions<TOptions> {
-  provider: (opt: TOptions) => Provider,
-  asyncProvider: () => Provider,
-}
-
-
-const buildProviders = <TOptions, InjectTypes extends any[], TValue>(token: string, inject: any[], useFactory: (options: TOptions, ...args: InjectTypes) => TValue): ProvidersWithOptions<TOptions> => {
-  return {
-    provider: (optss: TOptions) => {
-      return {
-        provide: token,
-        useFactory: useFactory.bind(null, options)
-      }
-    },
-    asyncProvider: () => {
-      return {
-        provide: token,
-        useFactory,
-        inject
-      }
+const web3Provider = {
+  provide: WEB3_PROVIDER,
+  useFactory: (options: BlockchainOptions) => {
+    switch (options.node.providerType) {
+      case NodeProviderType.HTTP:
+        return new Web3.providers.HttpProvider(options.node.url)
+      case NodeProviderType.WS:
+        return new Web3.providers.WebsocketProvider(options.node.url)
+      case NodeProviderType.IPC:
+        return new Web3.providers.IpcProvider(options.node.url, require('net'))
+      default:
+        throw Error(`Invalid NodeProviderType: ${options.node.providerType}`)
     }
-  }
+  },
+  inject: [BLOCKCHAIN_MODULE_OPTIONS]
 }
 
-const web3Provider = buildProviders<BlockchainOptions, [], provider>(
-  WEB3_PROVIDER,
-  [BLOCKCHAIN_MODULE_OPTIONS],
-  (options) => {
-    return new Web3.providers.HttpProvider(options.nodeConfig.rpcURL)
-  }
-)
+const wallet = {
+  provide: WALLET,
+  useFactory: (options: BlockchainOptions) => {
+    switch (options.wallet.type) {
+      case WalletType.AzureHSM:
+        return new AzureHSMWallet(options.wallet.vaultName)
+      case WalletType.Local:
+        const wallet = new LocalWallet()
+        wallet.addAccount(options.wallet.privateKey)
+        return wallet
+    }
+  },
+  inject: [BLOCKCHAIN_MODULE_OPTIONS]
+}
 
-const wallet = buildProviders<BlockchainOptions, [provider], Wallet>(
-  WALLET,
-  [BLOCKCHAIN_MODULE_OPTIONS, WEB3_PROVIDER],
-  (options, web3Provider) => {
-    return new RpcWallet(web3Provider)
-  }
-)
-
-const web3 = buildProviders<BlockchainOptions, [provider], Web3>(
-  WEB3,
-  [BLOCKCHAIN_MODULE_OPTIONS, WEB3_PROVIDER],
-  (options, web3Provider) => {
+const web3 = {
+  provide: WEB3,
+  useFactory: (web3Provider: provider) => {
     return new Web3(web3Provider)
-  }
-)
+  },
+  inject: [WEB3_PROVIDER]
+}
 
-const contractKit = buildProviders<BlockchainOptions, [Web3, Wallet], ContractKit>(
-  CONTRACT_KIT,
-  [BLOCKCHAIN_MODULE_OPTIONS, WEB3, WALLET],
-  (options, web3, wallet) => {
+const contractKit = {
+  provide: CONTRACT_KIT,
+  useFactory: (web3: Web3, wallet: Wallet) => {
     return new ContractKit(web3, wallet)
-  }
-)
+  },
+  inject: [WEB3, WALLET]
+}
 
 @Module({})
 export class BlockchainModule {
@@ -86,22 +82,27 @@ export class BlockchainModule {
     return {
       module: BlockchainModule,
       providers: [
-        web3Provider.provider(options),
-        wallet.provider(options),
-        web3.provider(options),
-        contractKit.provider(options),
+        {
+          provide: BLOCKCHAIN_MODULE_OPTIONS,
+          useValue: options,
+        },
+        web3Provider,
+        wallet,
+        web3,
+        contractKit,
       ],
       exports: [
         WEB3_PROVIDER,
         WALLET,
         WEB3,
-        CONTRACT_KIT
+        CONTRACT_KIT,
       ]
     }
   }
 
   public static forRootAsync(options: AsyncOptions<BlockchainOptions>): DynamicModule {
     return {
+      global: true,
       module: BlockchainModule,
       imports: options.imports,
       providers: [
@@ -110,16 +111,16 @@ export class BlockchainModule {
           useFactory: options.useFactory,
           inject: options.inject || [],
         },
-        web3Provider.asyncProvider(),
-        wallet.asyncProvider(),
-        web3.asyncProvider(),
-        contractKit.asyncProvider()
+        web3Provider,
+        wallet,
+        web3,
+        contractKit,
       ],
       exports: [
         WEB3_PROVIDER,
         WALLET,
         WEB3,
-        CONTRACT_KIT
+        CONTRACT_KIT,
       ]
     }
   }
