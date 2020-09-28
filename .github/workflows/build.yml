@@ -28,12 +28,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Restore Komenci cache
+        id: restore-komenci
         uses: actions/cache@v2
         with:
           path: |
             node_modules
           key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
-      - name: Restore celo-monorepo
+      - name: Restore celo-monorepo cache
         uses: actions/cache@v2
         id: restore-celo-monorepo
         with:
@@ -43,6 +44,7 @@ jobs:
       - name: Install dependencies
         run: |
           yarn
+        if: steps.restore-komenci.outputs.cache-hit != 'true'
       - name: Run linters
         run: |
             yarn lint
