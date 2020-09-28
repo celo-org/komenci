@@ -19,4 +19,24 @@ describe('GatewayService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined()
   })
+
+  it('should enable the rules depending on env variables', async () => {
+    process.env.RULE_DAILY_CAP_ENABLED = ''
+    await service.onModuleInit()
+    expect((service as any).ruleEnabled).toEqual(expect.objectContaining({DAILY_CAP: false}))
+
+    process.env.RULE_DAILY_CAP_ENABLED = 'true'
+    await service.onModuleInit()
+    expect((service as any).ruleEnabled).toEqual(expect.objectContaining({DAILY_CAP: true}))
+  })
+
+  it('should set the rules config depending on env variables', async () => {
+    process.env.RULE_CAPTCHA_CONFIG = ''
+    await service.onModuleInit()
+    expect((service as any).ruleConfigs).toEqual(expect.objectContaining({CAPTCHA: null}))
+
+    process.env.RULE_CAPTCHA_CONFIG = '{"test": true}'
+    await service.onModuleInit()
+    expect((service as any).ruleConfigs).toEqual(expect.objectContaining({CAPTCHA: {test: true}}))
+  })
 })
