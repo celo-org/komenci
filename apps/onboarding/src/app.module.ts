@@ -11,6 +11,7 @@ import relayerConfig from './config/relayer.config'
 import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
+import { AuthModule } from './session/auth/auth.module'
 import { SessionModule } from './session/session.module'
 
 @Module({
@@ -48,6 +49,7 @@ import { SessionModule } from './session/session.module'
     GatewayModule,
     HttpModule,
     SessionModule,
+    AuthModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigService],
       inject: [ConfigService],
