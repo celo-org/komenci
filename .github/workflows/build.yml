@@ -103,7 +103,7 @@ jobs:
           key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
       - name: Exit if caches not found
         run: exit 1
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true' || steps.restore-komenci.outputs.cache-hit != 'true
+        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true' || steps.restore-komenci.outputs.cache-hit != 'true'
       - name: Run linters
         run: |
             yarn lint
