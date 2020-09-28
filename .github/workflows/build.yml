@@ -64,7 +64,7 @@ jobs:
           key: ${{ runner.os }}-yarn-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-        if: steps.restore-celo-monorepo.outsputs.cache-hit != 'true'
+        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
       - name: Install celo-monorepo dependencies
         run: |
             yarn deps:celo:install
