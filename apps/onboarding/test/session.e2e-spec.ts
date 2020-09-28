@@ -12,12 +12,12 @@ describe('SessionController (e2e)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule,
+      imports: [
         SessionModule,
         TypeOrmModule.forRoot({
           "type": "postgres",
           "host": "localhost",
-          "port": 5432,
+          "port": 5111,
           "username": "postgres",
           "password": "docker",
           "database": "postgres",
