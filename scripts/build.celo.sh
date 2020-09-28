@@ -1,5 +1,6 @@
 #!/bin/bash
 
+yarn --cwd ./libs/celo/packages/base build
 yarn --cwd ./libs/celo/packages/utils build
 yarn --cwd ./libs/celo/packages/dev-utils build
 yarn --cwd ./libs/celo/packages/contractkit build:gen
