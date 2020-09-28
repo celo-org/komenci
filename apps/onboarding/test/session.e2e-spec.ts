@@ -17,7 +17,7 @@ describe('SessionController (e2e)', () => {
         TypeOrmModule.forRoot({
           "type": "postgres",
           "host": "localhost",
-          "port": 5111,
+          "port": 5432,
           "username": "postgres",
           "password": "docker",
           "database": "postgres",
