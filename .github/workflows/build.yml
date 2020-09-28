@@ -14,14 +14,30 @@ jobs:
           node-version: '12.x'
       - name: Install dependencies
         run: |
-          npm i
+          yarn
+      - name: Install submodules
+        run: |
+           git submodule update
+      - name: Install celo-monorepo dependencies
+        run: |
+            yarn --cwd ./libs/celo
+      - name: Build celo-monorepo dependencies
+        run : |
+            yarn --cwd ./libs/celo/packages/base build
+            yarn --cwd ./libs/celo/packages/utils build
+            yarn --cwd ./libs/celo/packages/dev-utils build
+            yarn --cwd ./libs/celo/packages/contractkit build:gen
+            yarn --cwd ./libs/celo/packages/contractkit build
+            yarn --cwd ./libs/celo/packages/phone-number-privacy-common build
       - name: Run linters
-        run: npm run lint
+        run: |
+            yarn lint
       - name: Run postgres for testing
         run: |
-          docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
+            docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
       - name: Run unit tests
-        run:  npm run test:cov
+        run: |
+            yarn test:cov
       - name: Run integration tests
         run: |
-          npm run test:e2e
+            yarn test:e2e
