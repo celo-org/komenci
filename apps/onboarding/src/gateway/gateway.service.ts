@@ -27,7 +27,7 @@ export class GatewayService implements OnModuleInit {
     this.ruleEnabled = this.rules.reduce((acc, rule) => {
       return {
         ...acc,
-        [rule.getID()]: true
+        [rule.getID()]: process.env[`RULE_${rule.getID()}_ENABLED`] === 'true'
       }
     }, {})
 
