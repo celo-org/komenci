@@ -7,7 +7,6 @@ export enum WalletType {
 
 export interface BaseWalletConfig {
   address: string
-  metaTransactionWalletAddress: string
 }
 
 export interface LocalWalletConfig extends BaseWalletConfig {
@@ -26,7 +25,6 @@ export const walletConfig = registerAs('wallet', (): WalletConfig => {
   const type = process.env.WALLET_TYPE as WalletType
   const baseConfig: BaseWalletConfig = {
     address: process.env.WALLET_ADDRESS,
-    metaTransactionWalletAddress: process.env.META_TRANSACTION_WALLET_ADDRESS
   }
 
   if (type === WalletType.AzureHSM) {

@@ -14,6 +14,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
             node-version: '10.x'
+      - name: Get celo-monorepo commit
+        id: celo-monorepo-commit
+        run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -30,13 +33,13 @@ jobs:
           path: |
             node_modules
           key: ${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-      - name: Restore celo-monorepo cache
+      - name: Restore celo-monorepo
         uses: actions/cache@v2
+        id: restore-celo-monorepo
         with:
           path: |
-            libs/celo/node_modules
-            libs/celo/**/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('libs/celo/**/yarn.lock') }}
+            libs/celo
+          key: ${{ runner.os }}-${{ steps.celo-monorepo-commit.outputs.commit }}
       - name: Install dependencies
         run: |
           yarn
@@ -46,9 +49,11 @@ jobs:
       - name: Install celo-monorepo dependencies
         run: |
             yarn deps:celo:install
+        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
       - name: Build celo-monorepo dependencies
         run : |
             yarn deps:celo:build
+        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
       - name: Run postgres for testing
         run: |
             docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres

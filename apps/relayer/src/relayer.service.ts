@@ -51,7 +51,6 @@ export class RelayerService implements IRelayerService {
     @Inject(CONTRACT_KIT) private contractKit: ContractKit,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     @Inject(appConfig.KEY) private appCfg: AppConfig,
-    @Inject(META_TRANSACTION_WALLET) private metaTxWallet: MetaTransactionWalletWrapper
 ) { }
 
   async signPersonalMessage(

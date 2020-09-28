@@ -16,9 +16,9 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "tslint -c tslint.json --project tsconfig.json",
-    "test": "jest  --forceExit --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage  --forceExit --detectOpenHandles",
+    "test": "jest --detectOpenHandles --runInBand",
+    "test:watch": "jest --detectOpenHandles --runInBand --watch",
+    "test:cov": "jest --coverage --detectOpenHandles --runInBand",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/onboarding/test/jest-e2e.json  --forceExit --detectOpenHandles"
   },
@@ -83,31 +83,5 @@
     "tslint-react": "^4.1.0",
     "tslint-react-hooks": "^2.2.1",
     "typescript": "^3.7.4"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": ".",
-    "testRegex": ".spec.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "coverageDirectory": "./coverage",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/apps/",
-      "<rootDir>/libs/"
-    ],
-    "moduleNameMapper": {
-      "apps/(.*)": "<rootDir>/apps/$1",
-      "@app/blockchain/(.*)": "<rootDir>/libs/blockchain/src/$1",
-      "@app/blockchain": "<rootDir>/libs/blockchain/src",
-      "@celo/(.*)": "<rootDir>/libs/celo/packages/$1",
-      "@app/nest-utils/(.*)": "<rootDir>/libs/nest-utils/src/$1",
-      "@app/nest-utils": "<rootDir>/libs/nest-utils/src"
-    }
   }
 }

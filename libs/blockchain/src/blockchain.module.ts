@@ -5,8 +5,8 @@ import {
 import { ContractKit } from '@celo/contractkit'
 import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
-import { Wallet } from '@celo/contractkit/lib/wallets/wallet'
-import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
+import { ReadOnlyWallet, Wallet } from '@celo/contractkit/lib/wallets/wallet';
+import { DynamicModule, FactoryProvider, Module, ModuleMetadata, Provider } from '@nestjs/common';
 import Web3 from 'web3'
 import { provider } from 'web3-core'
 import { NodeConfig, NodeProviderType } from './config/node.config'
@@ -27,7 +27,7 @@ export interface AsyncOptions<TOptions> extends Pick<ModuleMetadata, 'imports'> 
   inject?: any[]
 }
 
-const web3ProviderDef = {
+const web3ProviderDef: FactoryProvider<provider> = {
   provide: WEB3_PROVIDER,
   useFactory: (options: BlockchainOptions) => {
     switch (options.node.providerType) {
@@ -44,7 +44,7 @@ const web3ProviderDef = {
   inject: [BLOCKCHAIN_MODULE_OPTIONS]
 }
 
-const walletDef = {
+const walletDef: FactoryProvider<ReadOnlyWallet> = {
   provide: WALLET,
   useFactory: (options: BlockchainOptions) => {
     switch (options.wallet.type) {
@@ -59,7 +59,7 @@ const walletDef = {
   inject: [BLOCKCHAIN_MODULE_OPTIONS]
 }
 
-const web3Def = {
+const web3Def: FactoryProvider<Web3> = {
   provide: WEB3,
   useFactory: (web3Provider: provider) => {
     return new Web3(web3Provider)
@@ -67,7 +67,7 @@ const web3Def = {
   inject: [WEB3_PROVIDER]
 }
 
-const contractKitDef = {
+const contractKitDef: FactoryProvider<ContractKit> = {
   provide: CONTRACT_KIT,
   useFactory: (web3: Web3, wallet: Wallet) => {
     return new ContractKit(web3, wallet)
@@ -92,12 +92,12 @@ export class BlockchainModule {
         ...this.providers()
       ],
       exports: [
-        ...this.providers().map(({provide}) => provide)
+        ...this.providers().map(p => p.provide)
       ]
     }
   }
 
-  private static providers(): Provider[] {
+  private static providers(): Array<FactoryProvider<any>> {
     return [
       web3ProviderDef,
       walletDef,

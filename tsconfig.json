@@ -1,4 +1,7 @@
 {
+  "exclude": [
+    "libs/celo"
+  ],
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -31,12 +34,6 @@
       ],
       "@celo/*": [
         "libs/celo/packages/*"
-      ],
-      "@app/nest-utils": [
-        "libs/nest-utils/src"
-      ],
-      "@app/nest-utils/*": [
-        "libs/nest-utils/src/*"
       ]
     }
   }
