@@ -32,14 +32,14 @@ jobs:
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
       - name: Restore celo-monorepo
         uses: actions/cache@v2
         id: restore-celo-monorepo
         with:
           path: |
             libs/celo
-          key: ${{ runner.os }}-${{ steps.celo-monorepo-commit.outputs.commit }}
+          key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
       - name: Install dependencies
         run: |
           yarn
