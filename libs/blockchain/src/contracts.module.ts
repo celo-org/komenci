@@ -16,21 +16,17 @@ export interface ContractsOptions {
 const metaTransactionWalletDeployer = {
   provide: META_TRANSACTION_WALLET_DEPLOYER,
   useFactory: async (options: ContractsOptions, contractKit: ContractKit, logger: Logger) => {
-    try {
-      const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(
-        options.metaTransactionWalletAddress
-      )
+    const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(
+      options.metaTransactionWalletAddress
+    )
+    logger.log(`Initialized with MetaTxWalletDeployer at: ${options.metaTransactionWalletAddress}`)
 
-      const canDeploy = await deployer.canDeploy(options.walletAddress)
-      if (!canDeploy) {
-        logger.error(`${options.walletAddress} is not allowed to deploy contracts`)
-      }
-
-      return deployer
-    } catch(e) {
-      logger.error(`Can not communicate with deployer at: ${options.metaTransactionWalletAddress}`)
-      return null
+    const canDeploy = await deployer.canDeploy(options.walletAddress)
+    if (!canDeploy) {
+      throw Error(`Wallet(${options.walletAddress}) is not allowed to deploy contracts`)
     }
+
+    return deployer
   },
   inject: [CONTRACTS_MODULE_OPTIONS, CONTRACT_KIT, Logger]
 }
@@ -40,15 +36,18 @@ const metaTransactionWallet = {
   useFactory: async (
     options: ContractsOptions,
     deployer: MetaTransactionWalletDeployerWrapper,
-    contractKit: ContractKit
+    contractKit: ContractKit,
+    logger: Logger
   ) => {
     const metaTxWalletAddress = await deployer.getWallet(options.walletAddress)
+    logger.log(`Relayer has MetaTxWallet at: ${metaTxWalletAddress}`)
     return contractKit.contracts.getMetaTransactionWallet(metaTxWalletAddress)
   },
   inject: [
     CONTRACTS_MODULE_OPTIONS,
     META_TRANSACTION_WALLET_DEPLOYER,
-    CONTRACT_KIT
+    CONTRACT_KIT,
+    Logger
   ]
 }
 
