@@ -7,14 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-            submodules: true
       - uses: actions/setup-node@v1
         with:
             node-version: '10.x'
-      - name: Get celo-monorepo commit
-        id: celo-monorepo-commit
-        run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -22,7 +17,7 @@ jobs:
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}-${{ celo-monorepo-commit.outputs.commit }}
+          key: ${{ runner.os }}-yarn-komenci-${{ hashFiles('./yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Restore Komenci cache
@@ -56,7 +51,7 @@ jobs:
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}-${{ celo-monorepo-commit.outputs.commit }}
+          key: ${{ runner.os }}-yarn-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Restore celo-monorepo cache
