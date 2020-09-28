@@ -75,7 +75,8 @@ export const appConfig = registerAs<() => AppConfig>('app', () => {
     host: process.env.RELAYER_HOST || '0.0.0.0',
     port: parseInt(process.env.RELAYER_PORT, 10) || 3000,
     log_level: process.env.LOG_LEVEL || 'debug',
-    mtwDeployerAddress: process.env.META_TX_WALLET_DEPLOYER_ADDRESS,
+    mtwDeployerAddress: process.env.MTW_DEPLOYER_ADDRESS,
+    mtwImplementationAddress: process.env.MTW_IMPLEMENTATION_ADDRESS,
     networkConfig
   }
 })
