@@ -5,8 +5,8 @@ import {
 import { ContractKit } from '@celo/contractkit'
 import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
-import { ReadOnlyWallet, Wallet } from '@celo/contractkit/lib/wallets/wallet';
-import { DynamicModule, FactoryProvider, Module, ModuleMetadata, Provider } from '@nestjs/common';
+import { ReadOnlyWallet, Wallet } from '@celo/contractkit/lib/wallets/wallet'
+import { DynamicModule, FactoryProvider, Module, ModuleMetadata } from '@nestjs/common'
 import Web3 from 'web3'
 import { provider } from 'web3-core'
 import { NodeConfig, NodeProviderType } from './config/node.config'
@@ -97,7 +97,7 @@ export class BlockchainModule {
     }
   }
 
-  private static providers(): Array<FactoryProvider<any>> {
+  private static providers() {
     return [
       web3ProviderDef,
       walletDef,

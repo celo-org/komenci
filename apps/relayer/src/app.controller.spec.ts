@@ -1,5 +1,5 @@
 import { BlockchainModule, CONTRACT_KIT, WALLET } from '@app/blockchain'
-import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config';
+import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { walletConfig, WalletType } from '@app/blockchain/config/wallet.config'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
@@ -9,7 +9,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import Web3 from 'web3'
 
 import { AppController } from './app.controller'
-import { AppConfig, appConfig } from './config/app.config'
+import { appConfig } from './config/app.config'
 import { ACCOUNT_ADDRESS, MOCK_ODIS_RESPONSE, ODIS_URL, PHONE_NUMBER, PRIVATE_KEY } from './config/testing-constants'
 import { RelayerService } from './relayer.service'
 
