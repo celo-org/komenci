@@ -13,13 +13,13 @@ jobs:
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore Komenci cache
-        id: restore-komenci
+      - name: Restore Komenci cache sentinel
+        id: restore-komenci-sentinel
         uses: actions/cache@v2
         with:
           path: |
-            node_modules
-          key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
+            tslint.json
+          key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}-sentinel
       - name: Restore yarn cache
         uses: actions/cache@v2
         id: yarn-cache
@@ -28,11 +28,11 @@ jobs:
           key: ${{ runner.os }}-yarn-komenci-${{ hashFiles('./yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-        if: steps.restore-komenci.outputs.cache-hit != 'true'
+        if: steps.restore-komenci-sentinel.outputs.cache-hit != 'true'
       - name: Install Komenci dependencies
         run: |
           yarn
-        if: steps.restore-komenci.outputs.cache-hit != 'true'
+        if: steps.restore-komenci-sentinel.outputs.cache-hit != 'true'
 
   prepare_celo:
     runs-on: ubuntu-latest
@@ -49,13 +49,13 @@ jobs:
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore celo-monorepo cache
+      - name: Restore celo-monorepo cache sentinel
+        id: restore-celo-monorepo-sentinel
         uses: actions/cache@v2
-        id: restore-celo-monorepo
         with:
           path: |
-            libs/celo
-          key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
+            tslint.json
+          key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}-sentinel
       - name: Restore yarn cache
         uses: actions/cache@v2
         id: yarn-cache
@@ -64,15 +64,15 @@ jobs:
           key: ${{ runner.os }}-yarn-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
+        if: steps.restore-celo-monorepo-sentinel.outputs.cache-hit != 'true'
       - name: Install celo-monorepo dependencies
         run: |
             yarn deps:celo:install
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
+        if: steps.restore-celo-monorepo-sentinel.outputs.cache-hit != 'true'
       - name: Build celo-monorepo dependencies
         run : |
             yarn deps:celo:build
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
+        if: steps.restore-celo-monorepo-sentinel.outputs.cache-hit != 'true'
 
   test:
     runs-on: ubuntu-latest
