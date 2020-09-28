@@ -19,4 +19,9 @@ export class StartSessionDto {
   @ValidateIf(o => o.deviceType === DeviceType.Android)
   @IsNotEmpty()
   androidSignedAttestation?: string
+
+  @IsNotEmpty()
+  externalAccount: string
+
+  jwtToken: string
 }

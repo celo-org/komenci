@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Session } from '../session.entity'
+import { SessionModule } from '../session.module'
 import { SessionService } from '../session.service'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
@@ -16,9 +17,8 @@ import { JwtStrategy } from './jwt.strategy'
         session: false
       }),
     JwtModule.register({
-        secretOrPrivateKey: 'secret12356789',
-        signOptions: { expiresIn: '7d' }
-    })
+        secret: 'secret123456789',
+    }),
     ],
     providers: [SessionService, AuthService, JwtStrategy],
     controllers: [AuthController],

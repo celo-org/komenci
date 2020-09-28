@@ -8,7 +8,6 @@ import { StartSessionDto } from './dto/StartSessionDto'
 import { RelayerProxyService } from './relayer_proxy.service'
 import { AuthService } from './session/auth/auth.service'
 import { AuthenticatedGuard } from './session/guards/authenticated.guard'
-import { LoginGuard } from './session/guards/login.guard'
 // import { SessionDecorator } from './session/session.decorator'
 import { Session } from './session/session.entity'
 
@@ -21,16 +20,14 @@ export class AppController {
     private readonly authService: AuthService
   ) {}
 
-  @UseGuards(LoginGuard)
   @Post('startSession')
   async startSession(
     @Body() startSessionDto: StartSessionDto,
     @Req() req
   ): Promise<any> {
     // if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
-    if (1===1) {
-      const session = await this.authService.register('NeedToBeSpecify')
-      return { id: 'new-sesion' }
+    if (true) {
+      return this.authService.access(startSessionDto.externalAccount)
     } else {
       return { error: 'gateway-not-passed' }
     }

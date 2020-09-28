@@ -14,17 +14,21 @@ export class SessionService {
       id: uuidv4(),
       externalAccount: externalAccount,
       createdAt: new Date(Date.now()).toISOString(),
-      expiredAt: new Date(Date.now()+ 3600).toISOString(),
+      expiredAt: new Date(Date.now()+ 60 * 60 * 1000).toISOString(),
       completedAttestations: 0,
       requestedAttestations: 0,
       meta: {"metadata": "TBD"},
-      completedAt: new Date(Date.now() + 36000).toISOString()
+      completedAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
     })
     return this.sessionRepository.save(session)
   }
 
   findOne(id: string): Promise<Session> {
     return this.sessionRepository.findOne(id)
+  }
+
+  findByAccount(account: string): Promise<Session> {
+    return this.sessionRepository.findOne({externalAccount: account})
   }
 
   findAll() {

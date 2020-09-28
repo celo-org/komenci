@@ -26,13 +26,13 @@ export class Session {
     @Column('simple-json')
     meta?: object
 
-    @Column('date')
+    @Column('timestamp')
     createdAt: string
 
-    @Column('date')
+    @Column('timestamp')
     expiredAt: string
 
-    @Column('date')
+    @Column('timestamp')
     completedAt: string
 }
     
