@@ -1,6 +1,6 @@
 import { Ok, RootError } from '@celo/base/lib/result'
 import { Injectable } from '@nestjs/common'
-import { Rule } from './rule'
+import { Rule, RuleID } from './rule'
 
 interface DailyCapConfig {
   total: number
@@ -19,7 +19,7 @@ export class CapReachedError extends RootError<DailyCapRuleErrorTypes> {
 @Injectable()
 export class DailyCapRule implements Rule<DailyCapConfig, CapReachedError> {
   getID() {
-    return 'DailyCapRule'
+    return RuleID.DailyCap
   }
 
   async verify(startSessionDto, config, context) {
