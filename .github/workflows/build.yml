@@ -12,12 +12,11 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '12.x'
+      - name: Checkout submodules
+        uses: textbook/git-checkout-submodule-action@master
       - name: Install dependencies
         run: |
           yarn
-      - name: Install submodules
-        run: |
-           git submodule update
       - name: Install celo-monorepo dependencies
         run: |
             yarn --cwd ./libs/celo
