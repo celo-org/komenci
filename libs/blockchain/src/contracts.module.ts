@@ -1,8 +1,8 @@
-import { AsyncOptions, CONTRACT_KIT } from '@app/blockchain/blockchain.module';
-import { ContractKit } from '@celo/contractkit';
-import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer';
-import { DynamicModule, Module } from '@nestjs/common';
-import { Logger } from 'nestjs-pino';
+import { AsyncOptions, CONTRACT_KIT } from '@app/blockchain/blockchain.module'
+import { ContractKit } from '@celo/contractkit'
+import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+import { DynamicModule, Module } from '@nestjs/common'
+import { Logger } from 'nestjs-pino'
 
 export const CONTRACTS_MODULE_OPTIONS = 'CONTRACTS_MODULE_OPTIONS'
 export const META_TRANSACTION_WALLET = 'META_TRANSACTION_WALLET'

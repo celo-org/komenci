@@ -17,20 +17,15 @@ jobs:
       - name: Install dependencies
         run: |
           yarn
-      - name: Install celo-monorepo dependencies
-        run: |
-            yarn --cwd ./libs/celo
-      - name: Build celo-monorepo dependencies
-        run : |
-            yarn --cwd ./libs/celo/packages/base build
-            yarn --cwd ./libs/celo/packages/utils build
-            yarn --cwd ./libs/celo/packages/dev-utils build
-            yarn --cwd ./libs/celo/packages/contractkit build:gen
-            yarn --cwd ./libs/celo/packages/contractkit build
-            yarn --cwd ./libs/celo/packages/phone-number-privacy-common build
       - name: Run linters
         run: |
             yarn lint
+      - name: Install celo-monorepo dependencies
+        run: |
+            yarn deps:celo:install
+      - name: Build celo-monorepo dependencies
+        run : |
+            yarn deps:celo:build
       - name: Run postgres for testing
         run: |
             docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres

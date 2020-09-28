@@ -1,4 +1,4 @@
-import { ConfigType, registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config'
 
 export enum NodeProviderType {
   IPC = "ipc",

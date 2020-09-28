@@ -1,15 +1,14 @@
-import { CONTRACT_KIT, META_TRANSACTION_WALLET } from '@app/blockchain';
-import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config';
+import { CONTRACT_KIT, META_TRANSACTION_WALLET } from '@app/blockchain'
+import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
 import {
   AuthSigner,
   ServiceContext
 } from '@celo/contractkit/lib/identity/odis/query'
-import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet';
+import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { Inject, Injectable } from '@nestjs/common'
-import { ConfigType } from '@nestjs/config'
-import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { appConfig, AppConfig } from './config/app.config'
 
 export type SignPersonalMessageInput = {
@@ -50,8 +49,8 @@ export interface IRelayerService {
 export class RelayerService implements IRelayerService {
   constructor(
     @Inject(CONTRACT_KIT) private contractKit: ContractKit,
-    @Inject(walletConfig.KEY) private walletConfig: WalletConfig,
-    @Inject(appConfig.KEY) private config: AppConfig,
+    @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
+    @Inject(appConfig.KEY) private appCfg: AppConfig,
     @Inject(META_TRANSACTION_WALLET) private metaTxWallet: MetaTransactionWalletWrapper
 ) { }
 
@@ -60,11 +59,11 @@ export class RelayerService implements IRelayerService {
   ): Promise<SignPersonalMessageResponse> {
     const signature = await this.contractKit.web3.eth.sign(
       input.data,
-      this.walletConfig.address,
+      this.walletCfg.address,
     )
     return {
       signature,
-      relayerAddress: this.walletConfig.address
+      relayerAddress: this.walletCfg.address
     }
   }
 
@@ -78,7 +77,7 @@ export class RelayerService implements IRelayerService {
       contractKit: this.contractKit
     }
 
-    const { odisPubKey, odisUrl } = this.config.networkConfig
+    const { odisPubKey, odisUrl } = this.appCfg.networkConfig
     const serviceContext: ServiceContext = {
       odisUrl,
       odisPubKey
@@ -91,7 +90,7 @@ export class RelayerService implements IRelayerService {
       try {
         const phoneHashDetails = await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
           input.e164Number,
-          this.walletConfig.address,
+          this.walletCfg.address,
           authSigner,
           serviceContext,
           undefined,
@@ -103,7 +102,7 @@ export class RelayerService implements IRelayerService {
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {
-          await replenishQuota(this.walletConfig.address, this.contractKit)
+          await replenishQuota(this.walletCfg.address, this.contractKit)
         } else {
           throw new Error('Unable to query ODIS due to unexpected error')
         }
@@ -117,7 +116,7 @@ export class RelayerService implements IRelayerService {
   ): Promise<SubmitTransactionResponse> {
     return {
       txHash: '<tx-hash>',
-      relayerAddress: this.walletConfig.address
+      relayerAddress: this.walletCfg.address
     }
   }
 }

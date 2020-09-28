@@ -1,4 +1,4 @@
-import { registerAs } from '@nestjs/config';
+import { registerAs } from '@nestjs/config'
 
 export enum WalletType {
   Local = "local",
@@ -29,13 +29,13 @@ export const walletConfig = registerAs('wallet', (): WalletConfig => {
     metaTransactionWalletAddress: process.env.META_TRANSACTION_WALLET_ADDRESS
   }
 
-  if (type == WalletType.AzureHSM) {
+  if (type === WalletType.AzureHSM) {
     return {
       ...baseConfig,
       type,
       vaultName: process.env.WALLET_AZURE_VAULT_NAME,
     }
-  } else if (type == WalletType.Local) {
+  } else if (type === WalletType.Local) {
     return {
       ...baseConfig,
       type,

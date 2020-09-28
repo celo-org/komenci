@@ -338,6 +338,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@celo/typescript@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@celo/typescript/-/typescript-0.0.1.tgz#e48a70f4f4af3b13cf492c6ed3e83b1fc225fa87"
+  integrity sha512-C6IP2wp8DyZDdGNNEIqTfuVsL25AwxNGg3Sqej0ZJjQD/SrjVMaSjJhiEm3KMQ6H+hqDiVVEfMyD2AYCgwCV3Q==
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"

@@ -30,14 +30,8 @@ In our case we have:
 # `celo-monorepo` is a git submodule -- update downloads it in place
 > git submodule update
 # install `celo-monorepo` dependencies
-> yarn --pwd ./libs/celo
-# build `celo-monorepo` dependent packages
-> yarn --cwd ./libs/celo/packages/base build
-> yarn --cwd ./libs/celo/packages/utils build
-> yarn --cwd ./libs/celo/packages/dev-utils build
-> yarn --cwd ./libs/celo/packages/contractkit build:gen
-> yarn --cwd ./libs/celo/packages/contractkit build
-> yarn --cwd ./libs/celo/packages/phone-number-privacy-common build
+> yarn deps:celo:install
+> yarn deps:celo:build
 ```
 
 ##### Notes on `celo-monorepo`
@@ -47,6 +41,18 @@ So Komenci would be bound by the release cycle of `celo-monorepo` packages. This
 it will not require a big change - just removing the path transformations in `tsconfig.json`, and we can move back to `@celo/<package>` from NPM.
 
 When changes to `celo-monorerpo` packages have to be pulled in the build steps will be rerun and potentially extended if more packages are imported by Komenci.
+
+#### Running
+
+```bash
+# Start the relayer in one terminal:
+$ yarn start:dev relayer
+# Start the onboarding service in another
+$ yarn start:dev onboarding
+```
+
+By default the onboarding service should be pointing to the port of the relayer.
+Starting with `start:dev` will run webpack in watch mode and will rebuild when files change.
 
 #### Chain interaction
 

@@ -1,11 +1,11 @@
-import { BlockchainModule, ContractsModule } from '@app/blockchain';
-import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config';
+import { BlockchainModule, ContractsModule } from '@app/blockchain'
+import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
+import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { appConfig, AppConfig } from './config/app.config'
-import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { RelayerService } from './relayer.service'
 
 @Module({

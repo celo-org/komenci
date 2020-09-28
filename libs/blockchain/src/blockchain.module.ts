@@ -1,16 +1,15 @@
 import {
   WalletConfig,
   WalletType,
-} from '@app/blockchain/config/wallet.config';
-import { ContractKit } from '@celo/contractkit';
-import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet';
-import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet';
-import { Wallet } from '@celo/contractkit/lib/wallets/wallet';
-import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer';
-import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common';
-import Web3 from 'web3';
-import { provider } from 'web3-core';
-import { NodeConfig, NodeProviderType } from './config/node.config';
+} from '@app/blockchain/config/wallet.config'
+import { ContractKit } from '@celo/contractkit'
+import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet'
+import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
+import { Wallet } from '@celo/contractkit/lib/wallets/wallet'
+import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
+import Web3 from 'web3'
+import { provider } from 'web3-core'
+import { NodeConfig, NodeProviderType } from './config/node.config'
 
 export const CONTRACT_KIT = 'CONTRACT_KIT'
 export const BLOCKCHAIN_MODULE_OPTIONS = 'BLOCKCHAIN_MODULE_OPTIONS'
@@ -24,11 +23,11 @@ export interface BlockchainOptions {
 }
 
 export interface AsyncOptions<TOptions> extends Pick<ModuleMetadata, 'imports'> {
-  useFactory?: (...args: any[] ) => Promise<TOptions> | TOptions;
-  inject?: any[];
+  useFactory?: (...args: any[] ) => Promise<TOptions> | TOptions
+  inject?: any[]
 }
 
-const web3Provider = {
+const web3ProviderDef = {
   provide: WEB3_PROVIDER,
   useFactory: (options: BlockchainOptions) => {
     switch (options.node.providerType) {
@@ -45,22 +44,22 @@ const web3Provider = {
   inject: [BLOCKCHAIN_MODULE_OPTIONS]
 }
 
-const wallet = {
+const walletDef = {
   provide: WALLET,
   useFactory: (options: BlockchainOptions) => {
     switch (options.wallet.type) {
       case WalletType.AzureHSM:
         return new AzureHSMWallet(options.wallet.vaultName)
       case WalletType.Local:
-        const wallet = new LocalWallet()
-        wallet.addAccount(options.wallet.privateKey)
-        return wallet
+        const localWallet = new LocalWallet()
+        localWallet.addAccount(options.wallet.privateKey)
+        return localWallet
     }
   },
   inject: [BLOCKCHAIN_MODULE_OPTIONS]
 }
 
-const web3 = {
+const web3Def = {
   provide: WEB3,
   useFactory: (web3Provider: provider) => {
     return new Web3(web3Provider)
@@ -68,7 +67,7 @@ const web3 = {
   inject: [WEB3_PROVIDER]
 }
 
-const contractKit = {
+const contractKitDef = {
   provide: CONTRACT_KIT,
   useFactory: (web3: Web3, wallet: Wallet) => {
     return new ContractKit(web3, wallet)
@@ -76,30 +75,9 @@ const contractKit = {
   inject: [WEB3, WALLET]
 }
 
+
 @Module({})
 export class BlockchainModule {
-  public static forRoot(options: BlockchainOptions): DynamicModule {
-    return {
-      module: BlockchainModule,
-      providers: [
-        {
-          provide: BLOCKCHAIN_MODULE_OPTIONS,
-          useValue: options,
-        },
-        web3Provider,
-        wallet,
-        web3,
-        contractKit,
-      ],
-      exports: [
-        WEB3_PROVIDER,
-        WALLET,
-        WEB3,
-        CONTRACT_KIT,
-      ]
-    }
-  }
-
   public static forRootAsync(options: AsyncOptions<BlockchainOptions>): DynamicModule {
     return {
       global: true,
@@ -111,17 +89,20 @@ export class BlockchainModule {
           useFactory: options.useFactory,
           inject: options.inject || [],
         },
-        web3Provider,
-        wallet,
-        web3,
-        contractKit,
+        ...this.providers()
       ],
       exports: [
-        WEB3_PROVIDER,
-        WALLET,
-        WEB3,
-        CONTRACT_KIT,
+        ...this.providers().map(({provide}) => provide)
       ]
     }
+  }
+
+  private static providers(): Provider[] {
+    return [
+      web3ProviderDef,
+      walletDef,
+      web3Def,
+      contractKitDef,
+    ]
   }
 }

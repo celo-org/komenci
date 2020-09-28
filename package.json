@@ -8,6 +8,8 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
+    "deps:celo:install": "yarn --cwd ./libs/celo",
+    "deps:celo:build": "bash ./scripts/build.celo.sh",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -46,6 +48,7 @@
     "web3": "1.2.4"
   },
   "devDependencies": {
+    "@celo/typescript": "^0.0.1",
     "@nestjs/cli": "^7.5.1",
     "@nestjs/schematics": "^7.0.0",
     "@nestjs/testing": "^7.0.0",
