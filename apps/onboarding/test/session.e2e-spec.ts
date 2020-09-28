@@ -15,16 +15,17 @@ describe('SessionController (e2e)', () => {
       imports: [AppModule,
         SessionModule,
         TypeOrmModule.forRoot({
-        "type": "postgres",
-        "host": "localhost",
-        "port": 5432,
-        "username": "postgres",
-        "password": "docker",
-        "database": "postgres",
-        "autoLoadEntities": true,
-        "keepConnectionAlive": true,
-        "synchronize": true
-    }),],
+          "type": "postgres",
+          "host": "localhost",
+          "port": 5432,
+          "username": "postgres",
+          "password": "docker",
+          "database": "postgres",
+          "autoLoadEntities": true,
+          "keepConnectionAlive": true,
+          "synchronize": true
+        })
+      ],
       providers: [SessionService]
     }).compile()
 
