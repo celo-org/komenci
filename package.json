@@ -20,7 +20,7 @@
     "test:watch": "jest --detectOpenHandles --runInBand --watch",
     "test:cov": "jest --coverage --detectOpenHandles --runInBand",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/onboarding/test/jest-e2e.json  --forceExit --detectOpenHandles"
+    "test:e2e": "jest --config jest.config.e2e.js  --forceExit --detectOpenHandles --runInBand"
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",

@@ -3,10 +3,8 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  build:
-
+  prepare_komenci:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
         with:
@@ -24,7 +22,7 @@ jobs:
         id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}-${{ celo-monorepo-commit.outputs.commit }}
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Restore Komenci cache
@@ -34,6 +32,33 @@ jobs:
           path: |
             node_modules
           key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
+      - name: Install Komenci dependencies
+        run: |
+          yarn
+        if: steps.restore-komenci.outputs.cache-hit != 'true'
+
+  prepare_celo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            submodules: true
+      - uses: actions/setup-node@v1
+        with:
+            node-version: '10.x'
+      - name: Get celo-monorepo commit
+        id: celo-monorepo-commit
+        run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v2
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}-${{ celo-monorepo-commit.outputs.commit }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
       - name: Restore celo-monorepo cache
         uses: actions/cache@v2
         id: restore-celo-monorepo
@@ -41,13 +66,6 @@ jobs:
           path: |
             libs/celo
           key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
-      - name: Install dependencies
-        run: |
-          yarn
-        if: steps.restore-komenci.outputs.cache-hit != 'true'
-      - name: Run linters
-        run: |
-            yarn lint
       - name: Install celo-monorepo dependencies
         run: |
             yarn deps:celo:install
@@ -56,6 +74,53 @@ jobs:
         run : |
             yarn deps:celo:build
         if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [prepare_celo, prepare_komenci]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            submodules: true
+      - uses: actions/setup-node@v1
+        with:
+            node-version: '10.x'
+      - name: Get celo-monorepo commit
+        id: celo-monorepo-commit
+        run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v2
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}-${{ celo-monorepo-commit.outputs.commit }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: Restore celo-monorepo cache
+        uses: actions/cache@v2
+        id: restore-celo-monorepo
+        with:
+          path: |
+            libs/celo
+          key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
+      - name: Restore Komenci cache
+        id: restore-komenci
+        uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
+      - name: Exit if caches not found
+        run: exit 1
+        if: |
+            steps.restore-celo-monorepo.outputs.cache-hit != 'true' ||
+            steps.restore-komenci.outputs.cache-hit != 'true' ||
+            steps.yarn-cache.outputs.cache-hit != 'true'
+      - name: Run linters
+        run: |
+            yarn lint
       - name: Run postgres for testing
         run: |
             docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
