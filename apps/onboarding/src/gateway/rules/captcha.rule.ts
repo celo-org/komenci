@@ -8,14 +8,14 @@ import {
   CaptchaServiceErrors,
   ReCAPTCHAErrorTypes
 } from '../captcha/captcha.service'
-import { Rule } from './rule'
+import { Rule, RuleID } from './rule'
 
 @Injectable()
 export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
   constructor(private captchaService: CaptchaService) {}
 
   getID() {
-    return 'CaptchaRule'
+    return RuleID.Captcha
   }
 
   async verify(
