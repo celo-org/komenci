@@ -34,7 +34,7 @@ export class GatewayService implements OnModuleInit {
     this.ruleConfigs = this.rules.reduce((acc, rule) => {
       return {
         ...acc,
-        [rule.getID()]: rule.defaultConfig()
+        [rule.getID()]: this.getConfigFromRule(rule)
       }
     }, {})
   }
@@ -58,5 +58,13 @@ export class GatewayService implements OnModuleInit {
     )
 
     return results.every(result => result.ok)
+  }
+
+  private getConfigFromRule<T>(rule: Rule<T, any>): T {
+    try {
+      return JSON.parse(process.env[`RULE_${rule.getID()}_CONFIG`])
+    } catch {
+      return rule.defaultConfig()
+    }
   }
 }
