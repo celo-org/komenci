@@ -1,8 +1,7 @@
-import thirdPartyConfig from '@app/onboarding/config/third-party.config';
+import thirdPartyConfig from '@app/onboarding/config/third-party.config'
 import { HttpModule } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
-import { AppModule } from '../../app.module'
 import { SafetyNetService } from './safety-net.service'
 
 describe('SafetyNetService', () => {

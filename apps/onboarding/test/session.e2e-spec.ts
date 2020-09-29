@@ -1,9 +1,8 @@
-import databaseConfig from '@app/onboarding/config/database.config';
+import databaseConfig from '@app/onboarding/config/database.config'
 import { ValidationPipe } from '@nestjs/common'
-import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
+import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { AppModule } from '../src/app.module'
 import { SessionModule } from '../src/session/session.module'
 import { SessionService } from '../src/session/session.service'
 
