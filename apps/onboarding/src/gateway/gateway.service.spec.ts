@@ -61,11 +61,11 @@ describe('GatewayService', () => {
     })
 
     it('should set the rules config depending on env variables when valid', async () => {
-      process.env.RULE_CAPTCHA_CONFIG = '{"test": true}'
+      process.env.RULE_DAILY_CAP_CONFIG = '{"test": true}'
       const module = await buildTestingModule()
       const service = module.get<GatewayService>(GatewayService)
       await service.onModuleInit()
-      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({CAPTCHA: {test: true}}))
+      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({DAILY_CAP: {test: true}}))
     })
   })
 
@@ -126,19 +126,19 @@ describe('GatewayService', () => {
       })
       const service = module.get<GatewayService>(GatewayService)
       await service.onModuleInit()
-      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({ CAPTCHA: null }))
+      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({CAPTCHA: null}))
     })
 
     it('should set the rules config depending on env variables when valid', async () => {
       const module = await buildTestingModuleForConfig({
         enabled: {},
         configs: {
-          [RuleID.Captcha]: {test: true}
+          [RuleID.DailyCap]: '{"test": true}'
         }
       })
       const service = module.get<GatewayService>(GatewayService)
       await service.onModuleInit()
-      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({CAPTCHA: {test: true}}))
+      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({DAILY_CAP: {test: true}}))
     })
   })
 
