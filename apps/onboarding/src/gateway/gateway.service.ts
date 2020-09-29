@@ -1,4 +1,5 @@
-import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Injectable, OnModuleInit, Inject } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
 import { FastifyRequest } from 'fastify'
 import { StartSessionDto } from '../dto/StartSessionDto'
@@ -6,6 +7,7 @@ import { CaptchaRule } from './rules/captcha.rule'
 import { DailyCapRule } from './rules/daily-cap.rule'
 import { DeviceAttestationRule } from './rules/device-attestation.rule'
 import { GatewayContext, Rule } from './rules/rule'
+import rulesConfig from '../config/rules.config'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
@@ -14,7 +16,11 @@ export class GatewayService implements OnModuleInit {
   // TODO: Better types here
   private ruleConfigs: Record<string, unknown>
 
-  constructor(private moduleRef: ModuleRef) {}
+  constructor(
+    @Inject(rulesConfig.KEY)
+    private config: ConfigType<typeof rulesConfig>,
+    private moduleRef: ModuleRef,
+  ) {}
 
   async onModuleInit() {
     this.rules = await Promise.all([
@@ -23,18 +29,14 @@ export class GatewayService implements OnModuleInit {
       this.moduleRef.create(DeviceAttestationRule)
     ])
 
+
     // TODO: These should be initialized from Redis
-    this.ruleEnabled = this.rules.reduce((acc, rule) => {
-      return {
-        ...acc,
-        [rule.getID()]: process.env[`RULE_${rule.getID()}_ENABLED`] === 'true'
-      }
-    }, {})
+    this.ruleEnabled = this.config.enabled
 
     this.ruleConfigs = this.rules.reduce((acc, rule) => {
       return {
         ...acc,
-        [rule.getID()]: this.getConfigFromRule(rule)
+        [rule.getID()]: this.config.configs[rule.getID()] || rule.defaultConfig()
       }
     }, {})
   }
@@ -58,13 +60,5 @@ export class GatewayService implements OnModuleInit {
     )
 
     return results.every(result => result.ok)
-  }
-
-  private getConfigFromRule<T>(rule: Rule<T, any>): T {
-    try {
-      return JSON.parse(process.env[`RULE_${rule.getID()}_CONFIG`])
-    } catch {
-      return rule.defaultConfig()
-    }
   }
 }
