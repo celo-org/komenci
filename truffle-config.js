@@ -8,6 +8,9 @@ const NODE_URL = "https://alfajores-forno.celo-testnet.org"
 const gasLimit = 2000000
 
 module.exports = {
+
+  plugins: ["truffle-security"],
+
   contracts_build_directory: "./libs/celo/packages/protocol/build/contracts",
   migrations_directory: "./libs/blockchain/migrations",
   networks: {

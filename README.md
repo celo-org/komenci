@@ -19,7 +19,7 @@ In our case we have:
 - `libs/blockchain` - a library which wraps contract-kit
 - `libs/celo` - (:warning: NOT A NESTJS LIBRARY) `celo-monorepo` as a submodule - this allows us to import and use packages that haven't been released on NPM
 
-#### Instalation
+#### Installation
 
 ```bash
 > git clone git@github.com:celo-org/komenci.git
@@ -32,6 +32,16 @@ In our case we have:
 # install `celo-monorepo` dependencies
 > yarn deps:celo:install
 > yarn deps:celo:build
+```
+
+#### Configs
+
+Setup local config files:
+```
+> cp apps/onboarding/.env.local.example apps/onboarding/.env.local
+> cp apps/onboarding/.env.local.example apps/onboarding/.env.test
+> cp apps/relayer/.env.local.example apps/relayer/.env.local
+> cp apps/relayer/.env.local.example apps/relayer/.env.test
 ```
 
 ##### Notes on `celo-monorepo`
