@@ -8,8 +8,6 @@ import { StartSessionDto } from './dto/StartSessionDto'
 import { RelayerProxyService } from './relayer_proxy.service'
 import { AuthService } from './session/auth/auth.service'
 import { AuthenticatedGuard } from './session/guards/authenticated.guard'
-// import { SessionDecorator } from './session/session.decorator'
-import { Session } from './session/session.entity'
 
 @Controller()
 export class AppController {
@@ -25,8 +23,8 @@ export class AppController {
     @Body() startSessionDto: StartSessionDto,
     @Req() req
   ): Promise<any> {
-    // if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
-    if (true) {
+    if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
+    // if (true) {w
       return this.authService.access(startSessionDto.externalAccount)
     } else {
       return { error: 'gateway-not-passed' }
@@ -35,7 +33,7 @@ export class AppController {
 
   @UseGuards(AuthenticatedGuard)
   @Post('deployWallet')
-  deployWallet  (
+  deployWallet  (@Body() body: StartSessionDto
     // @SessionDecorator() session: Session
     ): any {
     return { id: 'new-session' }

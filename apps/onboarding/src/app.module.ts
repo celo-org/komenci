@@ -1,6 +1,7 @@
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core'
+import { JwtModule, JwtService } from '@nestjs/jwt'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { LoggerModule } from 'nestjs-pino/dist'
@@ -13,7 +14,8 @@ import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
 import { AuthModule } from './session/auth/auth.module'
-import { AuthenticatedGuard } from './session/guards/authenticated.guard';
+import { AuthService } from './session/auth/auth.service'
+import { AuthenticatedGuard } from './session/guards/authenticated.guard'
 import { SessionModule } from './session/session.module'
 
 @Module({
@@ -57,6 +59,14 @@ import { SessionModule } from './session/session.module'
       useFactory: async (config: ConfigService) => config.get<ConfigType<typeof databaseConfig>>('database')
     }),
     AuthModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule], // Missing this
+      useFactory: async (config: ConfigService) => ({
+        signOptions: {},
+        secretOrPrivateKey: config.get<ConfigType<typeof appConfig>>('app').jwt_secret,
+      }),
+      inject: [ConfigService], 
+    }),
   ],
   providers: [
     AppService,
@@ -72,10 +82,6 @@ import { SessionModule } from './session/session.module'
         )
         return ClientProxyFactory.create(relayerSvcOptions)
       }
-    },
-    {
-      provide: APP_GUARD,
-      useClass: AuthenticatedGuard,
     },
   ]
 })
