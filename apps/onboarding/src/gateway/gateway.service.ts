@@ -36,7 +36,7 @@ export class GatewayService implements OnModuleInit {
     this.ruleConfigs = this.rules.reduce((acc, rule) => {
       return {
         ...acc,
-        [rule.getID()]: this.config.configs[rule.getID()] || rule.defaultConfig()
+        [rule.getID()]: rule.validateConfig(this.config.configs[rule.getID()]) || rule.defaultConfig()
       }
     }, {})
   }
