@@ -8,9 +8,9 @@ export default registerAs('rules', (): RulesConfig => ({
     [RuleID.DeviceAttestation]: process.env.RULE_DEVICE_ATTESTATION_ENABLED === 'true',
   },
   configs: {
-    DAILY_CAP: process.env.RULE_DAILY_CAP_CONFIG,
-    CAPTCHA: process.env.RULE_CAPTCHA_CONFIG,
-    DEVICE_ATTESTATION: process.env.RULE_DEVICE_ATTESTATION_CONFIG,
+    [RuleID.DailyCap]: process.env.RULE_DAILY_CAP_CONFIG,
+    [RuleID.Captcha]: process.env.RULE_CAPTCHA_CONFIG,
+    [RuleID.DeviceAttestation]: process.env.RULE_DEVICE_ATTESTATION_CONFIG,
   },
 }))
 

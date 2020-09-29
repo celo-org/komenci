@@ -26,8 +26,8 @@ export class DailyCapRule implements Rule<DailyCapConfig, CapReachedError> {
     return Ok(true)
   }
 
-  validateConfig(config: string = 'null'): DailyCapConfig {
-    return JSON.parse(config) || null as DailyCapConfig
+  validateConfig(config?: string): DailyCapConfig {
+    return JSON.parse(config || 'null') || null as DailyCapConfig
   }
 
   defaultConfig(): DailyCapConfig {
