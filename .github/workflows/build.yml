@@ -15,14 +15,14 @@ jobs:
         run: echo "::set-output name=dir::$(yarn cache dir)"
       - name: Restore Komenci cache
         id: restore-komenci
-        uses: bowd/cache@master
+        uses: bowd/cache@v3
         with:
           path: |
             node_modules
           key: ${{ runner.os }}-komenci-deps-${{ hashFiles('./yarn.lock') }}
           only-check-key: true
       - name: Restore yarn cache
-        uses: bowd/cache@master
+        uses: bowd/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -49,7 +49,7 @@ jobs:
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
       - name: Restore celo-monorepo cache
-        uses: bowd/cache@master
+        uses: bowd/cache@v3
         id: restore-celo-monorepo
         with:
           path: |
@@ -57,7 +57,7 @@ jobs:
           key: ${{ runner.os }}-celo-${{ steps.celo-monorepo-commit.outputs.commit }}
           only-check-key: true
       - name: Restore yarn cache
-        uses: bowd/cache@master
+        uses: bowd/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -86,7 +86,7 @@ jobs:
         id: celo-monorepo-commit
         run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
       - name: Restore celo-monorepo cache
-        uses: bowd/cache@master
+        uses: bowd/cache@v3
         id: restore-celo-monorepo
         with:
           path: |
@@ -94,7 +94,7 @@ jobs:
           key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
       - name: Restore Komenci cache
         id: restore-komenci
-        uses: bowd/cache@master
+        uses: bowd/cache@v3
         with:
           path: |
             node_modules
