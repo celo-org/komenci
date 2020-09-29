@@ -8,6 +8,7 @@ import { AppService } from './app.service'
 import appConfig from './config/app.config'
 import databaseConfig from './config/database.config'
 import relayerConfig from './config/relayer.config'
+import rulesConfig from './config/rules.config'
 import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
@@ -18,7 +19,7 @@ import { SessionModule } from './session/session.module'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [relayerConfig, appConfig, thirdPartyConfig, databaseConfig],
+      load: [relayerConfig, appConfig, thirdPartyConfig, databaseConfig, rulesConfig],
       envFilePath: ['apps/onboarding/.env.local']
     }),
     LoggerModule.forRootAsync({

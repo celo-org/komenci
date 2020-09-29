@@ -27,7 +27,7 @@ describe('CaptchaRule', () => {
   })
 
   it('should have the correct id', () => {
-    expect(rule.getID()).toBe('CaptchaRule')
+    expect(rule.getID()).toBe('CAPTCHA')
   })
 
   it('should verify the token', async () => {
