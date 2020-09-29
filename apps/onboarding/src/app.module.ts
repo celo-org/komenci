@@ -58,7 +58,6 @@ import { SessionModule } from './session/session.module'
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => config.get<ConfigType<typeof databaseConfig>>('database')
     }),
-    AuthModule,
     JwtModule.registerAsync({
       imports: [ConfigModule], // Missing this
       useFactory: async (config: ConfigService) => ({
@@ -67,6 +66,8 @@ import { SessionModule } from './session/session.module'
       }),
       inject: [ConfigService], 
     }),
+    AuthModule,
+
   ],
   providers: [
     AppService,
