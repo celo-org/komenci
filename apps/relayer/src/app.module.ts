@@ -13,7 +13,10 @@ import { RelayerService } from './relayer.service'
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, nodeConfig, walletConfig],
-      envFilePath: ['apps/relayer/.env.local']
+      envFilePath: [
+        'apps/relayer/.env.local',
+        'apps/relayer/.env',
+      ]
     }),
     BlockchainModule.forRootAsync({
       inject: [ConfigService],

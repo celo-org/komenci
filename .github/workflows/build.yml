@@ -106,7 +106,9 @@ jobs:
       - name: Setup testing config
         run: |
             cp apps/onboarding/.env.test.ci apps/onboarding/.env.test
+            cp apps/onboarding/.env.test.ci apps/onboarding/.env
             cp apps/relayer/.env.test.ci apps/relayer/.env.test
+            cp apps/relayer/.env.test.ci apps/relayer/.env
       - name: Run postgres for testing
         run: |
             docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
