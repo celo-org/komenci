@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config'
+import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 
 function getConfig(config: string | undefined) {
   try {
@@ -7,15 +8,20 @@ function getConfig(config: string | undefined) {
   } catch { }
 }
 
-export default registerAs('rules', () => ({
+export default registerAs('rules', (): RulesConfig => ({
   enabled: {
-    DAILY_CAP: process.env.RULE_DAILY_CAP_ENABLED === 'true',
-    CAPTCHA: process.env.RULE_CAPTCHA_ENABLED === 'true',
-    DEVICE_ATTESTATION: process.env.RULE_DEVICE_ATTESTATION_ENABLED === 'true',
+    [RuleID.DailyCap]: process.env.RULE_DAILY_CAP_ENABLED === 'true',
+    [RuleID.Captcha]: process.env.RULE_CAPTCHA_ENABLED === 'true',
+    [RuleID.DeviceAttestation]: process.env.RULE_DEVICE_ATTESTATION_ENABLED === 'true',
   },
   configs: {
-    DAILY_CAP: getConfig(process.env.RULE_DAILY_CAP_CONFIG),
-    CAPTCHA: getConfig(process.env.RULE_CAPTCHA_CONFIG),
-    DEVICE_ATTESTATION: getConfig(process.env.RULE_DEVICE_ATTESTATION_CONFIG),
+    [RuleID.DailyCap]: getConfig(process.env.RULE_DAILY_CAP_CONFIG),
+    [RuleID.Captcha]: getConfig(process.env.RULE_CAPTCHA_CONFIG),
+    [RuleID.DeviceAttestation]: getConfig(process.env.RULE_DEVICE_ATTESTATION_CONFIG),
   },
 }))
+
+export interface RulesConfig {
+  enabled: Partial<Record<RuleID, boolean>>,
+  configs: Partial<Record<RuleID, any>>
+}
