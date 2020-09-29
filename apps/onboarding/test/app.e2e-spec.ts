@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
+import { assert } from 'console'
 import { AppModule } from '../src/app.module'
 
 const request = require('supertest')
