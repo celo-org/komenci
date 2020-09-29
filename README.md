@@ -28,7 +28,7 @@ In our case we have:
 > yarn 
 > npm install -g @nestjs/cli
 # `celo-monorepo` is a git submodule -- update downloads it in place
-> git submodule update
+> git submodule update --init
 # install `celo-monorepo` dependencies
 > yarn deps:celo:install
 > yarn deps:celo:build
