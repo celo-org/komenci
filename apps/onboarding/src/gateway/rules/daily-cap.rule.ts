@@ -26,9 +26,8 @@ export class DailyCapRule implements Rule<DailyCapConfig, CapReachedError> {
     return Ok(true)
   }
 
-  validateConfig(config: unknown): DailyCapConfig {
-    // Check should happen via io-ts runtime types
-    return config as DailyCapConfig
+  validateConfig(config: string = 'null'): DailyCapConfig {
+    return JSON.parse(config) || null as DailyCapConfig
   }
 
   defaultConfig(): DailyCapConfig {

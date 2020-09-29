@@ -71,7 +71,7 @@ export class DeviceAttestationRule
   }
 
   validateConfig(config: unknown): unknown {
-    return config
+    return null
   }
 
   defaultConfig(): unknown {

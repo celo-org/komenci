@@ -34,7 +34,7 @@ export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
   }
 
   validateConfig(config: unknown): unknown {
-    return config
+    return null
   }
 
   defaultConfig(): unknown {
