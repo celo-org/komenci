@@ -19,15 +19,13 @@ jobs:
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-komenci-deps-${{ hashFiles('./yarn.lock') }}
       - name: Restore yarn cache
         uses: actions/cache@v2
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-komenci-${{ hashFiles('./yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          key: ${{ runner.os }}-komenci-yarn-cache-${{ hashFiles('./yarn.lock') }}
         if: steps.restore-komenci.outputs.cache-hit != 'true'
       - name: Install Komenci dependencies
         run: |
@@ -55,15 +53,13 @@ jobs:
         with:
           path: |
             libs/celo
-          key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
+          key: ${{ runner.os }}-celo-${{ steps.celo-monorepo-commit.outputs.commit }}
       - name: Restore yarn cache
         uses: actions/cache@v2
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          key: ${{ runner.os }}-celo-yarn-cache-${{ steps.celo-monorepo-commit.outputs.commit }}
         if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
       - name: Install celo-monorepo dependencies
         run: |
