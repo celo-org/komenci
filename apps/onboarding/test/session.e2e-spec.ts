@@ -1,4 +1,6 @@
+import databaseConfig from '@app/onboarding/config/database.config';
 import { ValidationPipe } from '@nestjs/common'
+import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AppModule } from '../src/app.module'
@@ -14,17 +16,16 @@ describe('SessionController (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         SessionModule,
-        TypeOrmModule.forRoot({
-          "type": "postgres",
-          "host": "localhost",
-          "port": 5432,
-          "username": "postgres",
-          "password": "docker",
-          "database": "postgres",
-          "autoLoadEntities": true,
-          "keepConnectionAlive": true,
-          "synchronize": true
-        })
+        ConfigModule.forRoot({
+          isGlobal: true,
+          load: [databaseConfig],
+          envFilePath: ['apps/onboarding/.env.test']
+        }),
+        TypeOrmModule.forRootAsync({
+          imports: [ConfigService],
+          inject: [ConfigService],
+          useFactory: async (config: ConfigService) => config.get<ConfigType<typeof databaseConfig>>('database')
+        }),
       ],
       providers: [SessionService]
     }).compile()

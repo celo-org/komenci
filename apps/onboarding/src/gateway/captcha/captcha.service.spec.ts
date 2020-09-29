@@ -1,5 +1,10 @@
+import appConfig from '@app/onboarding/config/app.config';
+import databaseConfig from '@app/onboarding/config/database.config';
+import relayerConfig from '@app/onboarding/config/relayer.config';
+import thirdPartyConfig from '@app/onboarding/config/third-party.config';
 import { Ok } from '@celo/base/lib/result'
 import { HttpModule, HttpService } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing'
 import { HttpErrorTypes } from 'apps/onboarding/src/errors/http'
 import { AxiosError, AxiosResponse } from 'axios'
@@ -48,16 +53,24 @@ const httpError: Observable<AxiosError> = of({
 
 describe('CaptchaService', () => {
   let service: CaptchaService
-  let httpService: HttpService
+  const httpService = {
+    'get': jest.fn()
+  }
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule, AppModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          load: [thirdPartyConfig],
+          envFilePath: ['apps/onboarding/.env.test']
+        }),
+        HttpModule
+      ],
       providers: [CaptchaService]
-    }).compile()
+    }).overrideProvider(HttpService).useValue(httpService).compile()
 
     service = module.get<CaptchaService>(CaptchaService)
-    httpService = module.get<HttpService>(HttpService)
   })
 
   it('should be defined', () => {

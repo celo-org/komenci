@@ -35,4 +35,6 @@ lerna-debug.log*
 
 # Local env files
 apps/onboarding/.env.local
+apps/onboarding/.env.test
 apps/relayer/.env.local
+apps/relayer/.env.test

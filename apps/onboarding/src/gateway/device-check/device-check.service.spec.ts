@@ -1,4 +1,6 @@
+import thirdPartyConfig from '@app/onboarding/config/third-party.config';
 import { HttpModule } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing'
 import { AppModule } from '../../app.module'
 import { DeviceCheckService } from './device-check.service'
@@ -8,7 +10,14 @@ describe('DeviceCheckService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [AppModule, HttpModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          load: [thirdPartyConfig],
+          envFilePath: ['apps/onboarding/.env.test']
+        }),
+        HttpModule
+      ],
       providers: [DeviceCheckService],
     }).compile()
 
