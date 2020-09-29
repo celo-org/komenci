@@ -24,7 +24,6 @@ export class AppController {
     @Req() req
   ): Promise<any> {
     if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
-    // if (true) {w
       return this.authService.access(startSessionDto.externalAccount)
     } else {
       return { error: 'gateway-not-passed' }

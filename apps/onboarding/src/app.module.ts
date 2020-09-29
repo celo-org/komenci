@@ -1,7 +1,6 @@
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
-import { APP_GUARD } from '@nestjs/core'
-import { JwtModule, JwtService } from '@nestjs/jwt'
+import { JwtModule } from '@nestjs/jwt'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { LoggerModule } from 'nestjs-pino/dist'
@@ -14,8 +13,6 @@ import thirdPartyConfig from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
 import { AuthModule } from './session/auth/auth.module'
-import { AuthService } from './session/auth/auth.service'
-import { AuthenticatedGuard } from './session/guards/authenticated.guard'
 import { SessionModule } from './session/session.module'
 
 @Module({
