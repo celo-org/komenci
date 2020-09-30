@@ -8,9 +8,12 @@ export class AuthenticatedGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest()
-    if(!this.jwtService.verify(request.headers.authorization)) {
+    try {
+      if(this.jwtService.verify(request.headers.authorization)) {
+        return true
+      }
+    }catch {
       return false
     }
-    return true
   }
 }

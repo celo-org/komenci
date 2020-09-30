@@ -32,9 +32,7 @@ export class AppController {
 
   @UseGuards(AuthenticatedGuard)
   @Post('deployWallet')
-  deployWallet  (@Body() body: StartSessionDto
-    // @SessionDecorator() session: Session
-    ): any {
+  deployWallet  (@Body() body: StartSessionDto): any {
     return { id: 'new-session' }
   }
 

@@ -53,6 +53,20 @@ describe('AppController', () => {
     it('should return a valid session',async () => {
       const session = {captchaResponseToken:"xx", deviceType: "ios", iosDeviceToken:"pp", externalAccount:"0x1234vfyuik"}
 
+      jest.spyOn(appController, 'startSession').mockResolvedValue({
+        access_token: 'accessToken',
+        status: 200
+     })
+
+      expect(await appController.startSession(session as StartSessionDto, Post)).toEqual({
+        access_token: 'accessToken',
+        status: 200
+     })
+    })
+
+    it('should return a valid session',async () => {
+      const session = {}
+
       jest.spyOn(appController, 'startSession').mockResolvedValue({ error: 'gateway-not-passed' })
 
       expect(await appController.startSession(session as StartSessionDto, Post)).toEqual({ error: 'gateway-not-passed' })
