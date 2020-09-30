@@ -1,11 +1,13 @@
 import { registerAs } from '@nestjs/config'
 import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 
+const isTrue = (content: string) => String(content).toLowerCase() === 'true'
+
 export default registerAs('rules', (): RulesConfig => ({
   enabled: {
-    [RuleID.DailyCap]: process.env.RULE_DAILY_CAP_ENABLED === 'true',
-    [RuleID.Captcha]: process.env.RULE_CAPTCHA_ENABLED === 'true',
-    [RuleID.DeviceAttestation]: process.env.RULE_DEVICE_ATTESTATION_ENABLED === 'true',
+    [RuleID.DailyCap]: isTrue(process.env.RULE_DAILY_CAP_ENABLED),
+    [RuleID.Captcha]: isTrue(process.env.RULE_CAPTCHA_ENABLED),
+    [RuleID.DeviceAttestation]: isTrue(process.env.RULE_DEVICE_ATTESTATION_ENABLED),
   },
   configs: {
     [RuleID.DailyCap]: process.env.RULE_DAILY_CAP_CONFIG,
