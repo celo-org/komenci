@@ -1,6 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
 import { FastifyRequest } from 'fastify'
+import rulesConfig from '../config/rules.config'
 import { StartSessionDto } from '../dto/StartSessionDto'
 import { CaptchaRule } from './rules/captcha.rule'
 import { DailyCapRule } from './rules/daily-cap.rule'
@@ -14,7 +16,11 @@ export class GatewayService implements OnModuleInit {
   // TODO: Better types here
   private ruleConfigs: Record<string, unknown>
 
-  constructor(private moduleRef: ModuleRef) {}
+  constructor(
+    @Inject(rulesConfig.KEY)
+    private config: ConfigType<typeof rulesConfig>,
+    private moduleRef: ModuleRef,
+  ) {}
 
   async onModuleInit() {
     this.rules = await Promise.all([
@@ -23,18 +29,14 @@ export class GatewayService implements OnModuleInit {
       this.moduleRef.create(DeviceAttestationRule)
     ])
 
+
     // TODO: These should be initialized from Redis
-    this.ruleEnabled = this.rules.reduce((acc, rule) => {
-      return {
-        ...acc,
-        [rule.getID()]: true
-      }
-    }, {})
+    this.ruleEnabled = this.config.enabled
 
     this.ruleConfigs = this.rules.reduce((acc, rule) => {
       return {
         ...acc,
-        [rule.getID()]: rule.defaultConfig()
+        [rule.getID()]: rule.validateConfig(this.config.configs[rule.getID()]) || rule.defaultConfig()
       }
     }, {})
   }

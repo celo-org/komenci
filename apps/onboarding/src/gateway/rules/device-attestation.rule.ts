@@ -5,7 +5,7 @@ import {
   StartSessionDto
 } from 'apps/onboarding/src/dto/StartSessionDto'
 import { DeviceCheckService } from '../device-check/device-check.service'
-import { GatewayContext, Rule } from '../rules/rule'
+import { GatewayContext, Rule, RuleID } from '../rules/rule'
 import { SafetyNetService } from '../safety-net/safety-net.service'
 
 enum DeviceAttestationErrorTypes {
@@ -37,8 +37,8 @@ export class DeviceAttestationRule
     private safetyNetService: SafetyNetService
   ) {}
 
-  getID(): string {
-    return 'DeviceAttestationRule'
+  getID() {
+    return RuleID.DeviceAttestation
   }
 
   async verify(
@@ -71,7 +71,7 @@ export class DeviceAttestationRule
   }
 
   validateConfig(config: unknown): unknown {
-    return config
+    return null
   }
 
   defaultConfig(): unknown {
