@@ -1,17 +1,15 @@
-import { HttpModule, HttpService } from '@nestjs/common'
-import { ConfigModule, ConfigType } from '@nestjs/config'
+import { HttpModule } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { DeviceCheckService } from 'apps/onboarding/src/gateway/device-check/device-check.service'
 import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 import { SafetyNetService } from 'apps/onboarding/src/gateway/safety-net/safety-net.service'
-import appConfig from 'apps/relayer/src/config/app.config'
 import rulesConfig, { RulesConfig } from '../config/rules.config'
 import thirdPartyConfig from '../config/third-party.config'
 import { CaptchaService } from './captcha/captcha.service'
 import { GatewayService } from './gateway.service'
 
 describe('GatewayService', () => {
-
   describe("by changing the env", () => {
     const buildTestingModule = async (): Promise<TestingModule> => {
       return Test.createTestingModule({
