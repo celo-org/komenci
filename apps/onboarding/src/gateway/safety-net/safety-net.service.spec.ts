@@ -1,4 +1,4 @@
-import thirdPartyConfig from '@app/onboarding/config/third-party.config'
+import { thirdPartyConfig } from '@app/onboarding/config/third-party.config'
 import { HttpModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'

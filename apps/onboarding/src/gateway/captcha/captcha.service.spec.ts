@@ -1,4 +1,4 @@
-import thirdPartyConfig from '@app/onboarding/config/third-party.config'
+import { thirdPartyConfig } from '@app/onboarding/config/third-party.config'
 import { Ok } from '@celo/base/lib/result'
 import { HttpModule, HttpService } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
