@@ -4,11 +4,10 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { AppController } from './app.controller'
 import { AppModule } from './app.module'
 import { AppService } from './app.service'
+import { AuthService } from './auth/auth.service'
 import { StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
 import { RelayerProxyService } from './relayer_proxy.service'
-import { AuthModule } from './session/auth/auth.module'
-import { AuthService } from './session/auth/auth.service'
 
 describe('AppController', () => {
   let appController: AppController

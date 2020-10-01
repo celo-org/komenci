@@ -5,11 +5,9 @@ export class Session {
 
     public static of(params: Partial<Session>): Session {
         const session = new Session()
-    
         Object.assign(session, params)
-    
         return session
-      }
+    }
 
     @PrimaryGeneratedColumn('uuid')
     id: string
@@ -34,5 +32,9 @@ export class Session {
 
     @Column('timestamp')
     completedAt: string
+
+    isOpen(): boolean {
+        return !this.expiredAt && !this.completedAt
+    }
 }
     

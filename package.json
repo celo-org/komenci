@@ -40,6 +40,8 @@
     "btoa": "^1.2.1",
     "class-validator": "^0.12.2",
     "fastify": "^3.3.0",
+    "fp-ts": "^2.8.3",
+    "io-ts": "^2.2.10",
     "jsonwebtoken": "^8.5.1",
     "nestjs-pino": "^1.2.0",
     "passport": "^0.4.1",

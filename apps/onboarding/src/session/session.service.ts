@@ -27,7 +27,7 @@ export class SessionService {
     return this.sessionRepository.findOne(id)
   }
 
-  findByAccount(account: string): Promise<Session> {
+  async findByAccount(account: string) {
     return this.sessionRepository.findOne({externalAccount: account})
   }
 
@@ -38,5 +38,15 @@ export class SessionService {
   async removeSession(id: string): Promise<void> {
     await this.sessionRepository.delete(id)
     return null
+  }
+
+  async findOrCreateForAccount(externalAccount: string): Promise<Session> {
+    const existingSession = await this.findByAccount(externalAccount)
+    if (existingSession === undefined) {
+      const newSession = this.createSession(externalAccount)
+      return newSession
+    } else {
+      return existingSession
+    }
   }
 }

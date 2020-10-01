@@ -3,10 +3,8 @@ import {
   HttpService,
   Inject,
   Injectable,
-  ServiceUnavailableException
 } from '@nestjs/common'
-import { ConfigType } from '@nestjs/config'
-import thirdPartyConfig from '../../config/third-party.config'
+import { thirdPartyConfig, ThirdPartyConfig } from '../../config/third-party.config'
 import { HttpRequestError } from '../../errors/http'
 import { ErrorCode, ReCAPTCHAResponseDto } from './ReCAPTCHAResponseDto'
 
@@ -26,7 +24,7 @@ export type CaptchaServiceErrors = VerificationFailed | HttpRequestError
 export class CaptchaService {
   constructor(
     @Inject(thirdPartyConfig.KEY)
-    private config: ConfigType<typeof thirdPartyConfig>,
+    private config: ThirdPartyConfig,
     private httpService: HttpService
   ) {}
 

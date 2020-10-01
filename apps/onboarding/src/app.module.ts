@@ -1,18 +1,18 @@
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
-import { JwtModule } from '@nestjs/jwt'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
+import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import appConfig from './config/app.config'
-import databaseConfig from './config/database.config'
-import relayerConfig from './config/relayer.config'
-import thirdPartyConfig from './config/third-party.config'
+import { AuthModule } from './auth/auth.module'
+import { appConfig, AppConfig } from './config/app.config'
+import { DatabaseConfig, databaseConfig } from './config/database.config'
+import { relayerConfig } from './config/relayer.config'
+import { thirdPartyConfig } from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { RelayerProxyService } from './relayer_proxy.service'
-import { AuthModule } from './session/auth/auth.module'
 import { SessionModule } from './session/session.module'
 
 @Module({
@@ -27,7 +27,7 @@ import { SessionModule } from './session/session.module'
       providers: [ConfigService],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const appCfg = config.get<ConfigType<typeof appConfig>>('app')
+        const appCfg = config.get<AppConfig>('app')
         return {
           pinoHttp: {
             serializers: {
@@ -53,21 +53,13 @@ import { SessionModule } from './session/session.module'
     TypeOrmModule.forRootAsync({
       imports: [ConfigService],
       inject: [ConfigService],
-      useFactory: async (config: ConfigService) => config.get<ConfigType<typeof databaseConfig>>('database')
-    }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule], // Missing this
-      useFactory: async (config: ConfigService) => ({
-        signOptions: {},
-        secretOrPrivateKey: config.get<ConfigType<typeof appConfig>>('app').jwt_secret,
-      }),
-      inject: [ConfigService], 
+      useFactory: async (config: ConfigService) => config.get<DatabaseConfig>('database')
     }),
     AuthModule,
-
   ],
   providers: [
     AppService,
+    SessionService,
     RelayerProxyService,
     {
       provide: 'RELAYER_SERVICE',

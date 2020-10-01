@@ -1,7 +1,7 @@
-import { registerAs } from '@nestjs/config'
+import { ConfigType, registerAs } from '@nestjs/config';
 
 // TODO -- these are examples
-export default registerAs('thirdParty', () => ({
+export const thirdPartyConfig = registerAs('thirdParty', () => ({
   recaptchaUri: 'https://www.google.com/recaptcha/api/siteverify',
   recaptchaToken: process.env.RECAPTCHA_TOKEN,
   appleDeviceCheckUrl: "https://api.development.devicecheck.apple.com", // In production`https://api.devicecheck.apple.com`
@@ -12,3 +12,5 @@ export default registerAs('thirdParty', () => ({
   androidSafetyNetUrl: "https://www.googleapis.com/androidcheck/v1/attestations/verify",
   androidSafetyNetToken: process.env.ANDROID_SAFETYNET_TOKEN // API_KEY
 }))
+
+export type ThirdPartyConfig = ConfigType<typeof thirdPartyConfig>
