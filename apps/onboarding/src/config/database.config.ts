@@ -9,6 +9,6 @@ export default registerAs('database', () => ({
   database: process.env.DB_DATABASE || 'postgres',
   autoLoadEntities: true,
   keepConnectionAlive: true,
-  synchronize: JSON.parse(process.env.DB_SYNCHRONIZE) || true, // Only true for DEV
+  synchronize: process.env.DB_SYNCHRONIZE === "true", // Only true for DEV
 }))
 

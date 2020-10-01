@@ -1,7 +1,8 @@
+import databaseConfig from '@app/onboarding/config/database.config'
 import { ValidationPipe } from '@nestjs/common'
+import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { AppModule } from '../src/app.module'
 import { SessionModule } from '../src/session/session.module'
 import { SessionService } from '../src/session/session.service'
 
@@ -12,19 +13,19 @@ describe('SessionController (e2e)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule,
+      imports: [
         SessionModule,
-        TypeOrmModule.forRoot({
-        "type": "postgres",
-        "host": "localhost",
-        "port": 5432,
-        "username": "postgres",
-        "password": "docker",
-        "database": "postgres",
-        "autoLoadEntities": true,
-        "keepConnectionAlive": true,
-        "synchronize": true
-    }),],
+        ConfigModule.forRoot({
+          isGlobal: true,
+          load: [databaseConfig],
+          envFilePath: ['apps/onboarding/.env.test']
+        }),
+        TypeOrmModule.forRootAsync({
+          imports: [ConfigService],
+          inject: [ConfigService],
+          useFactory: async (config: ConfigService) => config.get<ConfigType<typeof databaseConfig>>('database')
+        }),
+      ],
       providers: [SessionService]
     }).compile()
 
@@ -43,7 +44,7 @@ describe('SessionController (e2e)', () => {
     it('Create a new Session object in the database', async () => {
       const session = await service.createSession('test')
       expect((await service.findOne(session.id)).externalAccount).toBe('test')
-      expect(await (await service.findAll()).length).toBe(1)
+      expect((await service.findAll()).length).toBe(1)
       await service.removeSession(session.id)
     })
 

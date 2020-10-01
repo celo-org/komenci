@@ -1,17 +1,35 @@
+const { pathsToModuleNameMapper } = require('ts-jest/utils');
+const { compilerOptions } = require('./tsconfig');
+
 module.exports = {
-  preset: 'ts-jest',
+  moduleFileExtensions: [ "js", "json", "ts" ],
+  rootDir: ".",
+  preset: "ts-jest",
   testRegex: "[^-]spec.ts$",
+  testEnvironment: "node",
   setupFilesAfterEnv: [
-    '<rootDir>/jest_setup.ts',
+    './jest.setup.ts',
   ],
+  coverageDirectory: "./coverage",
   verbose: true,
   roots: [
     "<rootDir>/apps/",
-    "<rootDir>/libs/"
+    "<rootDir>/libs/blockchain",
+  ],
+  collectCoverageFrom: [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**",
+    "!libs/celo/**",
+    "!libs/blockchain/migrations/**",
   ],
   moduleNameMapper: {
-    "apps/(.*)": "<rootDir>/apps/$1",
-    "@app/blockchain/(.*)": "<rootDir>/libs/blockchain/src/$1",
-    "@app/blockchain": "<rootDir>/libs/blockchain/src"
+    ...pathsToModuleNameMapper(
+      compilerOptions.paths,
+      {
+        prefix: "<rootDir>/"
+      }
+    ),
+    "apps/onboarding/(.*)": "<rootDir>/apps/onboarding/$1",
+    "apps/relayer/(.*)": "<rootDir>/apps/relayer/$1",
   }
 }
