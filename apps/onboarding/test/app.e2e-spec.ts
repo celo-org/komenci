@@ -1,13 +1,14 @@
 import { ValidationPipe } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 import { assert } from 'console'
-import request from 'supertest'
 import { AppModule } from '../src/app.module'
+
+const request = require('supertest')
 
 describe('AppController (e2e)', () => {
   let app
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     })    

@@ -1,8 +1,12 @@
 {
+  "exclude": [
+    "libs/celo"
+  ],
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
+    "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
@@ -10,7 +14,7 @@
     "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": ".",
     "incremental": true,
     "paths": {
       "@app/blockchain": [
@@ -18,6 +22,18 @@
       ],
       "@app/blockchain/*": [
         "libs/blockchain/src/*"
+      ],
+      "@app/onboarding": [
+        "apps/onboarding/src"
+      ],
+      "@app/onboarding/*": [
+        "apps/onboarding/src/*"
+      ],
+      "@celo/phone-number-privacy-common/lib/*": [
+        "libs/celo/packages/phone-number-privacy/common/lib/*"
+      ],
+      "@celo/*": [
+        "libs/celo/packages/*"
       ]
     }
   }

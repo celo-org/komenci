@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config'
 
-export enum Networks {
+export enum Network {
   integration = 'integration',
   alfajoresstaging = 'alfajoresstaging',
   alfajores = 'alfajores',
@@ -30,43 +30,53 @@ export interface NetworkConfig {
   odisUrl: string
 }
 
-export interface AppConfig {
-  host: string
-  port: number
-  log_level: string
-  address: string
-  azureVaultName: string
-  networkConfig: NetworkConfig
-}
-
-const networkConfigs: { [testnet: string]: NetworkConfig } = {
-  [Networks.integration]: {
+const networkConfigs: Record<Network, NetworkConfig> = {
+  [Network.integration]: {
     fullNodeUrl: fornoStaging,
     odisPubKey: odisPubKeyStaging,
     odisUrl: odisUrlStaging
   },
-  [Networks.alfajoresstaging]: {
+  [Network.alfajoresstaging]: {
     fullNodeUrl: fornoStaging,
     odisPubKey: odisPubKeyStaging,
     odisUrl: odisUrlStaging
   },
-  [Networks.alfajores]: {
+  [Network.alfajores]: {
     fullNodeUrl: fornoAlfajores,
     odisPubKey: odisPubKeyAlfajores,
     odisUrl: odisUrlAlfajores
   },
-  [Networks.mainnet]: {
+  [Network.mainnet]: {
     fullNodeUrl: fornoMainnet,
     odisPubKey: odisPubKeyMainnet,
     odisUrl: odisUrlMainnet
   }
 }
 
-export default registerAs<() => AppConfig>('app', () => ({
-  host: process.env.RELAYER_HOST || '0.0.0.0',
-  port: parseInt(process.env.RELAYER_PORT, 10) || 3000,
-  log_level: process.env.LOG_LEVEL || 'debug',
-  address: process.env.ADDRESS,
-  azureVaultName: process.env.AZUREVAULTNAME,
-  networkConfig: networkConfigs[process.env.NETWORK]
-}))
+export interface AppConfig {
+  host: string
+  port: number
+  log_level: string
+  networkConfig: NetworkConfig
+  mtwDeployerAddress: string
+}
+
+export const appConfig = registerAs<() => AppConfig>('app', () => {
+  const network = process.env.NETWORK as Network
+  if (!network) {
+    throw Error(`Unknown network: ${process.env.NETWORK}`)
+  }
+  const networkConfig = networkConfigs[network]
+  if (!networkConfig) {
+    throw Error(`No config for network: ${network}`)
+  }
+
+  return {
+    host: process.env.RELAYER_HOST || '0.0.0.0',
+    port: parseInt(process.env.RELAYER_PORT, 10) || 3000,
+    log_level: process.env.LOG_LEVEL || 'debug',
+    mtwDeployerAddress: process.env.MTW_DEPLOYER_ADDRESS,
+    mtwImplementationAddress: process.env.MTW_IMPLEMENTATION_ADDRESS,
+    networkConfig
+  }
+})

@@ -1,10 +1,11 @@
+import thirdPartyConfig from '@app/onboarding/config/third-party.config'
 import { Ok } from '@celo/base/lib/result'
 import { HttpModule, HttpService } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { HttpErrorTypes } from 'apps/onboarding/src/errors/http'
 import { AxiosError, AxiosResponse } from 'axios'
 import { Observable, of } from 'rxjs'
-import { AppModule } from '../../app.module'
 import { CaptchaService, ReCAPTCHAErrorTypes } from './captcha.service'
 import { ErrorCode, ReCAPTCHAResponseDto } from './ReCAPTCHAResponseDto'
 
@@ -48,16 +49,24 @@ const httpError: Observable<AxiosError> = of({
 
 describe('CaptchaService', () => {
   let service: CaptchaService
-  let httpService: HttpService
+  const httpService = {
+    'get': jest.fn()
+  }
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule, AppModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          load: [thirdPartyConfig],
+          envFilePath: ['apps/onboarding/.env.test']
+        }),
+        HttpModule
+      ],
       providers: [CaptchaService]
-    }).compile()
+    }).overrideProvider(HttpService).useValue(httpService).compile()
 
     service = module.get<CaptchaService>(CaptchaService)
-    httpService = module.get<HttpService>(HttpService)
   })
 
   it('should be defined', () => {
@@ -75,7 +84,7 @@ describe('CaptchaService', () => {
   })
 
   it('should fail with a http request error when an http error occurs', async () => {
-    const httpServiceSpy = spyOn(httpService, 'get').and.returnValue(httpError)
+    spyOn(httpService, 'get').and.returnValue(httpError)
     const result = await service.verifyCaptcha('token-test')
     expect(result.ok).toEqual(false)
     if (result.ok === false) {
@@ -86,7 +95,7 @@ describe('CaptchaService', () => {
 
   it('should fail with a recaptcha error when error codes are returned', async () => {
     const errorCodes = [ErrorCode.BadRequest, ErrorCode.TimeoutOrDuplicate]
-    const httpServiceSpy = spyOn(httpService, 'get').and.returnValue(
+    spyOn(httpService, 'get').and.returnValue(
       makeReCaptchaError(...errorCodes)
     )
     const result = await service.verifyCaptcha('token-test')

@@ -8,24 +8,22 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
+    "deps:celo:install": "yarn --cwd ./libs/celo",
+    "deps:celo:build": "bash ./scripts/build.celo.sh",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "tslint -c tslint.json --project tsconfig.json",
-    "test": "jest  --forceExit --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage  --forceExit --detectOpenHandles",
+    "test": "jest --detectOpenHandles --runInBand",
+    "test:watch": "jest --detectOpenHandles --runInBand --watch",
+    "test:cov": "jest --coverage --detectOpenHandles --runInBand",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/onboarding/test/jest-e2e.json  --forceExit --detectOpenHandles"
+    "test:e2e": "jest --config jest.config.e2e.js  --forceExit --detectOpenHandles --runInBand"
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",
-    "@celo/base": "^0.0.2",
-    "@celo/contractkit": "0.4.13",
-    "@celo/phone-number-privacy-common": "^1.0.8",
-    "@celo/typescript": "^0.0.1",
     "@nestjs/common": "^7.0.0",
     "@nestjs/config": "^0.5.0",
     "@nestjs/core": "^7.0.0",
@@ -42,7 +40,9 @@
     "fastify": "^3.3.0",
     "fp-ts": "^2.8.3",
     "io-ts": "^2.2.10",
+    "global": "^4.4.0",
     "jsonwebtoken": "^8.5.1",
+    "nest": "^0.1.6",
     "nestjs-pino": "^1.2.0",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
@@ -55,9 +55,12 @@
     "web3": "1.2.4"
   },
   "devDependencies": {
-    "@nestjs/cli": "^7.0.0",
+    "@celo/typescript": "^0.0.1",
+    "@nestjs/cli": "^7.5.1",
     "@nestjs/schematics": "^7.0.0",
     "@nestjs/testing": "^7.0.0",
+    "@truffle/contract": "^4.2.23",
+    "@truffle/hdwallet-provider": "^1.1.0",
     "@types/express": "^4.17.3",
     "@types/jest": "25.2.3",
     "@types/node": "^13.9.1",
@@ -72,6 +75,7 @@
     "eslint-plugin-import": "^2.20.1",
     "fetch-mock": "9.10.4",
     "jest": "26.0.1",
+    "node-loader": "^1.0.1",
     "pino-pretty": "^4.2.0",
     "prettier": "^1.19.1",
     "supertest": "^4.0.2",
@@ -79,6 +83,7 @@
     "ts-loader": "^6.2.1",
     "ts-node": "^8.6.2",
     "tsconfig-paths": "^3.9.0",
+    "tsconfig-paths-webpack-plugin": "^3.3.0",
     "tslint": "^5.20.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-eslint-rules": "^5.4.0",
@@ -86,28 +91,5 @@
     "tslint-react": "^4.1.0",
     "tslint-react-hooks": "^2.2.1",
     "typescript": "^3.7.4"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": ".",
-    "testRegex": ".spec.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "coverageDirectory": "./coverage",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/apps/",
-      "<rootDir>/libs/"
-    ],
-    "moduleNameMapper": {
-      "apps/(.*)": "<rootDir>/apps/$1",
-      "@app/blockchain/(.*)": "<rootDir>/libs/blockchain/src/$1",
-      "@app/blockchain": "<rootDir>/libs/blockchain/src"
-    }
   }
 }

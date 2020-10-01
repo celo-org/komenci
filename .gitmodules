@@ -1,0 +1,4 @@
+[submodule "libs/celo"]
+	path = libs/celo
+	url = https://github.com/celo-org/celo-monorepo.git
+
