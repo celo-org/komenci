@@ -34,6 +34,24 @@
       "compilerOptions": {
         "tsConfigPath": "libs/blockchain/tsconfig.lib.json"
       }
+    },
+    "nest-utils": {
+      "type": "library",
+      "root": "libs/nest-utils",
+      "entryFile": "index",
+      "sourceRoot": "libs/nest-utils/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/nest-utils/tsconfig.lib.json"
+      }
+    },
+    "tools": {
+      "type": "application",
+      "root": "apps/tools",
+      "entryFile": "main",
+      "sourceRoot": "apps/tools/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/tools/tsconfig.app.json"
+      }
     }
   }
 }

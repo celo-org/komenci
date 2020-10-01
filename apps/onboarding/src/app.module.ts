@@ -20,7 +20,10 @@ import { SessionModule } from './session/session.module'
     ConfigModule.forRoot({
       isGlobal: true,
       load: [relayerConfig, appConfig, thirdPartyConfig, databaseConfig, rulesConfig],
-      envFilePath: ['apps/onboarding/.env.local']
+      envFilePath: [
+        'apps/onboarding/.env.local',
+        'apps/onboarding/.env',
+      ]
     }),
     LoggerModule.forRootAsync({
       providers: [ConfigService],
