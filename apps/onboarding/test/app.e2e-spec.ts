@@ -45,8 +45,8 @@ describe('AppController (e2e)', () => {
     manager = module.get<EntityManager>(EntityManager)
     authService = module.get<AuthService>(AuthService)
     // @ts-ignore
-    manager.queryRunner = dbConn.createQueryRunner("master")
-    manager.queryRunner.clearTable("session")
+    manager.queryRunner = dbConn.createQueryRunner("master") // tslint:disable-line
+    await manager.queryRunner.clearTable("session")
   })
 
   afterAll(async () => {

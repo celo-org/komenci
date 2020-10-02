@@ -1,4 +1,4 @@
-import { ConfigType, registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config'
 
 export const databaseConfig = registerAs('database', () => ({
   host: process.env.DB_HOST || '0.0.0.0',

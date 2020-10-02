@@ -1,4 +1,4 @@
-import { ConfigType, registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config'
 
 // TODO -- these are examples
 export const thirdPartyConfig = registerAs('thirdParty', () => ({
