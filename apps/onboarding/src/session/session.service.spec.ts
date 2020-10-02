@@ -11,6 +11,13 @@ import { SessionService } from './session.service'
 describe('SessionService', () => {
   let service: SessionService
   let repository: SessionRepository
+  let findOne: jest.SpyInstance
+
+  const mockFindOne = (result: Session | undefined): jest.SpyInstance => {
+    return jest.spyOn(repository, 'findOne').mockImplementation(
+      () => Promise.resolve(result)
+    )
+  }
 
   beforeEach(async () => {
     jest.clearAllMocks()
@@ -56,12 +63,8 @@ describe('SessionService', () => {
   })
 
   describe('#findOne', () => {
-    let findOne: jest.SpyInstance
     beforeEach(async () => {
-      const session = new Session()
-      findOne = jest.spyOn(repository, 'findOne').mockImplementation(
-        () => Promise.resolve(session)
-      )
+      findOne = mockFindOne(new Session())
     })
 
     it('delegates to the repository', async () => {
@@ -71,12 +74,8 @@ describe('SessionService', () => {
   })
 
   describe('#findLastForAccount', () => {
-    let findOne: jest.SpyInstance
     beforeEach(async () => {
-      const session = new Session()
-      findOne = jest.spyOn(repository, 'findOne').mockImplementation(
-        () => Promise.resolve(session)
-      )
+      findOne = mockFindOne(new Session())
     })
 
     it('delegates to the repository', async () => {
@@ -90,14 +89,7 @@ describe('SessionService', () => {
 
   describe('#findOrCreateForAccount', () => {
     const eoa = `0x${Web3.utils.randomHex(20)}`
-    let findOne: jest.SpyInstance
     let save: jest.SpyInstance
-
-    const mockFindOne = (result: Session | undefined): jest.SpyInstance => {
-      return jest.spyOn(repository, 'findOne').mockImplementation(
-        () => Promise.resolve(result)
-      )
-    }
 
     beforeEach(() => {
       save = jest.spyOn(repository, 'save').mockImplementation(
