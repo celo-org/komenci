@@ -3,7 +3,7 @@ import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 
 const isTrue = (content: string) => String(content).toLowerCase() === 'true'
 
-export default registerAs('rules', (): RulesConfig => ({
+export const rulesConfig = registerAs('rules', (): RulesConfig => ({
   enabled: {
     [RuleID.DailyCap]: isTrue(process.env.RULE_DAILY_CAP_ENABLED),
     [RuleID.Captcha]: isTrue(process.env.RULE_CAPTCHA_ENABLED),

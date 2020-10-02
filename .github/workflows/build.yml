@@ -1,6 +1,6 @@
 name: Build
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   prepare_komenci:
@@ -91,14 +91,14 @@ jobs:
         with:
           path: |
             libs/celo
-          key: ${{ runner.os }}-celo-monorepo-${{ steps.celo-monorepo-commit.outputs.commit }}
+          key: ${{ runner.os }}-celo-${{ steps.celo-monorepo-commit.outputs.commit }}
       - name: Restore Komenci cache
         id: restore-komenci
         uses: bowd/cache@v3
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-komenci-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-komenci-deps-${{ hashFiles('yarn.lock') }}
       - name: Exit if caches not found
         run: exit 1
         if: steps.restore-celo-monorepo.outputs.cache-hit != 'true' || steps.restore-komenci.outputs.cache-hit != 'true'

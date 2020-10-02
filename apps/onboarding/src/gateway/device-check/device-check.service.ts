@@ -2,13 +2,13 @@ import { HttpService, Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import jwt from "jsonwebtoken"
 import uuidv4 from "uuid"
-import thirdPartyConfig from '../../config/third-party.config'
+import { thirdPartyConfig, ThirdPartyConfig } from '../../config/third-party.config'
 
 @Injectable()
 export class DeviceCheckService {
   constructor(
     @Inject(thirdPartyConfig.KEY)
-    private config: ConfigType<typeof thirdPartyConfig>,
+    private config: ThirdPartyConfig,
     private httpService: HttpService
   ) {}
 

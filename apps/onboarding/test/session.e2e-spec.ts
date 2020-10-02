@@ -1,4 +1,4 @@
-import databaseConfig from '@app/onboarding/config/database.config'
+import { databaseConfig } from '@app/onboarding/config/database.config'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -42,9 +42,10 @@ describe('SessionController (e2e)', () => {
       })
 
     it('Create a new Session object in the database', async () => {
+      const previousNumber = await (await service.findAll()).length
       const session = await service.createSession('test')
       expect((await service.findOne(session.id)).externalAccount).toBe('test')
-      expect((await service.findAll()).length).toBe(1)
+      expect(await (await service.findAll()).length).toBe(previousNumber + 1)
       await service.removeSession(session.id)
     })
 
