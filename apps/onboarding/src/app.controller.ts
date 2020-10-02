@@ -1,7 +1,6 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common'
+import { Body, Controller, ForbiddenException, Post, Req, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
-import { ForbiddenException } from '@nestjs/common'
 
 import { AppService } from './app.service'
 import { AuthService } from './auth/auth.service'

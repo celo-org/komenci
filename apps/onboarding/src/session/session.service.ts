@@ -14,11 +14,8 @@ export class SessionService {
       id: uuidv4(),
       externalAccount: externalAccount,
       createdAt: new Date(Date.now()).toISOString(),
-      expiredAt: new Date(Date.now()+ 60 * 60 * 1000).toISOString(),
       completedAttestations: 0,
       requestedAttestations: 0,
-      meta: {"metadata": "TBD"},
-      completedAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
     })
     return this.sessionRepository.save(session)
   }
@@ -28,7 +25,10 @@ export class SessionService {
   }
 
   async findByAccount(account: string) {
-    return this.sessionRepository.findOne({externalAccount: account})
+    return this.sessionRepository.findOne(
+      { externalAccount: account },
+      { order: { createdAt: "DESC" } }
+    )
   }
 
   findAll() {
@@ -37,12 +37,13 @@ export class SessionService {
 
   async removeSession(id: string): Promise<void> {
     await this.sessionRepository.delete(id)
+
     return null
   }
 
   async findOrCreateForAccount(externalAccount: string): Promise<Session> {
     const existingSession = await this.findByAccount(externalAccount)
-    if (existingSession === undefined) {
+    if (existingSession === undefined || !existingSession.isOpen()) {
       const newSession = this.createSession(externalAccount)
       return newSession
     } else {

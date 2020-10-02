@@ -13,13 +13,12 @@ import { SessionService } from 'apps/onboarding/src/session/session.service'
       SessionModule,
       PassportModule.register({
         defaultStrategy: 'jwt',
-        property: 'session',
-        session: false
+        property: 'session'
       }),
       JwtModule.registerAsync({
         useFactory: async (config: ConfigService) => ({
           signOptions: {},
-          secretOrPrivateKey: config.get<AppConfig>('app').jwt_secret,
+          secret: config.get<AppConfig>('app').jwt_secret,
         }),
         inject: [ConfigService],
       }),

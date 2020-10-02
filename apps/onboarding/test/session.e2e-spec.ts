@@ -1,4 +1,4 @@
-import databaseConfig from '@app/onboarding/config/database.config'
+import { databaseConfig } from '@app/onboarding/config/database.config'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'

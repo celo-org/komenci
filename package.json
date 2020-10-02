@@ -16,11 +16,12 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "tslint -c tslint.json --project tsconfig.json",
-    "test": "jest --detectOpenHandles --runInBand",
-    "test:watch": "jest --detectOpenHandles --runInBand --watch",
-    "test:cov": "jest --coverage --detectOpenHandles --runInBand",
+    "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch",
+    "test:cov": "jest --coverage --runInBand",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config jest.config.e2e.js  --forceExit --detectOpenHandles --runInBand"
+    "test:e2e": "jest --config jest.config.e2e.js --runInBand",
+    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand"
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",
@@ -76,6 +77,7 @@
     "eslint-plugin-import": "^2.20.1",
     "fetch-mock": "9.10.4",
     "jest": "26.0.1",
+    "leaked-handles": "^5.2.0",
     "node-loader": "^1.0.1",
     "pino-pretty": "^4.2.0",
     "prettier": "^1.19.1",

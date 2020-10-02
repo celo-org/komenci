@@ -21,17 +21,17 @@ export class Session {
     @Column()
     completedAttestations: number
 
-    @Column('simple-json')
+    @Column('json', {nullable: true})
     meta?: object
 
     @Column('timestamp')
     createdAt: string
 
-    @Column('timestamp')
-    expiredAt: string
+    @Column('timestamp', {nullable: true})
+    expiredAt?: string
 
-    @Column('timestamp')
-    completedAt: string
+    @Column('timestamp', {nullable: true})
+    completedAt?: string
 
     isOpen(): boolean {
         return !this.expiredAt && !this.completedAt

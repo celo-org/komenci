@@ -20,6 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: unknown): Promise<Session> {
+    debugger
     return this.authService.recoverSession(payload)
   }
 }
