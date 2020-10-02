@@ -1,14 +1,18 @@
 import { databaseConfig } from '@app/onboarding/config/database.config'
+import { Session } from '@app/onboarding/session/session.entity'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
-import { TypeOrmModule } from "@nestjs/typeorm"
+import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm'
+import { Connection, Repository } from 'typeorm'
 import { SessionModule } from '../src/session/session.module'
 import { SessionService } from '../src/session/session.service'
 
 describe('SessionController (e2e)', () => {
   let app
   let service: SessionService
+  let repo: Repository<Session>
+  let conn: Connection
 
 
   beforeEach(async () => {
@@ -32,8 +36,15 @@ describe('SessionController (e2e)', () => {
     app = moduleFixture.createNestApplication()
     app.useGlobalPipes(new ValidationPipe())
     service = moduleFixture.get<SessionService>(SessionService)
+    repo = moduleFixture.get<Repository<Session>>(getRepositoryToken(Session))
+    conn = moduleFixture.get<Connection>(Connection)
 
     await app.init()
+  })
+
+  afterAll(async () => {
+    await conn.close()
+    await app.close()
   })
 
   describe('Session CRUD', () => {
@@ -42,16 +53,13 @@ describe('SessionController (e2e)', () => {
       })
 
     it('Create a new Session object in the database', async () => {
-      const previousNumber = await (await service.findAll()).length
+      const previousCount = await repo.count()
       const session = await service.createSession('test')
       expect((await service.findOne(session.id)).externalAccount).toBe('test')
-      expect(await (await service.findAll()).length).toBe(previousNumber + 1)
+      expect(await repo.count()).toBe(previousCount + 1)
       await service.removeSession(session.id)
     })
 
   })
 
-  afterAll(async () => {
-    await app.close()
-  })
 })
