@@ -5,11 +5,9 @@ export class Session {
 
     public static of(params: Partial<Session>): Session {
         const session = new Session()
-    
         Object.assign(session, params)
-    
         return session
-      }
+    }
 
     @PrimaryGeneratedColumn('uuid')
     id: string
@@ -23,16 +21,20 @@ export class Session {
     @Column()
     completedAttestations: number
 
-    @Column('simple-json')
+    @Column('json', {nullable: true})
     meta?: object
 
-    @Column('date')
+    @Column('timestamp')
     createdAt: string
 
-    @Column('date')
-    expiredAt: string
+    @Column('timestamp', {nullable: true})
+    expiredAt?: string
 
-    @Column('date')
-    completedAt: string
+    @Column('timestamp', {nullable: true})
+    completedAt?: string
+
+    isOpen(): boolean {
+        return !this.expiredAt && !this.completedAt
+    }
 }
     

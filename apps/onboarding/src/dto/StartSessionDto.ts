@@ -1,4 +1,5 @@
 import { IsNotEmpty, ValidateIf } from 'class-validator'
+import { IsCeloAddress } from "../utils/validators"
 
 export enum DeviceType {
   Android = 'android',
@@ -19,4 +20,8 @@ export class StartSessionDto {
   @ValidateIf(o => o.deviceType === DeviceType.Android)
   @IsNotEmpty()
   androidSignedAttestation?: string
+
+  @IsNotEmpty()
+  @IsCeloAddress()
+  externalAccount: string
 }

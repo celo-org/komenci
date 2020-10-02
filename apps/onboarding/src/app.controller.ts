@@ -1,37 +1,46 @@
-import { Body, Controller, Post, Req } from '@nestjs/common'
+import { Body, Controller, ForbiddenException, Post, Req, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
+import { SessionService } from 'apps/onboarding/src/session/session.service'
+
 import { AppService } from './app.service'
+import { AuthService } from './auth/auth.service'
 import { GatewayService } from './gateway/gateway.service'
+import { RelayerProxyService } from './relayer_proxy.service'
 
 import { GetPhoneNumberIdResponse } from '../../relayer/src/relayer.service'
 import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 import { StartSessionDto } from './dto/StartSessionDto'
-import { RelayerProxyService } from './relayer_proxy.service'
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly relayerProxyService: RelayerProxyService,
-    private readonly gatewayService: GatewayService
+    private readonly gatewayService: GatewayService,
+    private readonly authService: AuthService,
+    private readonly sessionService: SessionService
   ) {}
 
   @Post('startSession')
   async startSession(
     @Body() startSessionDto: StartSessionDto,
     @Req() req
-  ): Promise<any> {
+  ): Promise<{token: string}> {
     if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
-      return { id: 'new-session' }
+      const token = await this.authService.startSession(startSessionDto.externalAccount)
+      return {token}
     } else {
-      return { error: 'gateway-not-passed' }
+      throw new ForbiddenException()
     }
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('deployWallet')
-  deployWallet(): any {
+  deployWallet  (@Body() body: StartSessionDto): any {
     return { id: 'new-session' }
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('distributedBlindedPepper')
   async distributedBlindedPepper(
     @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto
@@ -41,11 +50,13 @@ export class AppController {
     )
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('startAttestations')
   async startAttestation() {
     return this.relayerProxyService.submitTransaction({ tx: {} })
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('completeAttestation')
   async completeAttestation() {
     return this.relayerProxyService.submitTransaction({ tx: {} })

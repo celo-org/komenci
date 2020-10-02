@@ -1,13 +1,12 @@
 import { HttpService, Inject, Injectable } from '@nestjs/common'
-import { ConfigType } from '@nestjs/config'
-import thirdPartyConfig from '../../config/third-party.config'
+import { thirdPartyConfig, ThirdPartyConfig } from '../../config/third-party.config'
 import { SafetyNetDto } from '../../dto/SafetyNetDto'
 
 @Injectable()
 export class SafetyNetService {
   constructor(
     @Inject(thirdPartyConfig.KEY)
-    private config: ConfigType<typeof thirdPartyConfig>,
+    private config: ThirdPartyConfig,
     private httpService: HttpService
   ) {}
 
