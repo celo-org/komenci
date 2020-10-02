@@ -1,79 +1,91 @@
-import { SessionService } from '@app/onboarding/session/session.service'
+import { Session } from '@app/onboarding/session/session.entity'
 import { Post } from '@nestjs/common'
 import { JwtModule, JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
+import httpMocks from 'node-mocks-http'
 import { AppController } from './app.controller'
-import { AppModule } from './app.module'
 import { AppService } from './app.service'
 import { AuthService } from './auth/auth.service'
-import { StartSessionDto } from './dto/StartSessionDto'
+import { DeviceType, StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
 import { RelayerProxyService } from './relayer_proxy.service'
+import { SessionService } from './session/session.service'
+
+jest.mock('./gateway/gateway.service')
+jest.mock('./relayer_proxy.service')
+jest.mock('./session/session.service')
 
 describe('AppController', () => {
   let appController: AppController
-  const gatewayMock = {
-    verify: jest.fn()
-  }
-  const authMock = {
-    access: jest.fn()
-  }
-  const jwtMock = {
-    verify: jest.fn()
-  }
-  const relayerMock = {
-    getPhoneNumberIdentifier: jest.fn(),
-    submitTransaction: jest.fn(),
-  }
-  const sessionMock = {
+  // @ts-ignore
+  const gatewayService: GatewayService = new GatewayService()
+  // @ts-ignore
+  const sessionService = new SessionService()
+  // @ts-ignore
+  const relayerService = new RelayerProxyService()
+  let jwtService: JwtService
 
-  }
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         JwtModule.register({
-          secret: 'secret123456789',
-      })
-    ],
+          secret: 'test-secret'
+        })
+      ],
       controllers: [AppController],
       providers: [
-        AppService, RelayerProxyService, JwtService,
+        AppService, RelayerProxyService,
         AuthService, GatewayService, SessionService
       ]
-    })
-    .overrideProvider(GatewayService).useValue(gatewayMock)
-    .overrideProvider(AuthService).useValue(authMock)
-    .overrideProvider(JwtService).useValue(jwtMock)
-    .overrideProvider(RelayerProxyService).useValue(relayerMock)
-    .overrideProvider(SessionService).useValue(sessionMock)
-    .compile()
+    }).overrideProvider(GatewayService).useValue(gatewayService)
+      .overrideProvider(RelayerProxyService).useValue(relayerService)
+      .overrideProvider(SessionService).useValue(sessionService)
+      .compile()
 
     appController = app.get<AppController>(AppController)
+    jwtService = app.get<JwtService>(JwtService)
   })
 
-  describe('root', () => {
-    it('should be defined', () => {
-      expect(appController).toBeDefined()
+  it('should be defined', () => {
+    expect(appController).toBeDefined()
+  })
+
+  describe('#startSession', () => {
+    let req: httpMocks.MockRequest<any>
+    let payload: StartSessionDto
+    const externalAccount = "0x1234"
+
+    beforeEach(async () => {
+      req = httpMocks.createRequest({})
+      payload = {
+        captchaResponseToken: "sda",
+        deviceType: DeviceType.iOS,
+        iosDeviceToken: "asdas",
+        externalAccount,
+      }
     })
 
-    xit('should return a valid session',async () => {
-      const session = {captchaResponseToken:"xx", deviceType: "ios", iosDeviceToken:"pp", externalAccount:"0x1234vfyuik"}
+    describe('when the request passes the gateway', () => {
+      it('returns a session token', async () => {
+        const gatewayVerify = jest.spyOn(gatewayService, 'verify').mockResolvedValue(true)
+        const session = Session.of({id: 'test-session'})
+        const sessionFindOrCreate = jest.spyOn(sessionService, 'findOrCreateForAccount').mockResolvedValue(session)
 
-      jest.spyOn(appController, 'startSession').mockResolvedValue({
-        token: 'accessToken',
-     })
+        const result = await appController.startSession(payload, req)
 
-      expect(await appController.startSession(session as StartSessionDto, Post)).toEqual({
-        token: 'accessToken',
-     })
+        expect(gatewayVerify).toHaveBeenCalledWith(payload, req)
+        expect(sessionFindOrCreate).toHaveBeenCalledWith(payload.externalAccount)
+        expect(jwtService.verify(result.token)).toBeTruthy()
+        expect(jwtService.decode(result.token)).toMatchObject({sessionId: session.id})
+      })
     })
 
-    xit('should return a valid session',async () => {
-      const session = {}
-
-      // jest.spyOn(appController, 'startSession').mockResolvedValue({ error: 'gateway-not-passed' })
-      // expect(await appController.startSession(session as StartSessionDto, Post)).toEqual({ error: 'gateway-not-passed' })
+    describe('when the requests fails the gateway', () => {
+      it('throws Forbidden', async () => {
+        const gatewayVerify = jest.spyOn(gatewayService, 'verify').mockResolvedValue(false)
+        await expect(appController.startSession(payload, req)).rejects.toThrow(/Forbidden/)
+      })
     })
   })
 })

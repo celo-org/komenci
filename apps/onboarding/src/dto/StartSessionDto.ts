@@ -22,6 +22,4 @@ export class StartSessionDto {
 
   @IsNotEmpty()
   externalAccount: string
-
-  jwtToken: string
 }
