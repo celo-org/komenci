@@ -1,4 +1,4 @@
-import { WEB3_PROVIDER } from '@app/blockchain/blockchain.module'
+import { WEB3_PROVIDER } from '@app/blockchain/blockchain.providers'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { Inject, Injectable } from '@nestjs/common'
 import { isLeft } from 'fp-ts/Either'
@@ -66,9 +66,8 @@ export type BlockchainServiceError = NodeRPCError | DecodeError
 @Injectable()
 export class BlockchainService {
   constructor(
-    @Inject(WEB3_PROVIDER)
     // XXX: There's a better way in web3 1.3.0 but we're locked to 1.2.4 for now
-    private readonly web3Provider: Pick<HttpProvider, 'send'>
+    @Inject(WEB3_PROVIDER) private readonly web3Provider: Pick<HttpProvider, 'send'>
   ) {}
 
   public async getPendingTxPool(): Promise<Result<TxPool, BlockchainServiceError>> {

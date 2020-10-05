@@ -1,4 +1,4 @@
-import { WEB3_PROVIDER } from '@app/blockchain/blockchain.module'
+import { WEB3_PROVIDER } from '@app/blockchain/blockchain.providers'
 import { Test, TestingModule } from '@nestjs/testing'
 import Web3 from 'web3'
 import { BlockchainErrorTypes, BlockchainService } from './blockchain.service'
@@ -12,11 +12,11 @@ describe('BlockchainService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        BlockchainService,
         {
           provide: WEB3_PROVIDER,
           useValue: web3Provider,
-        }
+        },
+        BlockchainService,
       ],
     }).compile()
 

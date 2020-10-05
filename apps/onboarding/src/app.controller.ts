@@ -1,15 +1,20 @@
 import { Body, Controller, ForbiddenException, Post, Req, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
+import { RelayerResponse } from 'apps/relayer/src/app.controller'
+import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
 
 import { AppService } from './app.service'
 import { AuthService } from './auth/auth.service'
 import { GatewayService } from './gateway/gateway.service'
 import { RelayerProxyService } from './relayer_proxy.service'
 
-import { GetPhoneNumberIdResponse } from '../../relayer/src/relayer.service'
 import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 import { StartSessionDto } from './dto/StartSessionDto'
+
+interface GetPhoneNumberIdResponse {
+  identifier: string
+}
 
 @Controller()
 export class AppController {
@@ -45,20 +50,37 @@ export class AppController {
   async distributedBlindedPepper(
     @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto
   ): Promise<GetPhoneNumberIdResponse> {
-    return this.relayerProxyService.getPhoneNumberIdentifier(
+    const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
     )
+
+    return {
+      identifier: resp.payload
+    }
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('startAttestations')
-  async startAttestation() {
-    return this.relayerProxyService.submitTransaction({ tx: {} })
+  @Post('requestSubsidisedAttestation')
+  async requestSubsidisedAttestation() {
+    // const resp = this.relayerProxyService.submitTransactionBatch()
+    return {
+      txHash: ''
+    }
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('completeAttestation')
-  async completeAttestation() {
-    return this.relayerProxyService.submitTransaction({ tx: {} })
+  @Post('submitMetaTransaction')
+  async submitMetaTransaction(@Body() body: SubmitMetaTransactionDto) {
+    const resp = await this.relayerProxyService.submitTransaction({
+      transaction: {
+        ...body,
+        // MetaTransactions are always without value
+        value: "0",
+      }
+    })
+
+    return {
+      txHash: resp.payload
+    }
   }
 }

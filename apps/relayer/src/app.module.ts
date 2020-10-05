@@ -3,11 +3,11 @@ import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { appConfig, AppConfig } from './config/app.config'
-import { RelayerService } from './relayer.service'
-import { TransactionService } from './transaction/transaction.service';
+import { TransactionService } from './transaction/transaction.service'
 
 @Module({
   imports: [
@@ -58,7 +58,7 @@ import { TransactionService } from './transaction/transaction.service';
   ],
   controllers: [AppController],
   providers: [
-    RelayerService,
+    OdisService,
     TransactionService
   ]
 })

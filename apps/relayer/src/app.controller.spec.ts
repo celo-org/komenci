@@ -1,4 +1,5 @@
-import { BlockchainModule, WALLET } from '@app/blockchain'
+import { BlockchainModule } from '@app/blockchain'
+import { WALLET } from '@app/blockchain/blockchain.providers'
 import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { walletConfig, WalletType } from '@app/blockchain/config/wallet.config'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
@@ -6,12 +7,12 @@ import { ContractKit, OdisUtils } from '@celo/contractkit'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
+import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import Web3 from 'web3'
 
 import { AppController } from './app.controller'
 import { appConfig } from './config/app.config'
 import { ACCOUNT_ADDRESS, MOCK_ODIS_RESPONSE, ODIS_URL, PHONE_NUMBER, PRIVATE_KEY } from './config/testing-constants'
-import { RelayerService } from './relayer.service'
 
 const mockWallet: LocalWallet = new LocalWallet()
 mockWallet.addAccount(PRIVATE_KEY)
@@ -62,7 +63,7 @@ describe('AppController', () => {
       ],
       controllers: [AppController],
       providers: [
-        RelayerService,
+        OdisService,
         ConfigService,
         {
           provide: WALLET,
@@ -78,12 +79,12 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController)
   })
 
-  describe('getPhoneNumberIdentifier', () => {
+  xdescribe('getPhoneNumberIdentifier', () => {
     afterEach(() => {
       fetchMock.reset()
     })
 
-    xit('should retry after increasing quota when out of quota error is hit', async () => {
+    it('should retry after increasing quota when out of quota error is hit', async () => {
       fetchMock.post(odisUrl, 403)
 
       const getPhoneNumberIdentifierSpy = jest.spyOn(
@@ -103,7 +104,7 @@ describe('AppController', () => {
       expect(getPhoneNumberIdentifierSpy).toBeCalledTimes(2)
     })
 
-    xit('should return the identifier when input is correct', async () => {
+    it('should return the identifier when input is correct', async () => {
       fetchMock.post(odisUrl, {
         success: true,
         combinedSignature: MOCK_ODIS_RESPONSE
@@ -114,7 +115,7 @@ describe('AppController', () => {
         clientVersion: 'v1.0.0'
       }
       const result = await appController.getPhoneNumberIdentifier(input)
-      expect(result.identifier).toBe(
+      expect(result.payload).toBe(
         '0xf3ddadd1f488cdd42b9fa10354fdcae67c303ce182e71b30855733b50dce8301'
       )
     })

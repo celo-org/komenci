@@ -33,7 +33,7 @@ export type GetPhoneNumberIdResponse = {
 @Injectable()
 export class OdisService {
   constructor(
-    @Inject(ContractKit) private contractKit: ContractKit,
+    private contractKit: ContractKit,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     @Inject(appConfig.KEY) private appCfg: AppConfig,
   ) {}

@@ -59,7 +59,7 @@ export class AppController {
       await makeAsyncThrowable(
         this.transactionService.submitTransaction,
         (error: Error) => new RpcException(error.message)
-      )(input)
+      )(input.transaction)
     )
   }
 
