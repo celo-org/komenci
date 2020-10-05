@@ -79,8 +79,8 @@ export const appConfig = registerAs<() => AppConfig>('app', () => {
     logLevel: process.env.LOG_LEVEL || 'debug',
     mtwDeployerAddress: process.env.MTW_DEPLOYER_ADDRESS,
     mtwImplementationAddress: process.env.MTW_IMPLEMENTATION_ADDRESS,
-    transactionCheckIntervalMs: process.env.TRANSACTION_CHECK_INTERVAL_MS,
-    transactionTimeoutMs: process.env.TRANSACTION_TIMEOUT_MS,
+    transactionCheckIntervalMs: parseInt(process.env.TRANSACTION_CHECK_INTERVAL_MS, 10) || 1000,
+    transactionTimeoutMs: parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 10000,
     networkConfig
   }
 })
