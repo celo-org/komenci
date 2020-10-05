@@ -1,3 +1,4 @@
+import { BlockchainService } from '@app/blockchain/blockchain.service'
 import {
   WalletConfig,
   WalletType,
@@ -11,9 +12,7 @@ import Web3 from 'web3'
 import { provider } from 'web3-core'
 import { NodeConfig, NodeProviderType } from './config/node.config'
 
-export const CONTRACT_KIT = 'CONTRACT_KIT'
 export const BLOCKCHAIN_MODULE_OPTIONS = 'BLOCKCHAIN_MODULE_OPTIONS'
-export const WEB3 = 'WEB3'
 export const WEB3_PROVIDER = 'WEB3_PROVIDER'
 export const WALLET = 'WALLET'
 
@@ -26,6 +25,7 @@ export interface AsyncOptions<TOptions> extends Pick<ModuleMetadata, 'imports'> 
   useFactory?: (...args: any[] ) => Promise<TOptions> | TOptions
   inject?: any[]
 }
+
 
 const web3ProviderDef: FactoryProvider<provider> = {
   provide: WEB3_PROVIDER,
@@ -60,7 +60,7 @@ const walletDef: FactoryProvider<ReadOnlyWallet> = {
 }
 
 const web3Def: FactoryProvider<Web3> = {
-  provide: WEB3,
+  provide: Web3,
   useFactory: (web3Provider: provider) => {
     return new Web3(web3Provider)
   },
@@ -68,11 +68,11 @@ const web3Def: FactoryProvider<Web3> = {
 }
 
 const contractKitDef: FactoryProvider<ContractKit> = {
-  provide: CONTRACT_KIT,
+  provide: ContractKit,
   useFactory: (web3: Web3, wallet: Wallet) => {
     return new ContractKit(web3, wallet)
   },
-  inject: [WEB3, WALLET]
+  inject: [Web3, WALLET]
 }
 
 
@@ -89,9 +89,11 @@ export class BlockchainModule {
           useFactory: options.useFactory,
           inject: options.inject || [],
         },
+        BlockchainService,
         ...this.providers()
       ],
       exports: [
+        BlockchainService,
         ...this.providers().map(p => p.provide)
       ]
     }

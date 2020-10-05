@@ -1,4 +1,4 @@
-import { BlockchainModule, CONTRACT_KIT, WALLET } from '@app/blockchain'
+import { BlockchainModule, WALLET } from '@app/blockchain'
 import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { walletConfig, WalletType } from '@app/blockchain/config/wallet.config'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
@@ -69,7 +69,7 @@ describe('AppController', () => {
           useValue: mockWallet
         },
         {
-          provide: CONTRACT_KIT,
+          provide: ContractKit,
           useValue: mockContractKit
         }
       ]

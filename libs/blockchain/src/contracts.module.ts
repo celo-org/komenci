@@ -1,12 +1,11 @@
-import { AsyncOptions, CONTRACT_KIT } from '@app/blockchain/blockchain.module'
+import { AsyncOptions } from '@app/blockchain/blockchain.module'
 import { ContractKit } from '@celo/contractkit'
+import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { DynamicModule, Module } from '@nestjs/common'
 import { Logger } from 'nestjs-pino'
 
 export const CONTRACTS_MODULE_OPTIONS = 'CONTRACTS_MODULE_OPTIONS'
-export const META_TRANSACTION_WALLET = 'META_TRANSACTION_WALLET'
-export const META_TRANSACTION_WALLET_DEPLOYER = 'META_TRANSACTION_WALLET_DEPLOYER'
 
 export interface ContractsOptions {
   metaTransactionWalletAddress: string
@@ -14,7 +13,7 @@ export interface ContractsOptions {
 }
 
 const metaTransactionWalletDeployer = {
-  provide: META_TRANSACTION_WALLET_DEPLOYER,
+  provide: MetaTransactionWalletDeployerWrapper,
   useFactory: async (options: ContractsOptions, contractKit: ContractKit, logger: Logger) => {
     const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(
       options.metaTransactionWalletAddress
@@ -28,11 +27,11 @@ const metaTransactionWalletDeployer = {
 
     return deployer
   },
-  inject: [CONTRACTS_MODULE_OPTIONS, CONTRACT_KIT, Logger]
+  inject: [CONTRACTS_MODULE_OPTIONS, ContractKit, Logger]
 }
 
 const metaTransactionWallet = {
-  provide: META_TRANSACTION_WALLET,
+  provide: MetaTransactionWalletWrapper,
   useFactory: async (
     options: ContractsOptions,
     deployer: MetaTransactionWalletDeployerWrapper,
@@ -45,8 +44,8 @@ const metaTransactionWallet = {
   },
   inject: [
     CONTRACTS_MODULE_OPTIONS,
-    META_TRANSACTION_WALLET_DEPLOYER,
-    CONTRACT_KIT,
+    MetaTransactionWalletDeployerWrapper,
+    ContractKit,
     Logger
   ]
 }
@@ -68,8 +67,8 @@ export class ContractsModule {
         metaTransactionWalletDeployer,
       ],
       exports: [
-        META_TRANSACTION_WALLET,
-        META_TRANSACTION_WALLET_DEPLOYER
+        MetaTransactionWalletWrapper,
+        MetaTransactionWalletDeployerWrapper
       ]
     }
   }

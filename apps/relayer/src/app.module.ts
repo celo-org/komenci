@@ -7,6 +7,7 @@ import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { appConfig, AppConfig } from './config/app.config'
 import { RelayerService } from './relayer.service'
+import { TransactionService } from './transaction/transaction.service';
 
 @Module({
   imports: [
@@ -47,7 +48,7 @@ import { RelayerService } from './relayer.service'
         const relayerConfig = config.get<AppConfig>('app')
         return {
           pinoHttp: {
-            level: relayerConfig.log_level,
+            level: relayerConfig.logLevel,
             prettyPrint: process.env.NODE_ENV !== 'production'
           }
         }
@@ -56,6 +57,9 @@ import { RelayerService } from './relayer.service'
     HttpModule
   ],
   controllers: [AppController],
-  providers: [RelayerService]
+  providers: [
+    RelayerService,
+    TransactionService
+  ]
 })
 export class AppModule {}

@@ -1,5 +1,5 @@
 import { HttpModule, Logger, Module } from '@nestjs/common'
-import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { SessionService } from 'apps/onboarding/src/session/session.service'
