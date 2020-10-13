@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",
+    "@celo/base": "^0.0.3",
     "@nestjs/common": "^7.0.0",
     "@nestjs/config": "^0.5.0",
     "@nestjs/core": "^7.0.0",
@@ -45,8 +46,8 @@
     "jsonwebtoken": "^8.5.1",
     "nest": "^0.1.6",
     "nestjs-pino": "^1.2.0",
-    "node-mocks-http": "^1.9.0",
     "node-fetch": "2.6.1",
+    "node-mocks-http": "^1.9.0",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "pg": "^8.3.3",
