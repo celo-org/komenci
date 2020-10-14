@@ -1,0 +1,45 @@
+name: Deploy to AKS Cluster
+on:
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: Azure/docker-login@v1
+      with:
+        login-server: celotestnet.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+    
+    - run: |
+        docker build . -t celotestnet.azurecr.io/komenci:${{ github.sha }}
+        docker push celotestnet.azurecr.io/komenci:${{ github.sha }}
+      
+    # Set the target AKS cluster.
+    - uses: Azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: celotestnet
+        resource-group: testnet-eastus
+        
+    - uses: Azure/k8s-create-secret@v1
+      with:
+        container-registry-url: celotestnet.azurecr.io
+        container-registry-username: ${{ secrets.ACR_USERNAME }}
+        container-registry-password: ${{ secrets.ACR_PASSWORD }}
+        secret-name: k8s-secret
+
+    - uses: Azure/k8s-deploy@v1
+      with:
+        manifests: |
+          manifests/deployment.yaml
+          manifests/service.yaml
+        images: |
+          celotestnet.azurecr.io/komenci:${{ github.sha }}
+        imagepullsecrets: |
+          k8s-secret

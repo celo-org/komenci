@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: komenci
+  name: komenci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: komenci
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: komenci
+    spec:
+      containers:
+      - env:
+        - name: RELAYER_HOST
+          value: 'localhost'
+        - name: RELAYER_PORT
+          value: '5050' 
+        - name: DB_HOST
+          value: 'localhost'
+        - name: DB_PORT
+          value: '5432'
+        - name: DB_USERNAME
+          value: 'postgres'
+        - name: DB_PASSWORD
+          value: 'docker'
+        - name: DB_DATABASE
+          value: 'postgres'
+        - name: DB_SYNCHRONIZE
+          value: 'true'
+        image: celotestnet.azurecr.io/komenci
+        name: komenci
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+        resources: {}
+      imagePullSecrets:
+      - name: regcred
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
