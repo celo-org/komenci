@@ -1,24 +1,29 @@
-import { Test, TestingModule } from '@nestjs/testing'
-import { AppModule } from './../src/app.module'
-
-const request = require('supertest')
-
 describe('AppController (e2e)', () => {
-  let app
+  // let app: INestApplication
+  // let client: ClientProxy
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule]
-    }).compile()
+    // TODO: this doesn't currently work
+    // Ganache setup needs to be more complex to hydrate a valid chain state
 
-    app = moduleFixture.createNestApplication()
-    await app.init()
-  })
+    // const moduleFixture: TestingModule = await Test.createTestingModule({
+    //   imports: [
+    //     AppModule,
+    //     ClientsModule.register([
+    //       { name: 'RELAYER_SERVICE', transport: Transport.TCP },
+    //     ]),
+    //   ]
+    // }).overrideProvider(WEB3_PROVIDER).useValue(provider).compile()
 
-  xit('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!')
+    // app = moduleFixture.createNestApplication()
+    // app.connectMicroservice({
+    //   transport: Transport.TCP,
+    // })
+
+    // await app.startAllMicroservicesAsync()
+    // await app.init()
+
+    // client = app.get('RELAYER_SERVICE')
+    // await client.connect()
   })
 })

@@ -1,7 +1,11 @@
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
 import { makeAsyncThrowable } from '@celo/base/lib/result'
 import { Result, throwIfError } from '@celo/base/src/result'
-import { MetaTransactionWalletWrapper, RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import {
+  MetaTransactionWalletWrapper,
+  RawTransaction,
+  toRawTransaction,
+} from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Body, Controller, Inject } from '@nestjs/common'
 import { MessagePattern, RpcException } from '@nestjs/microservices'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
@@ -42,7 +46,7 @@ export class AppController {
   @MessagePattern({ cmd: 'getPhoneNumberIdentifier' })
   async getPhoneNumberIdentifier(
     @Body() input: DistributedBlindedPepperDto,
-  ): Promise<RelayerResponse<GetPhoneNumberIdResponse>> {
+  ): Promise<RelayerResponse<string>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
         this.odisService.getPhoneNumberIdentifier,
@@ -69,10 +73,10 @@ export class AppController {
   ): Promise<RelayerResponse<string>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
-        this.transactionService.submitTransaction,
+         this.transactionService.submitTransaction,
         (error: Error) => new RpcException(error.message)
       )(
-        this.metaTxWallet.toRawTransaction(
+        toRawTransaction(
           this.metaTxWallet.executeTransactions(
             input.transactions
           ).txo

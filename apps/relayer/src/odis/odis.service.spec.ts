@@ -74,7 +74,7 @@ describe('OdisService', () => {
       expect(res.ok).toBe(true)
       if (res.ok) {
         expect(getPhoneNumberIdentifier).toHaveBeenCalled()
-        expect(res.result.identifier).toBe(odisResponseOk.phoneHash)
+        expect(res.result).toBe(odisResponseOk.phoneHash)
       }
     })
 
@@ -113,7 +113,7 @@ describe('OdisService', () => {
         expect(res.ok).toBe(true)
         if (res.ok) {
           expect(getPhoneNumberIdentifier).toHaveBeenCalled()
-          expect(res.result.identifier).toBe(odisResponseOk.phoneHash)
+          expect(res.result).toBe(odisResponseOk.phoneHash)
         }
         expect(replenishQuota).toHaveBeenCalled()
         expect(getPhoneNumberIdentifier).toHaveBeenCalledTimes(2)

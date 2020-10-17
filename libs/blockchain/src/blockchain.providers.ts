@@ -33,6 +33,9 @@ export const web3ProviderDef: FactoryProvider<provider> = {
 export const walletDef: FactoryProvider<ReadOnlyWallet> = {
   provide: WALLET,
   useFactory: (options: BlockchainOptions) => {
+    if (options.wallet === undefined) {
+      return null
+    }
     switch (options.wallet.type) {
       case WalletType.AzureHSM:
         return new AzureHSMWallet(options.wallet.vaultName)

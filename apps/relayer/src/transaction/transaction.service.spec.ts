@@ -161,7 +161,7 @@ describe('TransactionService', () => {
     })
 
     describe('when the transaction result resolves', () => {
-      it('submits the transaction to the chain and watches and unwatchs', async () => {
+      it('submits the transaction to the chain, watched then unwatches', async () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
         const result: any = {
@@ -174,8 +174,21 @@ describe('TransactionService', () => {
         // @ts-ignore
         const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
 
-        const hash = await service.submitTransaction(tx)
-        expect(sendTransaction).toHaveBeenCalledWith(tx)
+        const rawTx = {
+          destination: tx.to,
+          data: tx.input,
+          value: tx.value
+        }
+
+        const hash = await service.submitTransaction(rawTx)
+
+        expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
+          to: rawTx.destination,
+          data: rawTx.data,
+          value: rawTx.value,
+          from: relayerAddress
+        }))
+
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash, result)
         // The receipt wait isn't waited on, it happens in the next tick
         await setTimeout(() => {
@@ -207,10 +220,21 @@ describe('TransactionService', () => {
         // @ts-ignore
         const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(true)
 
+        const rawTx = {
+          destination: tx.to,
+          data: tx.input,
+          value: tx.value
+        }
 
-        const hash = await service.submitTransaction(tx)
+        const hash = await service.submitTransaction(rawTx)
 
-        expect(sendTransaction).toHaveBeenCalledWith(tx)
+        expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
+          to: rawTx.destination,
+          data: rawTx.data,
+          value: rawTx.value,
+          from: relayerAddress
+        }))
+
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash, result)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
@@ -218,7 +242,7 @@ describe('TransactionService', () => {
 
         expect(checkTransactions).toHaveBeenCalled()
         await setTimeout(() => {
-          expect(deadLetter).toHaveBeenCalledWith(tx)
+          expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
           expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         })
 

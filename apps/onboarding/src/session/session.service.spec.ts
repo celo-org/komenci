@@ -33,7 +33,7 @@ describe('SessionService', () => {
 
     jest.spyOn(repository, 'save').mockResolvedValue(session)
 
-    expect(await service.createSession('test')).toEqual(session)
+    expect(await service.create('test')).toEqual(session)
 
   })
 

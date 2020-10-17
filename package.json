@@ -79,6 +79,7 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-import": "^2.20.1",
     "fetch-mock": "9.10.4",
+    "ganache-core": "^2.12.1",
     "jest": "26.0.1",
     "leaked-handles": "^5.2.0",
     "node-loader": "^1.0.1",

@@ -25,7 +25,6 @@ import { TransactionService } from './transaction/transaction.service'
         return {
           node: config.get<NodeConfig>('node'),
           wallet: config.get<WalletConfig>('wallet'),
-          mtwDeployerAddress: config.get<AppConfig>('app').mtwDeployerAddress
         }
       }
     }),
@@ -36,7 +35,7 @@ import { TransactionService } from './transaction/transaction.service'
         const wallet = config.get<WalletConfig>('wallet')
 
         return {
-          metaTransactionWalletAddress: cfg.mtwDeployerAddress,
+          deployerAddress: cfg.mtwDeployerAddress,
           walletAddress: wallet.address
         }
       },

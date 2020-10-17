@@ -40,9 +40,9 @@ export class OdisService {
 
   // TODO: Relocate this to the onboarding service once we update the ContractKit interface
   // to accept pre-signed auth header (then we can just expose signPersonalMessage)
-  async getPhoneNumberIdentifier(
+  getPhoneNumberIdentifier = async (
     input: DistributedBlindedPepperDto
-  ): Promise<Result<GetPhoneNumberIdResponse, OdisQueryError>> {
+  ): Promise<Result<string, OdisQueryError>> => {
     const authSigner: AuthSigner = {
       authenticationMethod: OdisUtils.Query.AuthenticationMethod.WALLET_KEY,
       contractKit: this.contractKit
@@ -67,9 +67,7 @@ export class OdisService {
           undefined,
           input.clientVersion
         )
-        return Ok({
-          identifier: phoneHashDetails.phoneHash
-        })
+        return Ok(phoneHashDetails.phoneHash)
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {

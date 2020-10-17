@@ -6,10 +6,12 @@ import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { TransactionResult } from '@celo/contractkit/lib/utils/tx-result'
+import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { Logger } from 'nestjs-pino'
 import Web3 from 'web3'
-import { Transaction, Tx } from 'web3-core'
+import { Transaction } from 'web3-core'
 import { TransactionObject } from 'web3-eth'
 import { AppConfig, appConfig } from '../config/app.config'
 
@@ -44,11 +46,18 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.timer)
   }
 
-  async submitTransaction(tx: Tx): Promise<Result<string, any>> {
+  submitTransaction = async (tx: RawTransactionDto): Promise<Result<string, any>> => {
     let tries = 0
     while(++tries < 3) {
       try {
-        const result = await this.kit.sendTransaction(tx)
+        const result = await this.kit.sendTransaction({
+          to: tx.destination,
+          value: tx.value,
+          data: tx.data,
+          from: this.walletCfg.address,
+          gas: 10000000,
+          gasPrice: 10000000000
+        })
         const txHash = await result.getHash()
         this.watchTransaction(txHash, result)
         return Ok(txHash)
@@ -61,14 +70,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   }
 
   async submitTransactionObject(txo: TransactionObject<any>): Promise<Result<string, any>> {
-    try {
-      const result = await this.kit.sendTransactionObject(txo)
-      const txHash = await result.getHash()
-      this.watchTransaction(txHash)
-      return Ok(txHash)
-    } catch(e) {
-      return Err(e)
-    }
+    return this.submitTransaction(toRawTransaction(txo))
   }
 
   private async checkTransactions() {
@@ -113,7 +115,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     this.transactionSeenAt.set(txHash, Date.now())
 
     if (result !== undefined) {
-      this.waitForReceipt(result)
+      this.waitForReceipt(result).catch(e => {
+        // TODO: Handle exception waiting for receipt
+      })
     }
   }
 

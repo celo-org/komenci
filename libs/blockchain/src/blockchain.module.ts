@@ -12,7 +12,7 @@ import { NodeConfig } from './config/node.config'
 
 export interface BlockchainOptions {
   node: NodeConfig
-  wallet: WalletConfig
+  wallet?: WalletConfig
 }
 
 export interface AsyncOptions<TOptions> extends Pick<ModuleMetadata, 'imports'> {

@@ -1,3 +1,6 @@
+import { BlockchainModule, ContractsModule } from '@app/blockchain'
+import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
+import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
@@ -5,7 +8,6 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
-import { AppService } from './app.service'
 import { AuthModule } from './auth/auth.module'
 import { appConfig, AppConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
@@ -19,9 +21,13 @@ import { SessionModule } from './session/session.module'
 @Module({
   controllers: [AppController],
   imports: [
+    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [relayerConfig, appConfig, thirdPartyConfig, databaseConfig, rulesConfig],
+      load: [
+        relayerConfig, appConfig, thirdPartyConfig,
+        databaseConfig, rulesConfig, nodeConfig
+      ],
       envFilePath: [
         'apps/onboarding/.env.local',
         'apps/onboarding/.env',
@@ -55,14 +61,30 @@ import { SessionModule } from './session/session.module'
     HttpModule,
     SessionModule,
     TypeOrmModule.forRootAsync({
-      imports: [ConfigService],
       inject: [ConfigService],
-      useFactory: async (config: ConfigService) => config.get<DatabaseConfig>('database')
+      useFactory: (config: ConfigService) => config.get<DatabaseConfig>('database')
     }),
-    AuthModule,
+    BlockchainModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          node: config.get<NodeConfig>('node'),
+        }
+      }
+    }),
+    ContractsModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const cfg = config.get<AppConfig>('app')
+
+        return {
+          deployerAddress: cfg.mtwDeployerAddress,
+        }
+      },
+    }),
   ],
   providers: [
-    AppService,
+    WalletService,
     SessionService,
     RelayerProxyService,
     {

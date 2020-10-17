@@ -8,22 +8,21 @@ import { Logger } from 'nestjs-pino'
 export const CONTRACTS_MODULE_OPTIONS = 'CONTRACTS_MODULE_OPTIONS'
 
 export interface ContractsOptions {
-  metaTransactionWalletAddress: string
-  walletAddress: string
+  deployerAddress: string
+  walletAddress?: string
 }
 
 const metaTransactionWalletDeployer = {
   provide: MetaTransactionWalletDeployerWrapper,
   useFactory: async (options: ContractsOptions, contractKit: ContractKit, logger: Logger) => {
     const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(
-      options.metaTransactionWalletAddress
+      options.deployerAddress
     )
-    logger.log(`Initialized with MetaTxWalletDeployer at: ${options.metaTransactionWalletAddress}`)
 
-    const canDeploy = await deployer.canDeploy(options.walletAddress)
-    if (!canDeploy) {
-      throw Error(`Wallet(${options.walletAddress}) is not allowed to deploy contracts`)
-    }
+    logger.log({
+      message: 'Initialized MetaTxWalletDeployer',
+      address: options.deployerAddress,
+    })
 
     return deployer
   },
@@ -38,9 +37,14 @@ const metaTransactionWallet = {
     contractKit: ContractKit,
     logger: Logger
   ) => {
-    const metaTxWalletAddress = await deployer.getWallet(options.walletAddress)
-    logger.log(`Relayer has MetaTxWallet at: ${metaTxWalletAddress}`)
-    return contractKit.contracts.getMetaTransactionWallet(metaTxWalletAddress)
+    if (options.walletAddress) {
+      const metaTxWalletAddress = await deployer.getWallet(options.walletAddress)
+      logger.log({
+        message: 'Found Relayer MetaTxWallet',
+        address: metaTxWalletAddress,
+      })
+      return contractKit.contracts.getMetaTransactionWallet(metaTxWalletAddress)
+    }
   },
   inject: [
     CONTRACTS_MODULE_OPTIONS,
