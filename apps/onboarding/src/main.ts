@@ -7,7 +7,7 @@ import {
 } from '@nestjs/platform-fastify'
 import { Logger } from 'nestjs-pino'
 import { AppModule } from './app.module'
-import appConfig from './config/app.config'
+import { appConfig } from './config/app.config'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(

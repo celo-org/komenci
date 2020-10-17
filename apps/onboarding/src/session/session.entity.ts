@@ -1,5 +1,10 @@
 import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
 
+interface SessionMetadata {
+    walletDeployTxHash: string,
+    walletDeployStartedAt: number
+}
+
 @Entity()
 export class Session {
 
@@ -22,7 +27,7 @@ export class Session {
     completedAttestations: number
 
     @Column('json', {nullable: true})
-    meta?: object
+    meta?: SessionMetadata
 
     @Column('timestamp')
     createdAt: string

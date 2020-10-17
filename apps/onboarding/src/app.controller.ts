@@ -1,24 +1,34 @@
-import { Body, Controller, ForbiddenException, Post, Req, UseGuards } from '@nestjs/common'
+import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
+import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
+import { WalletErrorType, WalletService } from '@app/onboarding/wallet/wallet.service'
+import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
+import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { Body, Controller, ForbiddenException, Inject, Post, Req, Session, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
+import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
 
-import { AppService } from './app.service'
 import { AuthService } from './auth/auth.service'
+
+import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
+import { StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
 import { RelayerProxyService } from './relayer_proxy.service'
 
-import { GetPhoneNumberIdResponse } from '../../relayer/src/relayer.service'
-import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
-import { StartSessionDto } from './dto/StartSessionDto'
+interface GetPhoneNumberIdResponse {
+  identifier: string
+}
 
 @Controller()
 export class AppController {
   constructor(
-    private readonly appService: AppService,
     private readonly relayerProxyService: RelayerProxyService,
     private readonly gatewayService: GatewayService,
     private readonly authService: AuthService,
-    private readonly sessionService: SessionService
+    private readonly sessionService: SessionService,
+    private readonly walletService: WalletService,
+    @Inject(appConfig.KEY)
+    private readonly cfg: AppConfig
   ) {}
 
   @Post('startSession')
@@ -36,8 +46,30 @@ export class AppController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('deployWallet')
-  deployWallet  (@Body() body: StartSessionDto): any {
-    return { id: 'new-session' }
+  async deployWallet(
+    @Session() session: SessionEntity,
+  ): Promise<any> {
+    const getResp = await this.walletService.getWallet(session)
+    if (getResp.ok) {
+      return {
+        status: 'deployed',
+        walletAddress: getResp.result
+      }
+    } else if (getResp.ok === false) {
+      if (getResp.error.errorType === WalletErrorType.NotDeployed) {
+        const deployResp = await this.walletService.deployWallet(session)
+        if (deployResp.ok) {
+          return {
+            status: 'in-progress',
+            txHash: deployResp.result
+          }
+        } else if (deployResp.ok === false) {
+          throw(deployResp.error)
+        }
+      } else {
+        throw(getResp.error)
+      }
+    }
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -45,20 +77,37 @@ export class AppController {
   async distributedBlindedPepper(
     @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto
   ): Promise<GetPhoneNumberIdResponse> {
-    return this.relayerProxyService.getPhoneNumberIdentifier(
+    const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
     )
+
+    return {
+      identifier: resp.payload
+    }
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('startAttestations')
-  async startAttestation() {
-    return this.relayerProxyService.submitTransaction({ tx: {} })
+  @Post('requestSubsidisedAttestation')
+  async requestSubsidisedAttestation() {
+    // const resp = this.relayerProxyService.submitTransactionBatch()
+    return {
+      txHash: ''
+    }
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('completeAttestation')
-  async completeAttestation() {
-    return this.relayerProxyService.submitTransaction({ tx: {} })
+  @Post('submitMetaTransaction')
+  async submitMetaTransaction(@Body() body: SubmitMetaTransactionDto) {
+    const resp = await this.relayerProxyService.submitTransaction({
+      transaction: {
+        ...body,
+        // MetaTransactions are always without value
+        value: "0",
+      }
+    })
+
+    return {
+      txHash: resp.payload
+    }
   }
 }
