@@ -1,37 +1,94 @@
-import { Controller } from '@nestjs/common'
-import { MessagePattern } from '@nestjs/microservices'
-import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
+import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import { makeAsyncThrowable } from '@celo/base/lib/result'
+import { Result, throwIfError } from '@celo/base/src/result'
 import {
-  GetPhoneNumberIdResponse,
-  RelayerService,
-  SignPersonalMessageInput,
-  SignPersonalMessageResponse,
-  SubmitTransactionInput,
-  SubmitTransactionResponse
-} from './relayer.service'
+  MetaTransactionWalletWrapper,
+  RawTransaction,
+  toRawTransaction,
+} from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { Body, Controller, Inject } from '@nestjs/common'
+import { MessagePattern, RpcException } from '@nestjs/microservices'
+import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
+import { SubmitTransactionBatchDto } from 'apps/relayer/src/dto/SubmitTransactionBatchDto'
+import { SubmitTransactionDto } from 'apps/relayer/src/dto/SubmitTransactionDto'
+import { GetPhoneNumberIdResponse, OdisService } from 'apps/relayer/src/odis/odis.service'
+import { TransactionService } from 'apps/relayer/src/transaction/transaction.service'
+import Web3 from 'web3'
+import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
+
+export interface RelayerResponse<T> {
+  payload: T
+  relayerAddress: string
+}
 
 @Controller()
 export class AppController {
-  constructor(private readonly relayerService: RelayerService) {}
+  constructor(
+    private readonly odisService: OdisService,
+    private readonly web3: Web3,
+    @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
+    private metaTxWallet: MetaTransactionWalletWrapper,
+    private transactionService: TransactionService,
+  ) {}
 
   @MessagePattern({ cmd: 'signPersonalMessage' })
   async signPersonalMessage(
-    input: SignPersonalMessageInput
-  ): Promise<SignPersonalMessageResponse> {
-    return this.relayerService.signPersonalMessage(input)
+    @Body() input: SignPersonalMessageDto
+  ): Promise<RelayerResponse<string>> {
+    return this.wrapResponse(
+      await this.web3.eth.sign(
+        input.data,
+        this.walletCfg.address,
+      )
+    )
   }
 
   @MessagePattern({ cmd: 'getPhoneNumberIdentifier' })
   async getPhoneNumberIdentifier(
-    input: DistributedBlindedPepperDto
-  ): Promise<GetPhoneNumberIdResponse> {
-    return this.relayerService.getPhoneNumberIdentifier(input)
+    @Body() input: DistributedBlindedPepperDto,
+  ): Promise<RelayerResponse<string>> {
+    return this.wrapResponse(
+      await makeAsyncThrowable(
+        this.odisService.getPhoneNumberIdentifier,
+        (error: Error) => new RpcException(error.message)
+      )(input)
+    )
   }
 
   @MessagePattern({ cmd: 'submitTransaction' })
   async submitTransaction(
-    input: SubmitTransactionInput
-  ): Promise<SubmitTransactionResponse> {
-    return this.relayerService.submitTransaction(input)
+    @Body() input: SubmitTransactionDto
+  ): Promise<RelayerResponse<string>> {
+    return this.wrapResponse(
+      await makeAsyncThrowable(
+        this.transactionService.submitTransaction,
+        (error: Error) => new RpcException(error.message)
+      )(input.transaction)
+    )
+  }
+
+  @MessagePattern({ cmd: 'submitTransactionBatch' })
+  async submitTransactionBatch(
+    @Body() input: SubmitTransactionBatchDto
+  ): Promise<RelayerResponse<string>> {
+    return this.wrapResponse(
+      await makeAsyncThrowable(
+         this.transactionService.submitTransaction,
+        (error: Error) => new RpcException(error.message)
+      )(
+        toRawTransaction(
+          this.metaTxWallet.executeTransactions(
+            input.transactions
+          ).txo
+        )
+      )
+    )
+  }
+
+  wrapResponse<T>(payload: T): RelayerResponse<T> {
+    return {
+      payload,
+      relayerAddress: this.walletCfg.address
+    }
   }
 }

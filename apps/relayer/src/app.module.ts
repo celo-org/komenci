@@ -3,10 +3,11 @@ import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { appConfig, AppConfig } from './config/app.config'
-import { RelayerService } from './relayer.service'
+import { TransactionService } from './transaction/transaction.service'
 
 @Module({
   imports: [
@@ -24,7 +25,6 @@ import { RelayerService } from './relayer.service'
         return {
           node: config.get<NodeConfig>('node'),
           wallet: config.get<WalletConfig>('wallet'),
-          mtwDeployerAddress: config.get<AppConfig>('app').mtwDeployerAddress
         }
       }
     }),
@@ -35,7 +35,7 @@ import { RelayerService } from './relayer.service'
         const wallet = config.get<WalletConfig>('wallet')
 
         return {
-          metaTransactionWalletAddress: cfg.mtwDeployerAddress,
+          deployerAddress: cfg.mtwDeployerAddress,
           walletAddress: wallet.address
         }
       },
@@ -47,7 +47,7 @@ import { RelayerService } from './relayer.service'
         const relayerConfig = config.get<AppConfig>('app')
         return {
           pinoHttp: {
-            level: relayerConfig.log_level,
+            level: relayerConfig.logLevel,
             prettyPrint: process.env.NODE_ENV !== 'production'
           }
         }
@@ -56,6 +56,9 @@ import { RelayerService } from './relayer.service'
     HttpModule
   ],
   controllers: [AppController],
-  providers: [RelayerService]
+  providers: [
+    OdisService,
+    TransactionService
+  ]
 })
 export class AppModule {}
