@@ -38,7 +38,7 @@ describe('SessionService', () => {
     expect(service).toBeDefined()
   })
 
-  describe('#createSession', () => {
+  describe('#create', () => {
     let session: Session
     let save: jest.SpyInstance
     let eoa: string

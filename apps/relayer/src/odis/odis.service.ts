@@ -71,6 +71,7 @@ export class OdisService {
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {
+          console.log(e)
           await replenishQuota(this.walletCfg.address, this.contractKit)
         } else {
           return Err(new OdisUnknownError(e))
