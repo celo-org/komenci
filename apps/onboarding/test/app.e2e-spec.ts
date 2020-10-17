@@ -3,6 +3,7 @@ import { DeviceType, StartSessionDto } from '@app/onboarding/dto/StartSessionDto
 import { GatewayService } from '@app/onboarding/gateway/gateway.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
+import { trimLeading0x } from '@celo/base/lib'
 import { ValidationPipe } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -94,7 +95,7 @@ describe('AppController (e2e)', () => {
     })
 
     describe("with a valid payload", () => {
-      const eoa = Web3.utils.randomHex(20)
+      const eoa = trimLeading0x(Web3.utils.randomHex(20))
       describe("when the gateway does not pass", () => {
         let gatewayVerify: jest.SpyInstance
         beforeEach(() => {
