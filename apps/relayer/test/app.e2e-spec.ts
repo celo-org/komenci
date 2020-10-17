@@ -26,4 +26,8 @@ describe('AppController (e2e)', () => {
     // client = app.get('RELAYER_SERVICE')
     // await client.connect()
   })
+
+  it('is an empty test', () => {
+    expect(true).toBeTruthy()
+  })
 })
