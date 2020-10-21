@@ -7,6 +7,7 @@ export const appConfig = registerAs('app', () => ({
   log_level: process.env.LOG_LEVEL || 'debug',
   mtwDeployerAddress: process.env.MTW_DEPLOYER_ADDRESS,
   mtwImplementationAddress: process.env.MTW_IMPLEMENTATION_ADDRESS,
+  fundAddress: process.env.FUND_ADDRESS,
   transactionTimeoutMs: parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 10000,
 }))
 

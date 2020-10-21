@@ -1,5 +1,8 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
+import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
+import { SessionDecorator } from '@app/onboarding/session/session.decorator'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
+import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType, WalletService } from '@app/onboarding/wallet/wallet.service'
 import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
@@ -7,6 +10,7 @@ import { Body, Controller, ForbiddenException, Inject, Post, Req, Session, UseGu
 import { AuthGuard } from '@nestjs/passport'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
+import { Logger } from 'nestjs-pino'
 
 import { AuthService } from './auth/auth.service'
 
@@ -19,12 +23,27 @@ interface GetPhoneNumberIdResponse {
   identifier: string
 }
 
+interface DeployWalletInProgress {
+  status: 'in-progress',
+  txHash: string,
+  deployerAddress: string,
+}
+
+interface DeployWalletDeployed {
+  status: 'deployed',
+  walletAddress: string
+}
+
+type DeployWalletResp = DeployWalletInProgress | DeployWalletDeployed
+
 @Controller()
 export class AppController {
   constructor(
+    private readonly logger: Logger,
     private readonly relayerProxyService: RelayerProxyService,
     private readonly gatewayService: GatewayService,
     private readonly authService: AuthService,
+    private readonly subsidyService: SubsidyService,
     private readonly sessionService: SessionService,
     private readonly walletService: WalletService,
     @Inject(appConfig.KEY)
@@ -48,7 +67,7 @@ export class AppController {
   @Post('deployWallet')
   async deployWallet(
     @Session() session: SessionEntity,
-  ): Promise<any> {
+  ): Promise<DeployWalletResp> {
     const getResp = await this.walletService.getWallet(session)
     if (getResp.ok) {
       return {
@@ -61,7 +80,8 @@ export class AppController {
         if (deployResp.ok) {
           return {
             status: 'in-progress',
-            txHash: deployResp.result
+            txHash: deployResp.result,
+            deployerAddress: this.cfg.mtwDeployerAddress
           }
         } else if (deployResp.ok === false) {
           throw(deployResp.error)
@@ -88,10 +108,19 @@ export class AppController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('requestSubsidisedAttestation')
-  async requestSubsidisedAttestation() {
-    // const resp = this.relayerProxyService.submitTransactionBatch()
+  async requestSubsidisedAttestation(
+    @Body() requestAttestationsDto: RequestAttestationsDto,
+    @Session() session: SessionEntity,
+) {
+    const resp = await this.relayerProxyService.submitTransactionBatch({
+      transactions: await this.subsidyService.buildTransactionBatch(
+        requestAttestationsDto,
+        session,
+      )
+    })
+
     return {
-      txHash: ''
+      txHash: resp.payload
     }
   }
 

@@ -1,6 +1,7 @@
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
 import { makeAsyncThrowable } from '@celo/base/lib/result'
 import { Result, throwIfError } from '@celo/base/src/result'
+import { ContractKit } from '@celo/contractkit'
 import {
   MetaTransactionWalletWrapper,
   RawTransaction,
@@ -26,6 +27,7 @@ export class AppController {
   constructor(
     private readonly odisService: OdisService,
     private readonly web3: Web3,
+    private readonly contractKit: ContractKit,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     private metaTxWallet: MetaTransactionWalletWrapper,
     private transactionService: TransactionService,
