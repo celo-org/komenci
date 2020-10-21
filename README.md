@@ -34,6 +34,18 @@ In our case we have:
 > yarn deps:celo:build
 ```
 
+#### Database
+
+The services rely on a SQL database to be running. Access can be configured through the config files.
+To spin up postgres in Docker simply run 
+
+```
+// run postgres
+docker run --rm  --name pg-docker -e POSTGRES_PASSWORD=komenci -u postgres -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data postgres
+```
+
+Make sure you either set up a komenci user and database and update the username (default "postgres") and database (default "postgres") according to the config files.
+
 #### Configs
 
 Setup local config files:
