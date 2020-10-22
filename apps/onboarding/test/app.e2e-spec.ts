@@ -3,7 +3,8 @@ import { DeviceType, StartSessionDto } from '@app/onboarding/dto/StartSessionDto
 import { GatewayService } from '@app/onboarding/gateway/gateway.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
-import { trimLeading0x } from '@celo/base/lib'
+import { ensureLeading0x, trimLeading0x } from '@celo/base/lib'
+import { hashMessage } from '@celo/utils/lib/signatureUtils'
 import { ValidationPipe } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -13,6 +14,7 @@ import { isRight } from 'fp-ts/Either'
 import { Connection, EntityManager, QueryRunner, Repository } from 'typeorm'
 import Web3 from 'web3'
 import { AppModule } from '../src/app.module'
+import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
 const request = require('supertest')
 
 jest.mock('@app/onboarding/gateway/gateway.service')
@@ -66,11 +68,12 @@ describe('AppController (e2e)', () => {
   })
 
   describe('/ (POST) startSession', () => {
-    const startSessionPayload = (eoa: string): StartSessionDto => ({
+    const startSessionPayload = (eoa: string, signature: string): StartSessionDto => ({
       captchaResponseToken: "sda",
       deviceType: DeviceType.iOS,
       iosDeviceToken: "asdas",
       externalAccount: eoa,
+      signature
     })
 
     describe('with invalid payloads', () => {
@@ -87,7 +90,7 @@ describe('AppController (e2e)', () => {
       })
 
       it('Returns 400 with an invalid ethereum address', async () => {
-        const payload = startSessionPayload("not-an-address")
+        const payload = startSessionPayload("not-an-address", "signature")
         const resp = await request(app.getHttpServer()).post('/startSession').send(payload)
         expect(resp.statusCode).toBe(400)
         expect(resp.body.message[0]).toMatch(/must be a valid Celo address/)
@@ -95,7 +98,17 @@ describe('AppController (e2e)', () => {
     })
 
     describe("with a valid payload", () => {
-      const eoa = trimLeading0x(Web3.utils.randomHex(20))
+      const privateKey = trimLeading0x(Web3.utils.randomHex(32))
+      let eoa: string
+      let signature: string
+
+      beforeEach(async () => {
+        const wallet = new LocalWallet()
+        wallet.addAccount(privateKey)
+        eoa = ensureLeading0x(wallet.getAccounts()[0])
+        signature = await wallet.signPersonalMessage(eoa, hashMessage(`komenci:${eoa}`))
+      })
+
       describe("when the gateway does not pass", () => {
         let gatewayVerify: jest.SpyInstance
         beforeEach(() => {
@@ -103,7 +116,7 @@ describe('AppController (e2e)', () => {
         })
 
         it("Returns 403 with an error", async () => {
-          const payload = startSessionPayload(eoa)
+          const payload = startSessionPayload(eoa, signature)
           const resp = await request(app.getHttpServer()).post('/startSession').send(payload)
           expect(resp.statusCode).toEqual(403)
           expect(resp.body).toMatchObject({
@@ -127,7 +140,7 @@ describe('AppController (e2e)', () => {
         }
 
         const subject = async () => {
-          const payload = startSessionPayload(eoa)
+          const payload = startSessionPayload(eoa, signature)
           const resp = await request(app.getHttpServer()).post('/startSession').send(payload)
           expect(resp.status).toEqual(201)
           return resp
@@ -142,37 +155,37 @@ describe('AppController (e2e)', () => {
             expect(save).toHaveBeenCalled()
             const session = await sessionRepository.findOne(tokenPayload.sessionId)
             expect(session).toBeDefined()
-            expect(session.externalAccount).toEqual(eoa)
+            expect(ensureLeading0x(session.externalAccount)).toEqual(eoa)
           })
         })
 
         describe("when a session already exists", () => {
           describe("but it's closed", () => {
-            it("creats a new session and returns the id in a token", async() => {
+            it("creates a new session and returns the id in a token", async() => {
               const oldSess = await sessionService.create(eoa)
               oldSess.completedAt = new Date(Date.now()).toISOString()
               await sessionRepository.save(oldSess)
 
               const save = jest.spyOn(sessionRepository, 'save')
-              const payload = startSessionPayload(eoa)
+              const payload = startSessionPayload(eoa, signature)
               const resp = await subject()
               const tokenPayload = decodeToken(resp.body.token)
 
               expect(save).toHaveBeenCalled()
               const session = await sessionRepository.findOne(tokenPayload.sessionId)
               expect(session).toBeDefined()
-              expect(session.externalAccount).toEqual(eoa)
+              expect(ensureLeading0x(session.externalAccount)).toEqual(eoa)
               expect(await sessionRepository.count()).toEqual(2)
             })
           })
 
           describe("and it's open", () => {
-            it("reuses the same session", async () => {
+            it.only("reuses the same session", async () => {
               const oldSess = await sessionService.create(eoa)
               await sessionRepository.save(oldSess)
 
               const save = jest.spyOn(sessionRepository, 'save')
-              const payload = startSessionPayload(eoa)
+              const payload = startSessionPayload(eoa, signature)
               const resp = await subject()
               const tokenPayload = decodeToken(resp.body.token)
 

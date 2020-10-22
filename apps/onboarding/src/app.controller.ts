@@ -1,16 +1,12 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { SessionDecorator } from '@app/onboarding/session/session.decorator'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType, WalletService } from '@app/onboarding/wallet/wallet.service'
-import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
-import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Body, Controller, ForbiddenException, Inject, Post, Req, Session, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
-import { Logger } from 'nestjs-pino'
 
 import { AuthService } from './auth/auth.service'
 
@@ -39,7 +35,6 @@ type DeployWalletResp = DeployWalletInProgress | DeployWalletDeployed
 @Controller()
 export class AppController {
   constructor(
-    private readonly logger: Logger,
     private readonly relayerProxyService: RelayerProxyService,
     private readonly gatewayService: GatewayService,
     private readonly authService: AuthService,
