@@ -13,8 +13,8 @@ jobs:
     - uses: Azure/docker-login@v1
       with:
         login-server: celotestnet.azurecr.io
-        # username: ${{ secrets.ACR_USERNAME }}
-        # password: ${{ secrets.ACR_PASSWORD }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
     
     - run: |
         docker build . -t celotestnet.azurecr.io/komenci/relayer:${{ github.sha }}
