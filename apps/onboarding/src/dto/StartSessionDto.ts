@@ -1,4 +1,4 @@
-import { IsNotEmpty, ValidateIf } from 'class-validator'
+import { IsHexadecimal, IsNotEmpty, ValidateIf } from 'class-validator'
 import { IsCeloAddress } from "../utils/validators"
 
 export enum DeviceType {
@@ -24,4 +24,8 @@ export class StartSessionDto {
   @IsNotEmpty()
   @IsCeloAddress()
   externalAccount: string
+
+  @IsNotEmpty()
+  @IsHexadecimal()
+  signature: string
 }

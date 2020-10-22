@@ -1,9 +1,13 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
+import { InvalidMetaTransaction, SubsidyError, WalletSignerMismatchError } from '@app/onboarding/subsidy/errors'
+import { normalizeAddress } from '@celo/base/lib'
+import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Inject, Injectable } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
+import { Session } from '../session/session.entity'
 
 @Injectable()
 export class SubsidyService {
@@ -12,6 +16,32 @@ export class SubsidyService {
     @Inject(appConfig.KEY)
     private readonly cfg: AppConfig
   ) {}
+
+  public async isValid(
+    input: RequestAttestationsDto,
+    session: Session
+  ): Promise<Result<boolean, SubsidyError>> {
+    const wallet = await this.contractKit.contracts.getMetaTransactionWallet(
+      input.walletAddress
+    )
+    const signer = normalizeAddress(await wallet.signer())
+    if (signer !== normalizeAddress(session.externalAccount)) {
+      return Err(new WalletSignerMismatchError(signer, session.externalAccount))
+    }
+
+    // TODO: extend this to be more rigid when we have generalised
+    // logic that can decode incoming meta transactions
+    if (normalizeAddress(input.transactions.approve.destination) !== normalizeAddress(input.walletAddress)) {
+      return Err(new InvalidMetaTransaction("subsidyRequest:approve"))
+    }
+
+    if (normalizeAddress(input.transactions.request.destination) !== normalizeAddress(input.walletAddress)) {
+      return Err(new InvalidMetaTransaction("subsidyRequest:request"))
+    }
+
+
+    return Ok(true)
+  }
 
   public async buildTransactionBatch(
     input: RequestAttestationsDto

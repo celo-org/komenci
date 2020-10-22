@@ -111,13 +111,19 @@ export class AppController {
   async requestSubsidisedAttestation(
     @Body() requestAttestationsDto: RequestAttestationsDto,
     @Session() session: SessionEntity,
-) {
-    const resp = await this.relayerProxyService.submitTransactionBatch({
+  ) {
+    const res = await this.subsidyService.isValid(requestAttestationsDto, session)
+
+    if (res.ok === false) {
+      throw(res.error)
+    }
+
+    const txSubmit = await this.relayerProxyService.submitTransactionBatch({
       transactions: await this.subsidyService.buildTransactionBatch(requestAttestationsDto)
     })
 
     return {
-      txHash: resp.payload
+      txHash: txSubmit.payload
     }
   }
 
