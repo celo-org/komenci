@@ -26,5 +26,12 @@ module.exports = {
       gas: gasLimit,
       gasPrice: 100000000000,
     },
+    test: {
+      host: 'localhost',
+      port: '8565',
+      network_id: 1101,
+      gas: gasLimit,
+      gasPrice: 100000000000,
+    },
   },
 };

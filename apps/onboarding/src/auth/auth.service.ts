@@ -33,7 +33,7 @@ export class AuthService {
         }
         const payload = result.right
         const session = await this.sessionService.findOne(payload.sessionId)
-        if (session.isOpen()) {
+        if (session && session.isOpen()) {
             return session
         } else {
             throw new BadRequestException("Session no longer available")
