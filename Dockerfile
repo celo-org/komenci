@@ -26,9 +26,12 @@ RUN git submodule update --init
 RUN yarn deps:celo:install || true
 RUN yarn deps:celo:build
 
+ARG SERVICE
+ENV _SERVICE=$SERVICE
+
 ENV PORT 3000
 
-RUN yarn run build relayer
-CMD node dist/apps/relayer/main | npx pino-pretty
+RUN yarn run build $SERVICE
+CMD node dist/apps/$_SERVICE/main | npx pino-pretty
 
 
