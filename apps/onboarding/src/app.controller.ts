@@ -113,10 +113,7 @@ export class AppController {
     @Session() session: SessionEntity,
 ) {
     const resp = await this.relayerProxyService.submitTransactionBatch({
-      transactions: await this.subsidyService.buildTransactionBatch(
-        requestAttestationsDto,
-        session,
-      )
+      transactions: await this.subsidyService.buildTransactionBatch(requestAttestationsDto)
     })
 
     return {

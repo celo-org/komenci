@@ -1,44 +1,51 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { RelayerProxyService } from '@app/onboarding/relayer_proxy.service'
-import { Session } from '@app/onboarding/session/session.entity'
-import { SessionService } from '@app/onboarding/session/session.service'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { Inject, Injectable } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 
 @Injectable()
 export class SubsidyService {
   constructor(
-    private readonly relayerProxyService: RelayerProxyService,
-    private readonly sessionService: SessionService,
     private readonly contractKit: ContractKit,
-    private readonly walletDeployer: MetaTransactionWalletDeployerWrapper,
     @Inject(appConfig.KEY)
     private readonly cfg: AppConfig
   ) {}
 
   public async buildTransactionBatch(
-    input: RequestAttestationsDto,
-    session: Session
+    input: RequestAttestationsDto
   ): Promise<RawTransaction[]> {
-    const beforeRequestsCount = await this.getCurrentRequestedAttestations(
-      input.identifier,
-      session.externalAccount
-    )
-    const afterRequestsCount = beforeRequestsCount + input.attestationsRequested
-    const walletAddress = await this.walletDeployer.getWallet(session.externalAccount)
+    const {
+      identifier, walletAddress, transactions, attestationsRequested
+    } = input
 
-    return [
-      await this.buildGuard(input.identifier, walletAddress, beforeRequestsCount),
-      // await this.buildSubsidyTransfer(input.attestationsRequested, walletAddress),
-      // input.transactions.approve,
-      // input.transactions.request,
-      // await this.buildGuard(input.identifier, walletAddress, afterRequestsCount)
+    const batch = [
+      await this.buildSubsidyTransfer(attestationsRequested, walletAddress),
+      transactions.approve,
+      transactions.request,
     ]
 
+    if (!this.cfg.useAttestationGuards) {
+      return batch
+    } else {
+      // TODO: Once we have a new version of Attestations.sol deployed
+      // to testnets we can toggle this feature and test the flow
+      // When we're comfortable we can remove the feature flag and do
+      // only guarded attestations.
+
+      const beforeRequestsCount = await this.getCurrentRequestedAttestations(
+        identifier,
+        walletAddress,
+      )
+      const afterRequestsCount = beforeRequestsCount + attestationsRequested
+
+      return [
+        await this.buildGuard(identifier, walletAddress, beforeRequestsCount),
+        ...batch,
+        await this.buildGuard(identifier, walletAddress, afterRequestsCount),
+      ]
+    }
   }
 
   private async getCurrentRequestedAttestations(identifier: string, account: string): Promise<number> {
@@ -59,7 +66,7 @@ export class SubsidyService {
     const stableToken = await this.contractKit.contracts.getStableToken()
     const fee = await attestations.getAttestationFeeRequired(attestationsRequested)
     return toRawTransaction(
-      stableToken.transferFrom(this.cfg.fundAddress, account, fee.toFixed()).txo
+      stableToken.transfer(account, fee.toFixed()).txo
     )
   }
 }
