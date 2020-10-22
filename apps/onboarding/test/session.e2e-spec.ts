@@ -54,7 +54,7 @@ describe('SessionController (e2e)', () => {
 
     it('Create a new Session object in the database', async () => {
       const previousCount = await repo.count()
-      const session = await service.createSession('test')
+      const session = await service.create('test')
       expect((await service.findOne(session.id)).externalAccount).toBe('test')
       expect(await repo.count()).toBe(previousCount + 1)
       await service.removeSession(session.id)

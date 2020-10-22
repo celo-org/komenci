@@ -38,7 +38,7 @@ describe('SessionService', () => {
     expect(service).toBeDefined()
   })
 
-  describe('#createSession', () => {
+  describe('#create', () => {
     let session: Session
     let save: jest.SpyInstance
     let eoa: string
@@ -48,7 +48,7 @@ describe('SessionService', () => {
       save = jest.spyOn(repository, 'save').mockImplementation(
         (s: Session) => Promise.resolve(s)
       )
-      session = await service.createSession(eoa)
+      session = await service.create(eoa)
     })
 
     it('creates a new session for an external account', async () => {

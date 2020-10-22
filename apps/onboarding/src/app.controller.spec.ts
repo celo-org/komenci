@@ -1,10 +1,10 @@
+import { appConfig } from '@app/onboarding/config/app.config'
 import { Session } from '@app/onboarding/session/session.entity'
-import { Post } from '@nestjs/common'
+import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { JwtModule, JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
 import httpMocks from 'node-mocks-http'
 import { AppController } from './app.controller'
-import { AppService } from './app.service'
 import { AuthService } from './auth/auth.service'
 import { DeviceType, StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
@@ -14,6 +14,7 @@ import { SessionService } from './session/session.service'
 jest.mock('./gateway/gateway.service')
 jest.mock('./relayer_proxy.service')
 jest.mock('./session/session.service')
+jest.mock('./wallet/wallet.service')
 
 describe('AppController', () => {
   let appController: AppController
@@ -23,6 +24,8 @@ describe('AppController', () => {
   const sessionService = new SessionService()
   // @ts-ignore
   const relayerService = new RelayerProxyService()
+  // @ts-ignore
+  const walletService = new WalletService()
   let jwtService: JwtService
 
 
@@ -35,12 +38,20 @@ describe('AppController', () => {
       ],
       controllers: [AppController],
       providers: [
-        AppService, RelayerProxyService,
-        AuthService, GatewayService, SessionService
+        RelayerProxyService,
+        AuthService,
+        GatewayService,
+        SessionService,
+        WalletService,
+        {
+          provide: appConfig.KEY,
+          useValue: appConfig.call(null)
+        }
       ]
     }).overrideProvider(GatewayService).useValue(gatewayService)
       .overrideProvider(RelayerProxyService).useValue(relayerService)
       .overrideProvider(SessionService).useValue(sessionService)
+      .overrideProvider(WalletService).useValue(walletService)
       .compile()
 
     appController = app.get<AppController>(AppController)

@@ -45,8 +45,8 @@
     "jsonwebtoken": "^8.5.1",
     "nest": "^0.1.6",
     "nestjs-pino": "^1.2.0",
+    "node-fetch": "^2.6.1",
     "node-mocks-http": "^1.9.0",
-    "node-fetch": "2.6.1",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "pg": "^8.3.3",
@@ -55,7 +55,9 @@
     "rimraf": "^3.0.2",
     "typeorm": "^0.2.26",
     "uuid": "^8.3.0",
-    "web3": "1.2.4"
+    "web3": "1.2.4",
+    "web3-core": "1.2.4",
+    "web3-core-helpers": "1.2.4"
   },
   "devDependencies": {
     "@celo/typescript": "^0.0.1",
@@ -77,6 +79,7 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-import": "^2.20.1",
     "fetch-mock": "9.10.4",
+    "ganache-core": "^2.12.1",
     "jest": "26.0.1",
     "leaked-handles": "^5.2.0",
     "node-loader": "^1.0.1",

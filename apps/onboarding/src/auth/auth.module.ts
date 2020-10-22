@@ -10,10 +10,9 @@ import { SessionService } from 'apps/onboarding/src/session/session.service'
 
 @Module({
     imports: [
-      SessionModule,
       PassportModule.register({
         defaultStrategy: 'jwt',
-        property: 'session'
+        property: 'session',
       }),
       JwtModule.registerAsync({
         useFactory: async (config: ConfigService) => ({
@@ -22,8 +21,9 @@ import { SessionService } from 'apps/onboarding/src/session/session.service'
         }),
         inject: [ConfigService],
       }),
+      SessionModule,
     ],
     providers: [AuthService, JwtStrategy, SessionService],
-    exports: [AuthService]
+    exports: [AuthService, PassportModule]
 })
 export class AuthModule { }

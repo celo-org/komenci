@@ -149,7 +149,7 @@ describe('AppController (e2e)', () => {
         describe("when a session already exists", () => {
           describe("but it's closed", () => {
             it("creats a new session and returns the id in a token", async() => {
-              const oldSess = await sessionService.createSession(eoa)
+              const oldSess = await sessionService.create(eoa)
               oldSess.completedAt = new Date(Date.now()).toISOString()
               await sessionRepository.save(oldSess)
 
@@ -168,7 +168,7 @@ describe('AppController (e2e)', () => {
 
           describe("and it's open", () => {
             it("reuses the same session", async () => {
-              const oldSess = await sessionService.createSession(eoa)
+              const oldSess = await sessionService.create(eoa)
               await sessionRepository.save(oldSess)
 
               const save = jest.spyOn(sessionRepository, 'save')
