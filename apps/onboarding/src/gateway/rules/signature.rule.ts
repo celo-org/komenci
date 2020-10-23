@@ -24,7 +24,7 @@ export class SignatureRule implements Rule<{}, InvalidSignature> {
   async verify(startSessionDto: StartSessionDto, config, context) {
     const signature = startSessionDto.signature
     const account = startSessionDto.externalAccount
-    const message = hashMessage(`komenci:${account}`)
+    const message = hashMessage(`komenci:login:${account}`)
     const signer = recoverMessageSigner(message, signature)
     if (signer.toLocaleLowerCase() === account.toLocaleLowerCase()) {
       return Ok(true)

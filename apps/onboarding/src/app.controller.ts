@@ -1,4 +1,5 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
+import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
@@ -17,6 +18,7 @@ import { RelayerProxyService } from './relayer_proxy.service'
 
 interface GetPhoneNumberIdResponse {
   identifier: string
+  pepper: string
 }
 
 interface DeployWalletInProgress {
@@ -32,7 +34,7 @@ interface DeployWalletDeployed {
 
 type DeployWalletResp = DeployWalletInProgress | DeployWalletDeployed
 
-@Controller()
+@Controller("v1")
 export class AppController {
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
@@ -61,9 +63,14 @@ export class AppController {
   @UseGuards(AuthGuard('jwt'))
   @Post('deployWallet')
   async deployWallet(
+    @Body() deployWalletDto: DeployWalletDto,
     @Session() session: SessionEntity,
   ): Promise<DeployWalletResp> {
-    const getResp = await this.walletService.getWallet(session)
+    const getResp = await this.walletService.getWallet(
+      session,
+      deployWalletDto.implementationAddress
+    )
+
     if (getResp.ok) {
       return {
         status: 'deployed',
@@ -71,7 +78,11 @@ export class AppController {
       }
     } else if (getResp.ok === false) {
       if (getResp.error.errorType === WalletErrorType.NotDeployed) {
-        const deployResp = await this.walletService.deployWallet(session)
+        const deployResp = await this.walletService.deployWallet(
+          session,
+          deployWalletDto.implementationAddress
+        )
+
         if (deployResp.ok) {
           return {
             status: 'in-progress',
@@ -97,13 +108,14 @@ export class AppController {
     )
 
     return {
-      identifier: resp.payload
+      identifier: resp.payload.phoneHash,
+      pepper: resp.payload.pepper
     }
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('requestSubsidisedAttestation')
-  async requestSubsidisedAttestation(
+  @Post('requestSubsidisedAttestations')
+  async requestSubsidisedAttestations(
     @Body() requestAttestationsDto: RequestAttestationsDto,
     @Session() session: SessionEntity,
   ) {

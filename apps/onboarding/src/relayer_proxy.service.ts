@@ -1,3 +1,4 @@
+import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import { Inject, Injectable } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
 import { DistributedBlindedPepperDto } from 'apps/onboarding/src/dto/DistributedBlindedPepperDto'
@@ -18,7 +19,7 @@ export class RelayerProxyService {
 
   async getPhoneNumberIdentifier(
     input: DistributedBlindedPepperDto
-  ): Promise<RelayerResponse<string>> {
+  ): Promise<RelayerResponse<PhoneNumberHashDetails>> {
     return this.client
       .send({ cmd: `getPhoneNumberIdentifier` }, input)
       .toPromise()

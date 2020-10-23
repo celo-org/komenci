@@ -1,8 +1,11 @@
 import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
 
 interface SessionMetadata {
-    walletDeployTxHash: string,
-    walletDeployStartedAt: number
+    walletDeploy: {
+        startedAt: number,
+        txHash: string,
+        implementationAddress: string
+    }
 }
 
 @Entity()
