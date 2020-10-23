@@ -67,7 +67,7 @@ describe('AppController (e2e)', () => {
     await manager.queryRunner.startTransaction()
   })
 
-  describe('/ (POST) startSession', () => {
+  describe('/v1/ (POST) startSession', () => {
     const startSessionPayload = (eoa: string, signature: string): StartSessionDto => ({
       captchaResponseToken: "sda",
       deviceType: DeviceType.iOS,
@@ -78,12 +78,12 @@ describe('AppController (e2e)', () => {
 
     describe('with invalid payloads', () => {
       it('Returns 400 with empty body', async () => {
-        const resp = await request(app.getHttpServer()).post('/startSession')
+        const resp = await request(app.getHttpServer()).post('/v1/startSession')
         expect(resp.statusCode).toBe(400)
       })
 
       it('Returns 400 with an invalid body', async () => {
-        const resp = await request(app.getHttpServer()).post('/startSession').send({
+        const resp = await request(app.getHttpServer()).post('/v1/startSession').send({
           notThatRight: 'payload'
         })
         expect(resp.statusCode).toBe(400)
@@ -91,7 +91,7 @@ describe('AppController (e2e)', () => {
 
       it('Returns 400 with an invalid ethereum address', async () => {
         const payload = startSessionPayload("not-an-address", "signature")
-        const resp = await request(app.getHttpServer()).post('/startSession').send(payload)
+        const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
         expect(resp.statusCode).toBe(400)
         expect(resp.body.message[0]).toMatch(/must be a valid Celo address/)
       })
@@ -117,7 +117,7 @@ describe('AppController (e2e)', () => {
 
         it("Returns 403 with an error", async () => {
           const payload = startSessionPayload(eoa, signature)
-          const resp = await request(app.getHttpServer()).post('/startSession').send(payload)
+          const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
           expect(resp.statusCode).toEqual(403)
           expect(resp.body).toMatchObject({
             statusCode: 403,
@@ -141,7 +141,7 @@ describe('AppController (e2e)', () => {
 
         const subject = async () => {
           const payload = startSessionPayload(eoa, signature)
-          const resp = await request(app.getHttpServer()).post('/startSession').send(payload)
+          const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
           expect(resp.status).toEqual(201)
           return resp
         }
@@ -180,7 +180,7 @@ describe('AppController (e2e)', () => {
           })
 
           describe("and it's open", () => {
-            it.only("reuses the same session", async () => {
+            it("reuses the same session", async () => {
               const oldSess = await sessionService.create(eoa)
               await sessionRepository.save(oldSess)
 
@@ -198,14 +198,14 @@ describe('AppController (e2e)', () => {
     })
   })
 
-  describe('/ (POST) distributedBlindedPepper', () => {
+  describe('/v1/ (POST) distributedBlindedPepper', () => {
     const eoa = Web3.utils.randomHex(20)
     let token: string
 
     describe('without a token', () => {
       it('Returns 401', async () => {
         return request(app.getHttpServer())
-          .post('/distributedBlindedPepper')
+          .post('/v1/distributedBlindedPepper')
           .expect(401)
       })
     })
@@ -219,14 +219,14 @@ describe('AppController (e2e)', () => {
       describe('with an invalid payload', () => {
         it('Returns 400 with empty body', async () => {
           const resp = await request(app.getHttpServer())
-            .post('/distributedBlindedPepper')
+            .post('/v1/distributedBlindedPepper')
             .set('Authorization', `Bearer ${token}`)
           expect(resp.statusCode).toBe(400)
         })
 
         it('Returns 400 with invalid phone number', async () => {
           return request(app.getHttpServer())
-            .post('/distributedBlindedPepper')
+            .post('/v1/distributedBlindedPepper')
             .set('Authorization', `Bearer ${token}`)
             .send({
               e164Number: 'invalid'
