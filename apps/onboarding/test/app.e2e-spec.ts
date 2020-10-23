@@ -4,6 +4,7 @@ import { GatewayService } from '@app/onboarding/gateway/gateway.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
 import { ensureLeading0x, trimLeading0x } from '@celo/base/lib'
+import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
 import { hashMessage } from '@celo/utils/lib/signatureUtils'
 import { ValidationPipe } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
@@ -14,7 +15,6 @@ import { isRight } from 'fp-ts/Either'
 import { Connection, EntityManager, QueryRunner, Repository } from 'typeorm'
 import Web3 from 'web3'
 import { AppModule } from '../src/app.module'
-import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
 const request = require('supertest')
 
 jest.mock('@app/onboarding/gateway/gateway.service')
