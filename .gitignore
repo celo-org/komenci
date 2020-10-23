@@ -38,3 +38,5 @@ apps/onboarding/.env.local
 apps/onboarding/.env.test
 apps/relayer/.env.local
 apps/relayer/.env.test
+apps/relayer/.env
+apps/onboarding/.env
