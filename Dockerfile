@@ -1,5 +1,5 @@
 FROM node:12-slim
-
+RUN apt update && apt install -y git
 RUN mkdir /app
 WORKDIR /app
 
