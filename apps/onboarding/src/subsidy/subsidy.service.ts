@@ -87,7 +87,7 @@ export class SubsidyService {
   private async buildGuard(identifier: string, account: string, count: number): Promise<RawTransactionDto> {
     const attestations = await this.contractKit.contracts.getAttestations()
     return toRawTransaction(
-      attestations.requireNAttestationsRequested(identifier, account, count).txo
+      (attestations as any).requireNAttestationsRequested(identifier, account, count).txo
     )
   }
 

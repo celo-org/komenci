@@ -4,7 +4,8 @@ const parseImplementations = (cfg: string): Record<string, string> => {
   try {
     return JSON.parse(cfg)
   } catch {
-    throw(new Error(`Error parsing MTW_IMPLEMENTATIONS: ${cfg}`))
+    console.warn(`Error parsing MTW_IMPLEMENTATIONS: ${cfg}`)
+    return {}
   }
 }
 
