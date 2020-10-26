@@ -71,30 +71,30 @@ export class AppController {
       deployWalletDto.implementationAddress
     )
 
-    if (getResp.ok) {
+    if (getResp.ok === true) {
       return {
         status: 'deployed',
         walletAddress: getResp.result
       }
-    } else if (getResp.ok === false) {
-      if (getResp.error.errorType === WalletErrorType.NotDeployed) {
-        const deployResp = await this.walletService.deployWallet(
-          session,
-          deployWalletDto.implementationAddress
-        )
+    }
 
-        if (deployResp.ok) {
-          return {
-            status: 'in-progress',
-            txHash: deployResp.result,
-            deployerAddress: this.cfg.mtwDeployerAddress
-          }
-        } else if (deployResp.ok === false) {
-          throw(deployResp.error)
-        }
-      } else {
-        throw(getResp.error)
+    if (getResp.error.errorType !== WalletErrorType.NotDeployed) {
+      throw(getResp.error)
+    }
+
+    const deployResp = await this.walletService.deployWallet(
+      session,
+      deployWalletDto.implementationAddress
+    )
+
+    if (deployResp.ok === true) {
+      return {
+        status: 'in-progress',
+        txHash: deployResp.result,
+        deployerAddress: this.cfg.mtwDeployerAddress
       }
+    } else {
+      throw(deployResp.error)
     }
   }
 
