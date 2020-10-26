@@ -59,7 +59,7 @@ export class WalletService {
         )
 
         if (deployWalletLog) {
-          return deployWalletLog.returnValues.wallet
+          return Ok(deployWalletLog.returnValues.wallet)
         }
       }
     }
