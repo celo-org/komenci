@@ -1,4 +1,4 @@
-import { IsNotEmpty, ValidateIf } from 'class-validator'
+import { IsHexadecimal, IsNotEmpty, IsOptional, ValidateIf } from 'class-validator'
 import { IsCeloAddress } from "../utils/validators"
 
 export enum DeviceType {
@@ -11,7 +11,15 @@ export class StartSessionDto {
   captchaResponseToken: string
 
   @IsNotEmpty()
-  deviceType: DeviceType
+  @IsCeloAddress()
+  externalAccount: string
+
+  @IsNotEmpty()
+  @IsHexadecimal()
+  signature: string
+
+  @IsOptional()
+  deviceType?: DeviceType
 
   @ValidateIf(o => o.deviceType === DeviceType.iOS)
   @IsNotEmpty()
@@ -20,8 +28,4 @@ export class StartSessionDto {
   @ValidateIf(o => o.deviceType === DeviceType.Android)
   @IsNotEmpty()
   androidSignedAttestation?: string
-
-  @IsNotEmpty()
-  @IsCeloAddress()
-  externalAccount: string
 }

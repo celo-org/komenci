@@ -2,12 +2,13 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
 import { FastifyRequest } from 'fastify'
+import { Logger } from 'nestjs-pino'
 import { rulesConfig } from '../config/rules.config'
 import { StartSessionDto } from '../dto/StartSessionDto'
 import { CaptchaRule } from './rules/captcha.rule'
 import { DailyCapRule } from './rules/daily-cap.rule'
 import { DeviceAttestationRule } from './rules/device-attestation.rule'
-import { GatewayContext, Rule } from './rules/rule'
+import { Rule } from './rules/rule'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
@@ -20,6 +21,7 @@ export class GatewayService implements OnModuleInit {
     @Inject(rulesConfig.KEY)
     private config: ConfigType<typeof rulesConfig>,
     private moduleRef: ModuleRef,
+    private logger: Logger
   ) {}
 
   async onModuleInit() {
@@ -29,8 +31,6 @@ export class GatewayService implements OnModuleInit {
       this.moduleRef.create(DeviceAttestationRule)
     ])
 
-
-    // TODO: These should be initialized from Redis
     this.ruleEnabled = this.config.enabled
 
     this.ruleConfigs = this.rules.reduce((acc, rule) => {
@@ -59,6 +59,15 @@ export class GatewayService implements OnModuleInit {
       })
     )
 
-    return results.every(result => result.ok)
+    let hasFailingResult = false
+    results.forEach(result => {
+      if (result.ok === false) {
+        // TODO: Replace with structured logging
+        hasFailingResult = true
+        this.logger.warn(result.error)
+      }
+    })
+
+    return hasFailingResult
   }
 }

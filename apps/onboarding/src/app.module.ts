@@ -1,5 +1,6 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
+import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
@@ -47,7 +48,8 @@ import { SessionModule } from './session/session.module'
                   method: req.method,
                   url: req.url,
                   hostname: req.hostname,
-                  remoteAddress: req.ip
+                  remoteAddress: req.ip,
+                  body: req.raw.body
                 }
               }
             },
@@ -84,6 +86,7 @@ import { SessionModule } from './session/session.module'
     }),
   ],
   providers: [
+    SubsidyService,
     WalletService,
     SessionService,
     RelayerProxyService,

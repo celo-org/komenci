@@ -1,5 +1,6 @@
 import { appConfig } from '@app/onboarding/config/app.config'
 import { Session } from '@app/onboarding/session/session.entity'
+import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { JwtModule, JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -15,6 +16,7 @@ jest.mock('./gateway/gateway.service')
 jest.mock('./relayer_proxy.service')
 jest.mock('./session/session.service')
 jest.mock('./wallet/wallet.service')
+jest.mock('./subsidy/subsidy.service')
 
 describe('AppController', () => {
   let appController: AppController
@@ -26,6 +28,8 @@ describe('AppController', () => {
   const relayerService = new RelayerProxyService()
   // @ts-ignore
   const walletService = new WalletService()
+  // @ts-ignore
+  const subsidyService = new SubsidyService()
   let jwtService: JwtService
 
 
@@ -43,6 +47,7 @@ describe('AppController', () => {
         GatewayService,
         SessionService,
         WalletService,
+        SubsidyService,
         {
           provide: appConfig.KEY,
           useValue: appConfig.call(null)
@@ -52,6 +57,7 @@ describe('AppController', () => {
       .overrideProvider(RelayerProxyService).useValue(relayerService)
       .overrideProvider(SessionService).useValue(sessionService)
       .overrideProvider(WalletService).useValue(walletService)
+      .overrideProvider(SubsidyService).useValue(subsidyService)
       .compile()
 
     appController = app.get<AppController>(AppController)
@@ -74,6 +80,7 @@ describe('AppController', () => {
         deviceType: DeviceType.iOS,
         iosDeviceToken: "asdas",
         externalAccount,
+        signature: "0x0"
       }
     })
 

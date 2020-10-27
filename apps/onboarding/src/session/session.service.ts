@@ -1,4 +1,4 @@
-import { normalizeAddress } from '@celo/base'
+import { normalizeAddress, trimLeading0x } from '@celo/base'
 import { Injectable } from '@nestjs/common'
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 import { v4 as uuidv4 } from 'uuid'
@@ -33,7 +33,7 @@ export class SessionService {
 
   async findLastForAccount(account: string) {
     return this.sessionRepository.findOne(
-      { externalAccount: account },
+      { externalAccount: trimLeading0x(account) },
       { order: { createdAt: "DESC" } }
     )
   }

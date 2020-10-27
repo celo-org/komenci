@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { DeviceCheckService } from 'apps/onboarding/src/gateway/device-check/device-check.service'
 import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 import { SafetyNetService } from 'apps/onboarding/src/gateway/safety-net/safety-net.service'
+import { Logger, LoggerModule } from 'nestjs-pino'
 import { rulesConfig, RulesConfig } from '../config/rules.config'
 import { thirdPartyConfig } from '../config/third-party.config'
 import { CaptchaService } from './captcha/captcha.service'
@@ -14,6 +15,7 @@ describe('GatewayService', () => {
     const buildTestingModule = async (): Promise<TestingModule> => {
       return Test.createTestingModule({
         imports: [
+          LoggerModule.forRoot(),
           HttpModule,
           ConfigModule.forRoot({
             load: [thirdPartyConfig, rulesConfig],
@@ -23,7 +25,7 @@ describe('GatewayService', () => {
           GatewayService,
           CaptchaService,
           DeviceCheckService,
-          SafetyNetService,
+          SafetyNetService
         ]
       }).compile()
     }
@@ -71,6 +73,7 @@ describe('GatewayService', () => {
     const buildTestingModuleForConfig = async (config: RulesConfig): Promise<TestingModule> => {
       return Test.createTestingModule({
         imports: [
+          LoggerModule.forRoot(),
           HttpModule,
           ConfigModule.forRoot({
             load: [thirdPartyConfig, rulesConfig],
