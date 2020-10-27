@@ -1,10 +1,11 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { InvalidMetaTransaction, SubsidyError, WalletSignerMismatchError } from '@app/onboarding/subsidy/errors'
-import { normalizeAddress } from '@celo/base/lib'
+import { MetaTxValidationError } from '@app/onboarding/wallet/errors'
+import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { WalletValidationError } from '@celo/komencikit/lib/errors'
 import { Inject, Injectable } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { Session } from '../session/session.entity'
@@ -12,6 +13,7 @@ import { Session } from '../session/session.entity'
 @Injectable()
 export class SubsidyService {
   constructor(
+    private readonly walletService: WalletService,
     private readonly contractKit: ContractKit,
     @Inject(appConfig.KEY)
     private readonly cfg: AppConfig
@@ -20,23 +22,46 @@ export class SubsidyService {
   public async isValid(
     input: RequestAttestationsDto,
     session: Session
-  ): Promise<Result<boolean, SubsidyError>> {
-    const wallet = await this.contractKit.contracts.getMetaTransactionWallet(
-      input.walletAddress
+  ): Promise<Result<boolean, WalletValidationError | MetaTxValidationError>> {
+    const walletValid = await this.walletService.isValidWallet(
+      input.walletAddress,
+      session.externalAccount
     )
-    const signer = normalizeAddress(await wallet.signer())
-    if (signer !== normalizeAddress(session.externalAccount)) {
-      return Err(new WalletSignerMismatchError(signer, session.externalAccount))
+
+    if (walletValid.ok === false) {
+      return walletValid
     }
 
-    // TODO: extend this to be more rigid when we have generalised
-    // logic that can decode incoming meta transactions
-    if (normalizeAddress(input.transactions.approve.destination) !== normalizeAddress(input.walletAddress)) {
-      return Err(new InvalidMetaTransaction("subsidyRequest:approve"))
+    const stableToken = await this.contractKit.contracts.getStableToken()
+    const approveValid = await this.walletService.isAllowedMetaTransaction(
+      input.transactions.approve,
+      session,
+      [
+        {
+          destination: stableToken.address,
+          methodId: stableToken.methodIds.approve,
+        }
+      ]
+    )
+
+    if (approveValid.ok === false) {
+      return approveValid
     }
 
-    if (normalizeAddress(input.transactions.request.destination) !== normalizeAddress(input.walletAddress)) {
-      return Err(new InvalidMetaTransaction("subsidyRequest:request"))
+    const attestations = await this.contractKit.contracts.getAttestations()
+    const requestValid = await this.walletService.isAllowedMetaTransaction(
+      input.transactions.approve,
+      session,
+      [
+        {
+          destination: attestations.address,
+          methodId: attestations.methodIds.request
+        }
+      ]
+    )
+
+    if (requestValid.ok === false) {
+      return requestValid
     }
 
     return Ok(true)

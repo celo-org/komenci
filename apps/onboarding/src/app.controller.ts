@@ -3,8 +3,20 @@ import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
-import { WalletErrorType, WalletService } from '@app/onboarding/wallet/wallet.service'
-import { Body, Controller, ForbiddenException, Inject, Post, Req, Session, UseGuards } from '@nestjs/common'
+import { WalletErrorType } from '@app/onboarding/wallet/errors'
+import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
+import { ContractKit } from '@celo/contractkit'
+import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Inject,
+  Post,
+  Req,
+  Session,
+  UseGuards,
+} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
@@ -36,6 +48,9 @@ type DeployWalletResp = DeployWalletInProgress | DeployWalletDeployed
 
 @Controller("v1")
 export class AppController {
+  // Cache for the allowed metaTx filter
+  _allowedMetaTransaction?: TxFilter[]
+
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
     private readonly gatewayService: GatewayService,
@@ -43,6 +58,7 @@ export class AppController {
     private readonly subsidyService: SubsidyService,
     private readonly sessionService: SessionService,
     private readonly walletService: WalletService,
+    private readonly contractKit: ContractKit,
     @Inject(appConfig.KEY)
     private readonly cfg: AppConfig
   ) {}
@@ -136,17 +152,48 @@ export class AppController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('submitMetaTransaction')
-  async submitMetaTransaction(@Body() body: SubmitMetaTransactionDto) {
+  async submitMetaTransaction(
+    @Body() body: SubmitMetaTransactionDto,
+    @Session() session: SessionEntity
+  ) {
+    const metaTx: RawTransaction = {
+      ...body,
+      value: "0x0"
+    }
+
+    const validTx = await this.walletService.isAllowedMetaTransaction(
+      metaTx,
+      session,
+      await this.allowedMetaTransactions()
+    )
+
+    if (validTx.ok === false) {
+      throw(validTx.error)
+    }
+
     const resp = await this.relayerProxyService.submitTransaction({
-      transaction: {
-        ...body,
-        // MetaTransactions are always without value
-        value: "0",
-      }
+      transaction: metaTx
     })
 
     return {
       txHash: resp.payload
     }
+  }
+
+  private async allowedMetaTransactions(): Promise<TxFilter[]> {
+    if (this._allowedMetaTransaction === undefined) {
+      const attestations = await this.contractKit.contracts.getAttestations()
+      this._allowedMetaTransaction = [
+        {
+          destination: attestations.address,
+          methodId: attestations.methodIds.selectIssuers
+        },
+        {
+          destination: attestations.address,
+          methodId: attestations.methodIds.complete
+        },
+      ]
+    }
+    return this._allowedMetaTransaction
   }
 }

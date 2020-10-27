@@ -2,33 +2,32 @@ import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RelayerProxyService } from '@app/onboarding/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
-import { normalizeAddress } from '@celo/base'
-import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
-import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
+import {
+  InputDecodeError, InvalidChildMethod, InvalidDestination,
+  InvalidImplementation,
+  InvalidRootMethod,
+  MetaTxValidationError, WalletError,
+  WalletNotDeployed,
+} from '@app/onboarding/wallet/errors'
+import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
+import { Err, Ok, Result } from '@celo/base/lib/result'
+import { CeloTransactionObject } from '@celo/contractkit'
+import { ABI as MetaTxWalletABI, MetaTransactionWallet, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
-import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+import { WalletValidationError } from '@celo/komencikit/lib/errors'
+import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
 import { Inject, Injectable } from '@nestjs/common'
 import Web3 from 'web3'
 
-export enum WalletErrorType {
-  NotDeployed = "NotDeployed",
-  InvalidImplementation = "InvalidImplementation"
-}
+const InputDataDecoder = require('ethereum-input-data-decoder')
+const MetaTxWalletDecoder = new InputDataDecoder(MetaTxWalletABI)
 
-export class WalletNotDeployed extends RootError<WalletErrorType> {
-  constructor() {
-    super(WalletErrorType.NotDeployed)
-  }
+export interface TxFilter {
+  destination: Address,
+  methodId: string
 }
-
-export class InvalidImplementation extends RootError<WalletErrorType> {
-  constructor(public readonly implementationAddress) {
-    super(WalletErrorType.InvalidImplementation)
-  }
-}
-
-type WalletError = WalletNotDeployed | InvalidImplementation
 
 @Injectable()
 export class WalletService {
@@ -41,6 +40,55 @@ export class WalletService {
     @Inject(appConfig.KEY)
     private readonly cfg: AppConfig
   ) {}
+
+  async isAllowedMetaTransaction(
+    transaction: RawTransaction,
+    session: Session,
+    allowedTransactions: TxFilter[]
+  ): Promise<Result<true, MetaTxValidationError>> {
+    const metaTxDecode = this.decodeMetaTransaction(transaction)
+    if (metaTxDecode.ok === false) {
+      return metaTxDecode
+    }
+
+    const metaTx = metaTxDecode.result
+    const normDestination = normalizeAddress(metaTx.destination)
+
+    const txWithMatchingDestination = allowedTransactions.filter(
+      (tx) =>
+        normalizeAddress(tx.destination) === normDestination
+    )
+
+    if (txWithMatchingDestination.length === 0) {
+      return Err(new InvalidDestination(metaTx.destination))
+    }
+
+    const metaTxMethodId = trimLeading0x(metaTx.data).slice(0, 8)
+    const matchingTx = txWithMatchingDestination.find(
+      (tx) => {
+        const methodId = trimLeading0x(tx.methodId)
+        return metaTxMethodId === methodId
+      }
+    )
+
+    if (matchingTx === undefined) {
+      return Err(new InvalidChildMethod(metaTxMethodId))
+    }
+
+    return Ok(true)
+  }
+
+  async isValidWallet(
+    walletAddress: Address,
+    expectedSigner: Address
+  ): Promise<Result<true, WalletValidationError>> {
+    return verifyWallet(
+      this.contractKit,
+      walletAddress,
+      Object.keys(this.cfg.mtwImplementations),
+      expectedSigner
+    )
+  }
 
   async getWallet(session: Session, implementationAddress: string): Promise<Result<string, WalletError>> {
     if (this.hasDeployInProgress(session, implementationAddress)) {
@@ -122,5 +170,23 @@ export class WalletService {
 
   private isValidImplementation(implementationAddress: string): boolean {
     return implementationAddress in this.cfg.mtwImplementations
+  }
+
+  private decodeMetaTransaction(tx: RawTransaction): Result<RawTransaction, MetaTxValidationError> {
+    // const wallet = await this.contractKit.contracts.getMetaTransactionWallet(tx.destination)
+    try {
+      const decodedData = MetaTxWalletDecoder.decodeData(tx.data)
+      if (decodedData.method !== 'executeMetaTransaction') {
+        return Err(new InvalidRootMethod(decodedData.method))
+      }
+
+      return Ok({
+        destination: decodedData.inputs[0],
+        data: decodedData.inputs[1],
+        value: decodedData.inputs[2],
+      })
+    } catch (e) {
+      return Err(new InputDecodeError(e))
+    }
   }
 }
