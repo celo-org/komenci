@@ -2,3 +2,14 @@ node_modules/
 Dockerfile
 dist/
 docker-compose.proxy.yml
+
+node_modules
+**/node_modules
+*node_modules
+# logs
+yarn-error.log
+npm-debug.log
+# root folders
+.github
+dockerfiles
+.vscode
