@@ -35,7 +35,6 @@ export class SubsidyService {
     const stableToken = await this.contractKit.contracts.getStableToken()
     const approveValid = await this.walletService.isAllowedMetaTransaction(
       input.transactions.approve,
-      session,
       [
         {
           destination: stableToken.address,
@@ -51,7 +50,6 @@ export class SubsidyService {
     const attestations = await this.contractKit.contracts.getAttestations()
     const requestValid = await this.walletService.isAllowedMetaTransaction(
       input.transactions.approve,
-      session,
       [
         {
           destination: attestations.address,

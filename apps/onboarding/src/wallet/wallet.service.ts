@@ -11,14 +11,14 @@ import {
 } from '@app/onboarding/wallet/errors'
 import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
-import { CeloTransactionObject } from '@celo/contractkit'
-import { ABI as MetaTxWalletABI, MetaTransactionWallet, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
+import { ABI as MetaTxWalletABI, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { WalletValidationError } from '@celo/komencikit/lib/errors'
 import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
 import { Inject, Injectable } from '@nestjs/common'
+import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 
 const InputDataDecoder = require('ethereum-input-data-decoder')
@@ -43,7 +43,6 @@ export class WalletService {
 
   async isAllowedMetaTransaction(
     transaction: RawTransaction,
-    session: Session,
     allowedTransactions: TxFilter[]
   ): Promise<Result<true, MetaTxValidationError>> {
     const metaTxDecode = this.decodeMetaTransaction(transaction)
@@ -94,13 +93,13 @@ export class WalletService {
     if (this.hasDeployInProgress(session, implementationAddress)) {
       const tx = await this.web3.eth.getTransaction(session.meta.walletDeploy.txHash)
       if (tx.blockNumber !== null) {
-        const deployer = await this.contractKit.contracts.getMetaTransactionWalletDeployer(
-          this.cfg.mtwDeployerAddress
+        const events = await this.walletDeployer.getPastEvents(
+          this.walletDeployer.eventTypes.WalletDeployed,
+          {
+            fromBlock: tx.blockNumber,
+            toBlock: tx.blockNumber,
+          }
         )
-        const events = await deployer.getPastEvents('WalletDeployed', {
-          fromBlock: tx.blockNumber,
-          toBlock: tx.blockNumber,
-        })
 
         const deployWalletLog = events.find((event) =>
           normalizeAddress(event.returnValues.owner) === normalizeAddress(session.externalAccount)
@@ -135,7 +134,7 @@ export class WalletService {
       )
     })
 
-    const result = await this.sessionService.update(session.id, {
+    await this.sessionService.update(session.id, {
       meta: {
         ...session.meta,
         walletDeploy: {
@@ -174,19 +173,26 @@ export class WalletService {
 
   private decodeMetaTransaction(tx: RawTransaction): Result<RawTransaction, MetaTxValidationError> {
     // const wallet = await this.contractKit.contracts.getMetaTransactionWallet(tx.destination)
+    let decodedData: any
     try {
-      const decodedData = MetaTxWalletDecoder.decodeData(tx.data)
-      if (decodedData.method !== 'executeMetaTransaction') {
-        return Err(new InvalidRootMethod(decodedData.method))
-      }
-
-      return Ok({
-        destination: decodedData.inputs[0],
-        data: decodedData.inputs[1],
-        value: decodedData.inputs[2],
-      })
+      decodedData = MetaTxWalletDecoder.decodeData(tx.data)
     } catch (e) {
       return Err(new InputDecodeError(e))
     }
+
+    if (decodedData.method === null) {
+      return Err(new InputDecodeError())
+    }
+
+    if (decodedData.method !== 'executeMetaTransaction') {
+      return Err(new InvalidRootMethod(decodedData.method))
+    }
+
+    const inputs: [string, any, Buffer] = decodedData.inputs
+    return Ok({
+      destination: inputs[0],
+      value: inputs[1].toString(),
+      data: inputs[2].toString('hex')
+    })
   }
 }

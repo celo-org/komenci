@@ -46,7 +46,7 @@ export class InvalidDestination extends RootError<MetaTxValidationErrorTypes> {
 }
 
 export class InputDecodeError extends RootError<MetaTxValidationErrorTypes> {
-  constructor(public readonly error: Error) {
+  constructor(public readonly error?: Error) {
     super(MetaTxValidationErrorTypes.InputDecodeError)
   }
 }

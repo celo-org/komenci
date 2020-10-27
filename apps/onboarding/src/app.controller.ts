@@ -163,7 +163,6 @@ export class AppController {
 
     const validTx = await this.walletService.isAllowedMetaTransaction(
       metaTx,
-      session,
       await this.allowedMetaTransactions()
     )
 
