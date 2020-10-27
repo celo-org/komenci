@@ -92,7 +92,6 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Replace expired transaction with a dummy transaction
-   * using the same nonce and a higher gas price
    * @param tx Expired tx
    */
   private async deadLetter(tx: Transaction) {
