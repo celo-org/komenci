@@ -18,7 +18,7 @@ jest.mock('./relayer_proxy.service')
 jest.mock('./session/session.service')
 jest.mock('./wallet/wallet.service')
 jest.mock('./subsidy/subsidy.service')
-jest.mock('@celo/contractKit')
+jest.mock('@celo/contractkit')
 
 describe('AppController', () => {
   let appController: AppController
