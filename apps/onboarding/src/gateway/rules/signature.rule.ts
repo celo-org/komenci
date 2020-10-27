@@ -26,11 +26,12 @@ export class SignatureRule implements Rule<{}, InvalidSignature> {
     const account = startSessionDto.externalAccount
     const message = hashMessage(`komenci:login:${account}`)
     const signer = recoverMessageSigner(message, signature)
-    if (signer.toLocaleLowerCase() === account.toLocaleLowerCase()) {
-      return Ok(true)
+
+    if (signer.toLocaleLowerCase() !== account.toLocaleLowerCase()) {
+      return Err(new InvalidSignature())
     }
 
-    return Err(new InvalidSignature())
+    return Ok(true)
   }
 
   validateConfig(config?: string): {} {

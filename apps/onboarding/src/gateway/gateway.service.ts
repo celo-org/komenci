@@ -59,12 +59,15 @@ export class GatewayService implements OnModuleInit {
       })
     )
 
+    let hasFailingResult = false
     results.forEach(result => {
       if (result.ok === false) {
+        // TODO: Replace with structured logging
+        hasFailingResult = true
         this.logger.warn(result.error)
       }
     })
 
-    return results.every(result => result.ok)
+    return hasFailingResult
   }
 }

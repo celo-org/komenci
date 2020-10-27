@@ -39,7 +39,6 @@ export class SubsidyService {
       return Err(new InvalidMetaTransaction("subsidyRequest:request"))
     }
 
-
     return Ok(true)
   }
 
