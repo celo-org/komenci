@@ -33,13 +33,8 @@ export class SignatureRule implements Rule<{}, InvalidSignature> {
     const signer = startSessionDto.externalAccount
 
     try {
-      console.log(messageHash)
-      console.log(signature)
-      console.log(signer)
       const parsedSig = parseSignatureWithoutPrefix(messageHash, signature, signer)
-      console.log(parsedSig)
     } catch (e) {
-      console.log(e)
       return Err(new InvalidSignature(e))
     }
 
