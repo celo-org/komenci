@@ -182,6 +182,8 @@ export class AppController {
   private async allowedMetaTransactions(): Promise<TxFilter[]> {
     if (this._allowedMetaTransaction === undefined) {
       const attestations = await this.contractKit.contracts.getAttestations()
+      const accounts = await this.contractKit.contracts.getAccounts()
+
       this._allowedMetaTransaction = [
         {
           destination: attestations.address,
@@ -191,6 +193,10 @@ export class AppController {
           destination: attestations.address,
           methodId: attestations.methodIds.complete
         },
+        {
+          destination: accounts.address,
+          methodId: accounts.methodIds.setAccount
+        }
       ]
     }
     return this._allowedMetaTransaction
