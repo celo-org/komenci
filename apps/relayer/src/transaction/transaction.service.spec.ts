@@ -4,6 +4,7 @@ import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { Test } from '@nestjs/testing'
 import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
+import { leftTask } from 'fp-ts/lib/ReaderTaskEither'
 import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
@@ -150,7 +151,7 @@ describe('TransactionService', () => {
     let service: TransactionService
     beforeEach(async () => {
       service = await setupService({
-        transactionTimeoutMs: 1000,
+        transactionTimeoutMs: 2000,
         transactionCheckIntervalMs: 500
       }, {})
       // @ts-ignore
@@ -171,6 +172,11 @@ describe('TransactionService', () => {
         const watchTransaction = jest.spyOn(service, 'watchTransaction')
         // @ts-ignore
         const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
+        // @ts-ignore
+        const checkTransactions = jest.spyOn(service, 'checkTransactions')
+        // Simulate pending tx
+        const getTransactionSpy = jest.spyOn(contractKit.web3.eth, 'getTransaction')
+        getTransactionSpy.mockResolvedValue(tx)
 
         const rawTx = {
           destination: tx.to,
@@ -188,11 +194,26 @@ describe('TransactionService', () => {
         }))
 
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash, result)
-        // The receipt wait isn't waited on, it happens in the next tick
+
+        // Ensure the checkTransactions method is called
+        jest.advanceTimersByTime(600)
+        expect(checkTransactions).toHaveBeenCalled()
+
+        // Shouldn't remove it from the unwatch list until it's finalized
+        await setTimeout(() => {
+          expect(unwatchTransaction).not.toHaveBeenCalledWith(tx.hash)
+        })
+
+        // Simulate being included in a block and ensure it's unwatched
+        const completedTx = txFixture()
+        completedTx.hash = tx.hash
+        completedTx.blockHash = "notNull"
+        getTransactionSpy.mockResolvedValue(completedTx)
+        jest.advanceTimersByTime(600)
+
         await setTimeout(() => {
           expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         })
-        jest.advanceTimersToNextTimer()
       })
     })
 
@@ -201,9 +222,7 @@ describe('TransactionService', () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
         const result: any = {
-          getHash: () => Promise.resolve(tx.hash),
-          // Simulate timeout
-          waitReceipt: () => new Promise(resolve => setTimeout(resolve, 10000))
+          getHash: () => Promise.resolve(tx.hash)
         }
         const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockResolvedValue(result)
         // @ts-ignore
@@ -243,9 +262,7 @@ describe('TransactionService', () => {
           expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
           expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         })
-
       })
     })
-
   })
 })
