@@ -60,6 +60,7 @@
     "web3-core-helpers": "1.2.4"
   },
   "devDependencies": {
+    "bignumber.js": "9.0.0",
     "@celo/typescript": "^0.0.1",
     "@nestjs/cli": "^7.5.1",
     "@nestjs/schematics": "^7.0.0",

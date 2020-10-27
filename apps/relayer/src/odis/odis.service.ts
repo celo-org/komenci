@@ -2,6 +2,7 @@ import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
+import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import { AuthSigner, ServiceContext } from '@celo/contractkit/lib/identity/odis/query'
 import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { Inject, Injectable } from '@nestjs/common'
@@ -42,7 +43,7 @@ export class OdisService {
   // to accept pre-signed auth header (then we can just expose signPersonalMessage)
   getPhoneNumberIdentifier = async (
     input: DistributedBlindedPepperDto
-  ): Promise<Result<string, OdisQueryError>> => {
+  ): Promise<Result<PhoneNumberHashDetails, OdisQueryError>> => {
     const authSigner: AuthSigner = {
       authenticationMethod: OdisUtils.Query.AuthenticationMethod.WALLET_KEY,
       contractKit: this.contractKit
@@ -67,7 +68,7 @@ export class OdisService {
           undefined,
           input.clientVersion
         )
-        return Ok(phoneHashDetails.phoneHash)
+        return Ok(phoneHashDetails)
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {

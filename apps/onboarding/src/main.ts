@@ -1,6 +1,6 @@
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService, ConfigType } from '@nestjs/config'
-import { NestFactory } from '@nestjs/core'
+import { NestApplication, NestFactory } from '@nestjs/core'
 import {
   FastifyAdapter,
   NestFastifyApplication
@@ -10,15 +10,17 @@ import { AppModule } from './app.module'
 import { appConfig } from './config/app.config'
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
+  const app = await NestFactory.create<NestApplication>(
+   AppModule,
+   {
+     logger: false
+   }
   )
 
-  const logger = app.get(Logger)
-  app.useLogger(logger)
+  // const logger = app.get(Logger)
+  app.useLogger(app.get(Logger))
   const cfg = app.get(ConfigService).get<ConfigType<typeof appConfig>>('app')
-  logger.log(`Starting HTTP server on  ${cfg.host}:${cfg.port}`)
+  // logger.log(`Starting HTTP server on  ${cfg.host}:${cfg.port}`)
   app.useGlobalPipes(new ValidationPipe())
 
   await app.listen(cfg.port, cfg.host)

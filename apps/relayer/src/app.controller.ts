@@ -1,9 +1,9 @@
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
 import { makeAsyncThrowable } from '@celo/base/lib/result'
-import { Result, throwIfError } from '@celo/base/src/result'
+import { ContractKit } from '@celo/contractkit'
+import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import {
   MetaTransactionWalletWrapper,
-  RawTransaction,
   toRawTransaction,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Body, Controller, Inject } from '@nestjs/common'
@@ -11,7 +11,7 @@ import { MessagePattern, RpcException } from '@nestjs/microservices'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
 import { SubmitTransactionBatchDto } from 'apps/relayer/src/dto/SubmitTransactionBatchDto'
 import { SubmitTransactionDto } from 'apps/relayer/src/dto/SubmitTransactionDto'
-import { GetPhoneNumberIdResponse, OdisService } from 'apps/relayer/src/odis/odis.service'
+import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import { TransactionService } from 'apps/relayer/src/transaction/transaction.service'
 import Web3 from 'web3'
 import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
@@ -26,6 +26,7 @@ export class AppController {
   constructor(
     private readonly odisService: OdisService,
     private readonly web3: Web3,
+    private readonly contractKit: ContractKit,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     private metaTxWallet: MetaTransactionWalletWrapper,
     private transactionService: TransactionService,
@@ -46,7 +47,7 @@ export class AppController {
   @MessagePattern({ cmd: 'getPhoneNumberIdentifier' })
   async getPhoneNumberIdentifier(
     @Body() input: DistributedBlindedPepperDto,
-  ): Promise<RelayerResponse<string>> {
+  ): Promise<RelayerResponse<PhoneNumberHashDetails>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
         this.odisService.getPhoneNumberIdentifier,

@@ -1,8 +1,9 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
+import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
+import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
+import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType, WalletService } from '@app/onboarding/wallet/wallet.service'
-import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
-import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Body, Controller, ForbiddenException, Inject, Post, Req, Session, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
@@ -17,14 +18,29 @@ import { RelayerProxyService } from './relayer_proxy.service'
 
 interface GetPhoneNumberIdResponse {
   identifier: string
+  pepper: string
 }
 
-@Controller()
+interface DeployWalletInProgress {
+  status: 'in-progress',
+  txHash: string,
+  deployerAddress: string,
+}
+
+interface DeployWalletDeployed {
+  status: 'deployed',
+  walletAddress: string
+}
+
+type DeployWalletResp = DeployWalletInProgress | DeployWalletDeployed
+
+@Controller("v1")
 export class AppController {
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
     private readonly gatewayService: GatewayService,
     private readonly authService: AuthService,
+    private readonly subsidyService: SubsidyService,
     private readonly sessionService: SessionService,
     private readonly walletService: WalletService,
     @Inject(appConfig.KEY)
@@ -47,28 +63,38 @@ export class AppController {
   @UseGuards(AuthGuard('jwt'))
   @Post('deployWallet')
   async deployWallet(
+    @Body() deployWalletDto: DeployWalletDto,
     @Session() session: SessionEntity,
-  ): Promise<any> {
-    const getResp = await this.walletService.getWallet(session)
-    if (getResp.ok) {
+  ): Promise<DeployWalletResp> {
+    const getResp = await this.walletService.getWallet(
+      session,
+      deployWalletDto.implementationAddress
+    )
+
+    if (getResp.ok === true) {
       return {
         status: 'deployed',
         walletAddress: getResp.result
       }
-    } else if (getResp.ok === false) {
-      if (getResp.error.errorType === WalletErrorType.NotDeployed) {
-        const deployResp = await this.walletService.deployWallet(session)
-        if (deployResp.ok) {
-          return {
-            status: 'in-progress',
-            txHash: deployResp.result
-          }
-        } else if (deployResp.ok === false) {
-          throw(deployResp.error)
-        }
-      } else {
-        throw(getResp.error)
+    }
+
+    if (getResp.error.errorType !== WalletErrorType.NotDeployed) {
+      throw(getResp.error)
+    }
+
+    const deployResp = await this.walletService.deployWallet(
+      session,
+      deployWalletDto.implementationAddress
+    )
+
+    if (deployResp.ok === true) {
+      return {
+        status: 'in-progress',
+        txHash: deployResp.result,
+        deployerAddress: this.cfg.mtwDeployerAddress
       }
+    } else {
+      throw(deployResp.error)
     }
   }
 
@@ -82,16 +108,29 @@ export class AppController {
     )
 
     return {
-      identifier: resp.payload
+      identifier: resp.payload.phoneHash,
+      pepper: resp.payload.pepper
     }
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('requestSubsidisedAttestation')
-  async requestSubsidisedAttestation() {
-    // const resp = this.relayerProxyService.submitTransactionBatch()
+  @Post('requestSubsidisedAttestations')
+  async requestSubsidisedAttestations(
+    @Body() requestAttestationsDto: RequestAttestationsDto,
+    @Session() session: SessionEntity,
+  ) {
+    const res = await this.subsidyService.isValid(requestAttestationsDto, session)
+
+    if (res.ok === false) {
+      throw(res.error)
+    }
+
+    const txSubmit = await this.relayerProxyService.submitTransactionBatch({
+      transactions: await this.subsidyService.buildTransactionBatch(requestAttestationsDto)
+    })
+
     return {
-      txHash: ''
+      txHash: txSubmit.payload
     }
   }
 

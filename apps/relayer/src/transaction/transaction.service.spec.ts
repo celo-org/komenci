@@ -2,13 +2,11 @@ import { BlockchainService, NodeRPCError, TxPool } from '@app/blockchain/blockch
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
-import { Test, TestingModule } from '@nestjs/testing'
+import { Test } from '@nestjs/testing'
 import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
-import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
-import { EventLog, Log, Transaction, TransactionReceipt } from 'web3-core'
-import { Eth } from 'web3-eth'
+import { Transaction, TransactionReceipt } from 'web3-core'
 import { TransactionService } from './transaction.service'
 
 jest.mock('@app/blockchain/blockchain.service')
