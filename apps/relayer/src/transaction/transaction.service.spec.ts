@@ -174,8 +174,9 @@ describe('TransactionService', () => {
         // @ts-ignore
         const checkTransactions = jest.spyOn(service, 'checkTransactions')
         // Simulate pending tx
-        const getTransactionSpy = jest.spyOn(contractKit.web3.eth, 'getTransaction')
-        getTransactionSpy.mockResolvedValue(tx)
+        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction')
+        const txPromise = Promise.resolve(tx)
+        getTransaction.mockReturnValue(txPromise)
 
         const rawTx = {
           destination: tx.to,
@@ -195,7 +196,8 @@ describe('TransactionService', () => {
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash, result)
 
         // Ensure the checkTransactions method is called
-        jest.advanceTimersByTime(600)
+        jest.advanceTimersToNextTimer(1)
+        await txPromise
         expect(checkTransactions).toHaveBeenCalled()
 
         // Shouldn't remove it from the unwatch list until it's finalized
@@ -207,12 +209,14 @@ describe('TransactionService', () => {
         const completedTx = txFixture()
         completedTx.hash = tx.hash
         completedTx.blockHash = "notNull"
-        getTransactionSpy.mockResolvedValue(completedTx)
-        jest.advanceTimersByTime(600)
-
+        const completedTxPromise = Promise.resolve(completedTx)
+        getTransaction.mockReturnValue(completedTxPromise)
+        jest.advanceTimersToNextTimer(2)
+        await completedTxPromise
         await setTimeout(() => {
           expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         })
+        jest.advanceTimersToNextTimer(1)
       })
     })
 
@@ -223,12 +227,14 @@ describe('TransactionService', () => {
         const result: any = {
           getHash: () => Promise.resolve(tx.hash)
         }
-        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockResolvedValue(result)
+        const resultPromise = Promise.resolve(result)
+        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockReturnValue(resultPromise)
         // @ts-ignore
         const watchTransaction = jest.spyOn(service, 'watchTransaction')
         // @ts-ignore
         const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
-        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockResolvedValue(tx)
+        const txPromise = Promise.resolve(tx)
+        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
         // @ts-ignore
         const deadLetter = jest.spyOn(service, 'deadLetter')
         // @ts-ignore
@@ -254,13 +260,18 @@ describe('TransactionService', () => {
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash, result)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
-        jest.advanceTimersByTime(600)
+        jest.advanceTimersToNextTimer(1)
 
         expect(checkTransactions).toHaveBeenCalled()
+        await txPromise
+        await resultPromise
+        await result.getHash()
         await setTimeout(() => {
           expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
           expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+          expect(watchTransaction.mock.calls.length).toBe(2)
         })
+        jest.advanceTimersToNextTimer(1)
       })
     })
   })
