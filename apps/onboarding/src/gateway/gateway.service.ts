@@ -1,4 +1,5 @@
 import { SignatureRule } from '@app/onboarding/gateway/rules/signature.rule'
+import { RootError } from '@celo/base/lib/result'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
@@ -13,7 +14,7 @@ import { Rule } from './rules/rule'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
-  private rules: Array<Rule<any, any>>
+  private rules: Array<Rule<any, RootError<any>>>
   private ruleEnabled: Record<string, boolean>
   // TODO: Better types here
   private ruleConfigs: Record<string, unknown>
@@ -66,7 +67,10 @@ export class GatewayService implements OnModuleInit {
       if (result.ok === false) {
         // TODO: Replace with structured logging
         hasFailingResult = true
-        this.logger.warn(result.error)
+        this.logger.error({
+          message: result.error.message,
+          errorType: result.error.errorType
+        }, result.error.stack)
       }
     })
 
