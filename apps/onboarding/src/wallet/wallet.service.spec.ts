@@ -124,8 +124,6 @@ describe("WalletService", () => {
             ).txo
           )
 
-          console.log(attestations.methodIds)
-
           const res = await walletService.isAllowedMetaTransaction(
             testTx,
             [
