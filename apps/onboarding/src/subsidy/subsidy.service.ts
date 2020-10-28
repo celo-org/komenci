@@ -49,7 +49,7 @@ export class SubsidyService {
 
     const attestations = await this.contractKit.contracts.getAttestations()
     const requestValid = await this.walletService.isAllowedMetaTransaction(
-      input.transactions.approve,
+      input.transactions.request,
       [
         {
           destination: attestations.address,

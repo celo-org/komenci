@@ -55,7 +55,7 @@ describe("WalletService", () => {
 
   describe('#isAllowedMetaTransaction', () => {
     describe('with a random transaction', () => {
-      it('returns an DecodeError', async () => {
+      it('returns a DecodeError', async () => {
         const module = await buildModule({})
         const walletService = module.get(WalletService)
         const contractKit = module.get(ContractKit)
@@ -123,6 +123,8 @@ describe("WalletService", () => {
               {v: 0, r: "0x0", s: "0x0"}
             ).txo
           )
+
+          console.log(attestations.methodIds)
 
           const res = await walletService.isAllowedMetaTransaction(
             testTx,

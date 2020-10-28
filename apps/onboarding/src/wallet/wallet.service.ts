@@ -1,3 +1,4 @@
+import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RelayerProxyService } from '@app/onboarding/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
@@ -54,19 +55,18 @@ export class WalletService {
     const normDestination = normalizeAddress(metaTx.destination)
 
     const txWithMatchingDestination = allowedTransactions.filter(
-      (tx) =>
-        normalizeAddress(tx.destination) === normDestination
+      (allowed) =>
+        normalizeAddress(allowed.destination) === normDestination
     )
 
     if (txWithMatchingDestination.length === 0) {
       return Err(new InvalidDestination(metaTx.destination))
     }
 
-    const metaTxMethodId = trimLeading0x(metaTx.data).slice(0, 8)
+    const metaTxMethodId = extractMethodId(metaTx.data)
     const matchingTx = txWithMatchingDestination.find(
-      (tx) => {
-        const methodId = trimLeading0x(tx.methodId)
-        return metaTxMethodId === methodId
+      (allowed) => {
+        return metaTxMethodId === normalizeMethodId(allowed.methodId)
       }
     )
 
@@ -150,10 +150,8 @@ export class WalletService {
 
   private hasDeployInProgress(session: Session, implementationAddress: string): boolean {
     if (
-      session.meta &&
-      session.meta.walletDeploy !== undefined &&
-      session.meta.walletDeploy.txHash !== undefined &&
-      session.meta.walletDeploy.implementationAddress === implementationAddress
+      session.meta?.walletDeploy?.txHash !== undefined &&
+      session.meta?.walletDeploy?.implementationAddress === implementationAddress
     ) {
       const deployDeadline = new Date(
         session.meta.walletDeploy.startedAt +
@@ -172,7 +170,6 @@ export class WalletService {
   }
 
   private decodeMetaTransaction(tx: RawTransaction): Result<RawTransaction, MetaTxValidationError> {
-    // const wallet = await this.contractKit.contracts.getMetaTransactionWallet(tx.destination)
     let decodedData: any
     try {
       decodedData = MetaTxWalletDecoder.decodeData(tx.data)
@@ -188,6 +185,11 @@ export class WalletService {
       return Err(new InvalidRootMethod(decodedData.method))
     }
 
+    if (decodedData.inputs.length !== 6) {
+      return Err(new InputDecodeError(new Error("Invalid inputs length")))
+    }
+
+    // destination, value, calldata
     const inputs: [string, any, Buffer] = decodedData.inputs
     return Ok({
       destination: inputs[0],
