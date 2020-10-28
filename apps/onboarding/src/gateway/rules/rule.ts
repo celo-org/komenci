@@ -6,7 +6,7 @@ export enum RuleID {
   DailyCap = 'DAILY_CAP',
   Captcha = 'CAPTCHA',
   DeviceAttestation = 'DEVICE_ATTESTATION',
-  Signature = 'SIGNATURE"'
+  Signature = 'SIGNATURE'
 }
 
 export interface GatewayContext {
