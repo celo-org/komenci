@@ -1,6 +1,6 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { MetaTxValidationError } from '@app/onboarding/wallet/errors'
+import { InvalidWallet, MetaTxValidationError } from '@app/onboarding/wallet/errors'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'

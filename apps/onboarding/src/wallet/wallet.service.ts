@@ -7,9 +7,9 @@ import {
   InputDecodeError, InvalidChildMethod, InvalidDestination,
   InvalidImplementation,
   InvalidRootMethod,
+  InvalidWallet,
   MetaTxValidationError,
-  WalletNotDeployed,
-  InvalidWallet
+  WalletNotDeployed
 } from '@app/onboarding/wallet/errors'
 import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
