@@ -19,11 +19,12 @@ export class ApiErrorFilter extends BaseExceptionFilter {
     if (ApiError.isApiError(exception)) {
       const apiError = exception as ApiError<any>
       const res = apiError.toJSON()
-      applicationRef.reply(host.getArgByIndex(1), res, apiError.status)
+      applicationRef.reply(host.getArgByIndex(1), res, apiError.statusCode)
       return this.logger.error(
         {
           message: apiError.message,
-          errorType: apiError.errorType
+          errorType: apiError.errorType,
+          metadata: apiError.metadata
         },
         apiError.stack,
       )

@@ -12,12 +12,26 @@ import { ApiErrorFilter } from '../src/errors/api-error.filter'
 const request = require('supertest')
 
 class ExampleApiError extends ApiError<'ExampleApiError'> {
+  statusCode = 400
+
   constructor() {
-    super(
-      'ExampleApiError',
-      'This is an example error',
-      400
-    )
+    super('ExampleApiError')
+    this.message = 'This is an example error'
+  }
+}
+
+interface ExampleMetadata {
+  address: string
+  count: number
+}
+
+class ExampleApiErrorWithMetadata extends ApiError<'ExampleApiError', ExampleMetadata> {
+  statusCode = 400
+
+  constructor(address: string, count: number) {
+    super('ExampleApiError')
+    this.message = 'This is an example error'
+    this.metadata = {address, count}
   }
 }
 
@@ -33,6 +47,11 @@ export class ErrorController {
   @Get('throwApiError')
   async throwApiError() {
     throw new ExampleApiError()
+  }
+
+  @Get('throwApiErrorWithMetadata')
+  async throwApiErrorWithMetadata() {
+    throw new ExampleApiErrorWithMetadata("0x0", 100)
   }
 
   @Get('throwRootError')
@@ -52,7 +71,11 @@ describe('ErrorController (e2e)', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot()
+        LoggerModule.forRoot({
+          pinoHttp: {
+            prettyPrint: true
+          }
+        })
       ],
       controllers: [ErrorController],
       providers: [
@@ -80,6 +103,23 @@ describe('ErrorController (e2e)', () => {
         errorType: 'ExampleApiError',
         statusCode: 400,
         message: 'This is an example error'
+      })
+    })
+  })
+
+  describe('/throwApiErrorWithMetadata (GET)', () => {
+    it('Returns 400 with data', async () => {
+      const resp = await request(app.getHttpServer()).get('/throwApiErrorWithMetadata')
+      // console.log(resp.body)
+      expect(resp.statusCode).toBe(400)
+      expect(await resp.body).toEqual({
+        errorType: 'ExampleApiError',
+        statusCode: 400,
+        message: 'This is an example error',
+        metadata: {
+          address: "0x0",
+          count: 100
+        }
       })
     })
   })

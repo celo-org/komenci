@@ -1,6 +1,6 @@
 import { RootError } from '@celo/base/lib/result'
 
-export class ApiError<T> extends RootError<T> {
+export abstract class ApiError<TError, TMetadata = never> extends RootError<TError> {
   // Can not use instanceof with classes that extend Error
   static isApiError(obj: any): boolean {
     return obj._apiError === true
@@ -8,21 +8,21 @@ export class ApiError<T> extends RootError<T> {
   }
 
   _apiError: boolean = true
+  abstract statusCode: number
+  metadata?: TMetadata
 
-  constructor(
-    errorType: T,
-    public readonly message: string,
-    public readonly status: number = 500
+  protected constructor(
+    errorType: TError,
   ) {
     super(errorType)
   }
 
   toJSON = () => {
     return {
-      statusCode: this.status,
+      statusCode: this.statusCode,
       errorType: this.errorType,
       message: this.message,
+      ...(this.metadata ? {metadata: this.metadata} : {})
     }
-
   }
 }
