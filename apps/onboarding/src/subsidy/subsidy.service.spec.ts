@@ -1,6 +1,7 @@
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
+import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { ContractKit } from '@celo/contractkit'
 import { WrapperCache } from '@celo/contractkit/lib/contract-cache'
 import { AttestationsWrapper } from '@celo/contractkit/lib/wrappers/Attestations'
@@ -13,6 +14,7 @@ jest.mock('@celo/contractkit')
 jest.mock('@celo/contractkit/lib/wrappers/Attestations')
 jest.mock('@celo/contractkit/lib/wrappers/StableTokenWrapper')
 jest.mock('@celo/contractkit/lib/contract-cache')
+jest.mock('@app/onboarding/wallet/wallet.service')
 
 // @ts-ignore
 const contractKit = new ContractKit()
@@ -34,6 +36,7 @@ describe('SubsidyService', () => {
       providers: [
         SubsidyService,
         ContractKit,
+        WalletService,
         {
           provide: appConfig.KEY,
           useValue: cfg
