@@ -12,13 +12,13 @@ export enum ReCAPTCHAErrorTypes {
   VerificationFailed = 'VerificationFailed'
 }
 
-class VerificationFailed extends RootError<ReCAPTCHAErrorTypes> {
+export class CaptchaVerificationFailed extends RootError<ReCAPTCHAErrorTypes> {
   constructor(public errorCodes: ErrorCode[]) {
     super(ReCAPTCHAErrorTypes.VerificationFailed)
   }
 }
 
-export type CaptchaServiceErrors = VerificationFailed | HttpRequestError
+export type CaptchaServiceErrors = CaptchaVerificationFailed | HttpRequestError
 
 @Injectable()
 export class CaptchaService {
@@ -43,7 +43,7 @@ export class CaptchaService {
         if (data.success === true) {
           return Ok(true)
         } else {
-          return Err(new VerificationFailed(data['error-codes']))
+          return Err(new CaptchaVerificationFailed(data['error-codes']))
         }
       })
       .catch(error => {

@@ -89,7 +89,7 @@ export class WalletService {
     )
   }
 
-  async getWallet(session: Session, implementationAddress: string): Promise<Result<string, WalletError>> {
+  async getWallet(session: Session, implementationAddress: string): Promise<Result<string, WalletNotDeployed>> {
     if (this.hasDeployInProgress(session, implementationAddress)) {
       const tx = await this.web3.eth.getTransaction(session.meta.walletDeploy.txHash)
       if (tx.blockNumber !== null) {
@@ -114,7 +114,7 @@ export class WalletService {
     return Err(new WalletNotDeployed())
   }
 
-  async deployWallet(session: Session, implementationAddress: string): Promise<Result<string, WalletError>> {
+  async deployWallet(session: Session, implementationAddress: string): Promise<Result<string, InvalidImplementation>> {
     if (!this.isValidImplementation(implementationAddress)) {
       return Err(new InvalidImplementation(implementationAddress))
     }

@@ -1,7 +1,8 @@
-import { AuthService } from '@app/onboarding/auth/auth.service'
+import { AuthService, TokenPayload } from '@app/onboarding/auth/auth.service'
 import { rulesConfig, RulesConfig } from '@app/onboarding/config/rules.config'
+import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
-import { CaptchaService } from '@app/onboarding/gateway/captcha/captcha.service'
+import { CaptchaService, CaptchaVerificationFailed } from '@app/onboarding/gateway/captcha/captcha.service'
 import { DeviceCheckService } from '@app/onboarding/gateway/device-check/device-check.service'
 import { RuleID } from '@app/onboarding/gateway/rules/rule'
 import { SafetyNetService } from '@app/onboarding/gateway/safety-net/safety-net.service'
@@ -9,7 +10,7 @@ import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
 import { serializeSignature } from '@celo/base'
 import { ensureLeading0x, trimLeading0x } from '@celo/base/lib'
-import { Ok } from '@celo/base/lib/result'
+import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
 import { buildLoginTypedData } from '@celo/komencikit/lib/login'
@@ -100,12 +101,12 @@ describe('AppController (e2e)', () => {
     },
   }
 
-  describe.only('/v1/ (POST) startSession', () => {
-    const loginSignature = async (eoa: string, captchaToken: string): Promise<string> => {
-      return serializeSignature(
-        await contractKit.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
-      )
-
+  describe('/v1/ (POST) startSession', () => {
+    const decodeToken = (token: string): TokenPayload => {
+      const decodeResp = TokenPayload.decode(jwtService.verify(token))
+      expect(isRight(decodeResp)).toBe(true)
+      // @ts-ignore - we're expecting
+      return decodeResp.right
     }
 
     describe('with invalid payloads', () => {
@@ -161,7 +162,7 @@ describe('AppController (e2e)', () => {
           verifyCaptchaSpy = jest.spyOn(captchaService, 'verifyCaptcha').mockResolvedValue(Ok(true))
         })
 
-        it('returns a 403', async () => {
+        it('returns a 401', async () => {
           const payload: StartSessionDto = {
             externalAccount: eoa,
             captchaResponseToken: captchaToken,
@@ -169,90 +170,137 @@ describe('AppController (e2e)', () => {
           }
 
           const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
-          expect(resp.statusCode).toEqual(403)
+          expect(resp.statusCode).toEqual(401)
           expect(resp.body).toMatchObject({
-            statusCode: 403,
-            message: 'Forbidden'
+            statusCode: 401,
+            message: 'Unauthorized'
           })
         })
       })
 
-      // describe("when the gateway does not pass", () => {
-      //   it("Returns 403 with an error", async () => {
-      //     const payload = startSessionPayload(eoa, signature)
-      //     const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
-      //     expect(resp.statusCode).toEqual(403)
-      //     expect(resp.body).toMatchObject({
-      //       statusCode: 403,
-      //       message: 'Forbidden'
-      //     })
-      //   })
-      // })
+      describe("but an invalid captcha token", () => {
+        beforeEach(async () => {
+          const wallet = new LocalWallet()
+          wallet.addAccount(privateKey)
+          eoa = ensureLeading0x(wallet.getAccounts()[0])
+          signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
+          verifyCaptchaSpy = jest.spyOn(
+            captchaService, 'verifyCaptcha'
+          ).mockResolvedValue(Err(new CaptchaVerificationFailed([])))
+        })
 
-      // describe("when the gateway passes", () => {
-      //   const decodeToken = (token: string): TokenPayload => {
-      //     const decodeResp = TokenPayload.decode(jwtService.verify(token))
-      //     expect(isRight(decodeResp)).toBe(true)
-      //     // @ts-ignore - we're expecting
-      //     return decodeResp.right
-      //   }
+        it('returns a 401', async () => {
+          const payload: StartSessionDto = {
+            externalAccount: eoa,
+            captchaResponseToken: captchaToken,
+            signature
+          }
 
-      //   const subject = async () => {
-      //     const payload = startSessionPayload(eoa, signature)
-      //     const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
-      //     expect(resp.status).toEqual(201)
-      //     return resp
-      //   }
+          const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
+          expect(resp.statusCode).toEqual(401)
+          expect(resp.body).toMatchObject({
+            statusCode: 401,
+            message: 'Unauthorized'
+          })
+        })
+      })
 
-      //   describe("when no session exist for the account", () => {
-      //     it('creates a new session and returns the id in a token', async () => {
-      //       const save = jest.spyOn(sessionRepository, 'save')
-      //       const resp = await subject()
-      //       const tokenPayload = decodeToken(resp.body.token)
+      describe('and a valid captcha and signature', () => {
+        beforeEach(async () => {
+          const wallet = new LocalWallet()
+          wallet.addAccount(privateKey)
+          eoa = ensureLeading0x(wallet.getAccounts()[0])
+          signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
+          verifyCaptchaSpy = jest.spyOn(
+            captchaService, 'verifyCaptcha'
+          ).mockResolvedValue(Ok(true))
+        })
 
-      //       expect(save).toHaveBeenCalled()
-      //       const session = await sessionRepository.findOne(tokenPayload.sessionId)
-      //       expect(session).toBeDefined()
-      //       expect(ensureLeading0x(session.externalAccount)).toEqual(eoa)
-      //     })
-      //   })
+        const subject = async () => {
+          const payload = {
+            externalAccount: eoa,
+            captchaResponseToken: captchaToken,
+            signature
+          }
 
-      //   describe("when a session already exists", () => {
-      //     describe("but it's closed", () => {
-      //       it("creates a new session and returns the id in a token", async() => {
-      //         const oldSess = await sessionService.create(eoa)
-      //         oldSess.completedAt = new Date(Date.now()).toISOString()
-      //         await sessionRepository.save(oldSess)
+          return request(app.getHttpServer()).post('/v1/startSession').send(payload)
+        }
 
-      //         const save = jest.spyOn(sessionRepository, 'save')
-      //         const payload = startSessionPayload(eoa, signature)
-      //         const resp = await subject()
-      //         const tokenPayload = decodeToken(resp.body.token)
+        describe("when no session exist for the account", () => {
+          it('creates a new session and returns the id in a token', async () => {
+            const save = jest.spyOn(sessionRepository, 'save')
+            const resp = await subject()
+            const tokenPayload = decodeToken(resp.body.token)
 
-      //         expect(save).toHaveBeenCalled()
-      //         const session = await sessionRepository.findOne(tokenPayload.sessionId)
-      //         expect(session).toBeDefined()
-      //         expect(ensureLeading0x(session.externalAccount)).toEqual(eoa)
-      //         expect(await sessionRepository.count()).toEqual(2)
-      //       })
-      //     })
+            expect(save).toHaveBeenCalled()
+            const session = await sessionRepository.findOne(tokenPayload.sessionId)
+            expect(session).toBeDefined()
+            expect(ensureLeading0x(session.externalAccount)).toEqual(eoa)
+          })
+        })
 
-      //     describe("and it's open", () => {
-      //       it("reuses the same session", async () => {
-      //         const oldSess = await sessionService.create(eoa)
-      //         await sessionRepository.save(oldSess)
+        describe("when a session already exists", () => {
+          describe("but it's closed", () => {
+            it("creates a new session and returns the id in a token", async() => {
+              const oldSess = await sessionService.create(eoa)
+              oldSess.completedAt = new Date(Date.now()).toISOString()
+              await sessionRepository.save(oldSess)
 
-      //         const save = jest.spyOn(sessionRepository, 'save')
-      //         const payload = startSessionPayload(eoa, signature)
-      //         const resp = await subject()
-      //         const tokenPayload = decodeToken(resp.body.token)
+              const save = jest.spyOn(sessionRepository, 'save')
+              const resp = await subject()
+              const tokenPayload = decodeToken(resp.body.token)
 
-      //         expect(tokenPayload.sessionId).toEqual(oldSess.id)
-      //         expect(await sessionRepository.count()).toEqual(1)
-      //       })
-      //     })
-      //   })
-      // })
+              expect(save).toHaveBeenCalled()
+              const session = await sessionRepository.findOne(tokenPayload.sessionId)
+              expect(session).toBeDefined()
+              expect(ensureLeading0x(session.externalAccount)).toEqual(eoa)
+              expect(await sessionRepository.count()).toEqual(2)
+            })
+          })
+
+          describe("and it's open", () => {
+            it("reuses the same session", async () => {
+              const oldSess = await sessionService.create(eoa)
+              await sessionRepository.save(oldSess)
+
+              const save = jest.spyOn(sessionRepository, 'save')
+              const resp = await subject()
+              const tokenPayload = decodeToken(resp.body.token)
+
+              expect(tokenPayload.sessionId).toEqual(oldSess.id)
+              expect(await sessionRepository.count()).toEqual(1)
+            })
+          })
+        })
+      })
+    })
+  })
+
+  describe.only('/v1/ (POST) deployWallet', () => {
+    let token: string = ""
+
+    const eoa = Web3.utils.randomHex(20)
+    const impl = Web3.utils.randomHex(20)
+
+    beforeEach(async () => {
+      token = await authService.startSession(eoa)
+    })
+
+    describe('with an invalid implementation', () => {
+      it('returns a 400:InvalidImplementation', async () => {
+        const payload: DeployWalletDto = {
+          implementationAddress: impl
+        }
+        const resp = await request(app.getHttpServer())
+          .post('/v1/deployWallet')
+          .auth(token, {type: 'bearer'})
+          .send(payload)
+
+        expect(resp.status).toBe(400)
+        expect(resp.body).toMatchObject({
+          errorType: 'InvalidImplementation'
+        })
+      })
     })
   })
 

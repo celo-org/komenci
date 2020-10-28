@@ -1,3 +1,4 @@
+import { ApiError } from '@app/onboarding/errors/api-error'
 import { RootError } from '@celo/base/lib/result'
 import { Input } from '@nestjs/cli/commands'
 
@@ -12,9 +13,12 @@ export class WalletNotDeployed extends RootError<WalletErrorType> {
   }
 }
 
-export class InvalidImplementation extends RootError<WalletErrorType> {
-  constructor(public readonly implementationAddress) {
+export class InvalidImplementation extends ApiError<WalletErrorType, {implementation: string}> {
+  statusCode = 400
+  constructor(implementation: string) {
     super(WalletErrorType.InvalidImplementation)
+    this.message = "Unexpected MetaTransactionWallet implementation address"
+    this.metadata = { implementation }
   }
 }
 

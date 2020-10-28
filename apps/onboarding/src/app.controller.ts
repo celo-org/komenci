@@ -14,7 +14,7 @@ import {
   Inject,
   Post,
   Req,
-  Session,
+  Session, UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
@@ -72,7 +72,7 @@ export class AppController {
       const token = await this.authService.startSession(startSessionDto.externalAccount)
       return {token}
     } else {
-      throw new ForbiddenException()
+      throw new UnauthorizedException()
     }
   }
 
