@@ -7,8 +7,9 @@ import {
   InputDecodeError, InvalidChildMethod, InvalidDestination,
   InvalidImplementation,
   InvalidRootMethod,
-  MetaTxValidationError, WalletError,
+  MetaTxValidationError,
   WalletNotDeployed,
+  InvalidWallet
 } from '@app/onboarding/wallet/errors'
 import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
@@ -80,13 +81,19 @@ export class WalletService {
   async isValidWallet(
     walletAddress: Address,
     expectedSigner: Address
-  ): Promise<Result<true, WalletValidationError>> {
-    return verifyWallet(
+  ): Promise<Result<true, InvalidWallet>> {
+    const valid = await verifyWallet(
       this.contractKit,
       walletAddress,
       Object.keys(this.cfg.mtwImplementations),
       expectedSigner
     )
+
+    if (valid.ok !== true) {
+      return Err(new InvalidWallet(valid.error))
+    }
+
+    return valid
   }
 
   async getWallet(session: Session, implementationAddress: string): Promise<Result<string, WalletNotDeployed>> {

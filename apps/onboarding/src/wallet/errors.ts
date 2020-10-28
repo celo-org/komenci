@@ -1,10 +1,12 @@
 import { ApiError } from '@app/onboarding/errors/api-error'
 import { RootError } from '@celo/base/lib/result'
+import { WalletValidationError, WalletVerificationErrorTypes } from '@celo/komencikit/lib/errors'
 import { Input } from '@nestjs/cli/commands'
 
 export enum WalletErrorType {
   NotDeployed = "NotDeployed",
-  InvalidImplementation = "InvalidImplementation"
+  InvalidImplementation = "InvalidImplementation",
+  InvalidWallet = "InvalidWallet"
 }
 
 export class WalletNotDeployed extends RootError<WalletErrorType> {
@@ -22,7 +24,18 @@ export class InvalidImplementation extends ApiError<WalletErrorType, {implementa
   }
 }
 
-export type WalletError = WalletNotDeployed | InvalidImplementation
+export class InvalidWallet extends ApiError<WalletErrorType, {error: string}> {
+  statusCode = 400
+  constructor(private readonly walletError: WalletValidationError) {
+    super(WalletErrorType.InvalidImplementation)
+    this.message = "Invalid wallet"
+    this.metadata = {
+      error: walletError.errorType
+    }
+  }
+}
+
+export type WalletError = WalletNotDeployed | InvalidImplementation | InvalidWallet
 
 export enum MetaTxValidationErrorTypes {
   InvalidRootMethod = "InvalidRootMethod",
@@ -31,27 +44,35 @@ export enum MetaTxValidationErrorTypes {
   InputDecodeError = "InputDecodeError"
 }
 
-export class InvalidRootMethod extends RootError<MetaTxValidationErrorTypes> {
+export class InvalidRootMethod extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+  statusCode = 400
   constructor(public readonly received: string) {
     super(MetaTxValidationErrorTypes.InvalidRootMethod)
+    this.metadata = { received }
   }
 }
 
-export class InvalidChildMethod extends RootError<MetaTxValidationErrorTypes> {
+export class InvalidChildMethod extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+  statusCode = 400
   constructor(public readonly received: string) {
     super(MetaTxValidationErrorTypes.InvalidChildMethod)
+    this.metadata = { received }
   }
 }
 
-export class InvalidDestination extends RootError<MetaTxValidationErrorTypes> {
+export class InvalidDestination extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+  statusCode = 400
   constructor(public readonly received: string) {
     super(MetaTxValidationErrorTypes.InvalidDestination)
+    this.metadata = { received }
   }
 }
 
-export class InputDecodeError extends RootError<MetaTxValidationErrorTypes> {
+export class InputDecodeError extends ApiError<MetaTxValidationErrorTypes> {
+  statusCode = 400
   constructor(public readonly error?: Error) {
     super(MetaTxValidationErrorTypes.InputDecodeError)
+    this.message = this.error?.message
   }
 }
 
@@ -60,6 +81,5 @@ export type MetaTxValidationError =
   InvalidChildMethod |
   InvalidDestination |
   InputDecodeError
-
 
 
