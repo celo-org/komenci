@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, HttpServer, HttpStatus, Inject, Optional } from '@nestjs/common'
 import { AbstractHttpAdapter, BaseExceptionFilter } from '@nestjs/core'
 import { MESSAGES } from '@nestjs/core/constants'
-import { Logger } from 'nestjs-pino'
+import { InjectPinoLogger, Logger, PinoLogger } from 'nestjs-pino'
 
 import { RootError } from '@celo/base/lib/result'
 import { ApiError } from './api-error'
@@ -9,8 +9,8 @@ import { ApiError } from './api-error'
 @Catch()
 export class ApiErrorFilter extends BaseExceptionFilter {
   @Optional()
-  @Inject()
-  protected readonly logger?: Logger
+  @InjectPinoLogger("ApiErrorFilter")
+  protected readonly logger?: PinoLogger
 
   handleUnknownError(
     exception: any,
@@ -23,11 +23,11 @@ export class ApiErrorFilter extends BaseExceptionFilter {
       applicationRef.reply(host.getArgByIndex(1), res, apiError.statusCode)
       return this.logger.error(
         {
-          message: apiError.message,
           errorType: apiError.errorType,
-          metadata: apiError.metadata
+          metadata: apiError.metadata,
+          trace: apiError.stack,
         },
-        apiError.stack,
+        apiError.message,
       )
     } else {
       const body = {
@@ -40,15 +40,14 @@ export class ApiErrorFilter extends BaseExceptionFilter {
         return this.logger.error(
           {
             errorType: rootError.errorType,
-            message: rootError.message,
+            trace: rootError.stack,
           },
-          rootError.stack,
+          rootError.message,
         )
       } else if (this.isExceptionObject(exception)) {
-        return this.logger.error(
-          exception.message,
-          exception.stack,
-        )
+        return this.logger.error({
+          trace: exception.stack
+        }, exception.message)
       } else {
         return this.logger.error(exception)
       }

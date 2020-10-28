@@ -4,7 +4,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
 import { FastifyRequest } from 'fastify'
-import { Logger } from 'nestjs-pino'
+import { InjectPinoLogger, Logger, PinoLogger } from 'nestjs-pino'
 import { rulesConfig } from '../config/rules.config'
 import { StartSessionDto } from '../dto/StartSessionDto'
 import { CaptchaRule } from './rules/captcha.rule'
@@ -23,7 +23,8 @@ export class GatewayService implements OnModuleInit {
     @Inject(rulesConfig.KEY)
     private config: ConfigType<typeof rulesConfig>,
     private moduleRef: ModuleRef,
-    private logger: Logger
+    @InjectPinoLogger()
+    private logger: PinoLogger
   ) {}
 
   async onModuleInit() {
@@ -67,10 +68,14 @@ export class GatewayService implements OnModuleInit {
       if (result.ok === false) {
         // TODO: Replace with structured logging
         hasFailingResult = true
-        this.logger.error({
-          message: result.error.message,
-          errorType: result.error.errorType
-        }, result.error.stack)
+        this.logger.error(
+          {
+            message: result.error.message,
+            errorType: result.error.errorType
+          },
+          result.error.message,
+          result.error.stack,
+        )
       }
     })
 
