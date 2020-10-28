@@ -61,7 +61,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           gasPrice: 10000000000
         })
         const txHash = await result.getHash()
-        this.watchTransaction(txHash, result)
+        this.watchTransaction(txHash)
         return Ok(txHash)
       } catch(e) {
         if (tries === 3) {
@@ -121,7 +121,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private watchTransaction(txHash: string, result?: TransactionResult) {
+  private watchTransaction(txHash: string) {
     this.watchedTransactions.add(txHash)
     this.transactionSeenAt.set(txHash, Date.now())
   }
