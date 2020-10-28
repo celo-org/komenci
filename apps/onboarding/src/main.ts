@@ -14,7 +14,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(
    AppModule,
    {
-     logger: false
+     logger: true
    }
   )
 
@@ -23,7 +23,7 @@ async function bootstrap() {
   const cfg = app.get(ConfigService).get<ConfigType<typeof appConfig>>('app')
   // logger.log(`Starting HTTP server on  ${cfg.host}:${cfg.port}`)
   app.useGlobalPipes(new ValidationPipe())
-  app.useGlobalFilters(new ApiErrorFilter())
+  // app.useGlobalFilters(new ApiErrorFilter())
 
   await app.listen(cfg.port, cfg.host)
 }

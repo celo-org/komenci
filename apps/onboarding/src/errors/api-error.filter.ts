@@ -1,24 +1,45 @@
-import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common'
-import { Request, Response } from 'express'
+import { ArgumentsHost, Catch, HttpServer, HttpStatus, Inject, Optional } from '@nestjs/common'
+import { AbstractHttpAdapter, BaseExceptionFilter } from '@nestjs/core'
+import { MESSAGES } from '@nestjs/core/constants'
+import { Logger } from 'nestjs-pino'
 
 import { ApiError } from './api-error'
 
-@Catch(ApiError)
-export class ApiErrorFilter implements ExceptionFilter {
-  catch(exception: ApiError<any>, host: ArgumentsHost) {
-    const ctx = host.switchToHttp()
-    const response = ctx.getResponse<Response>()
-    const request = ctx.getRequest<Request>()
-    const {status, message, errorType} = exception.toJSON()
+@Catch()
+export class ApiErrorFilter extends BaseExceptionFilter {
+  @Optional()
+  @Inject()
+  protected readonly logger?: Logger
 
-    response
-      .status(status)
-      .json({
-        statusCode: status,
-        message,
-        errorType,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-      })
+  handleUnknownError(
+    exception: any,
+    host: ArgumentsHost,
+    applicationRef: AbstractHttpAdapter | HttpServer
+  ) {
+    if (ApiError.isApiError(exception)) {
+      const apiError = exception as ApiError<any>
+      const res = apiError.toJSON()
+      applicationRef.reply(host.getArgByIndex(1), res, apiError.status)
+      return this.logger.error(
+        {
+          message: apiError.message,
+          errorType: apiError.errorType
+        },
+        apiError.stack,
+      )
+    } else {
+      const body = {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.UNKNOWN_EXCEPTION_MESSAGE,
+      }
+      applicationRef.reply(host.getArgByIndex(1), body, body.statusCode)
+      if (this.isExceptionObject(exception)) {
+        return this.logger.error(
+          exception.message,
+          exception.stack,
+        )
+      }
+      return this.logger.error(exception)
+    }
   }
 }
