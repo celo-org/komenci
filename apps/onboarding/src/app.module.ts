@@ -1,9 +1,11 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
+import { ApiErrorFilter } from '@app/onboarding/errors/api-error.filter'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { APP_FILTER } from '@nestjs/core'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { SessionService } from 'apps/onboarding/src/session/session.service'
@@ -102,6 +104,10 @@ import { SessionModule } from './session/session.module'
         return ClientProxyFactory.create(relayerSvcOptions)
       }
     },
+    {
+      provide: APP_FILTER,
+      useClass: ApiErrorFilter,
+    }
   ]
 })
 export class AppModule {}
