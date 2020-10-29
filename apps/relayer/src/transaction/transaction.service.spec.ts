@@ -193,7 +193,7 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, result)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash)
 
         // Ensure the checkTransactions method is called
         jest.advanceTimersToNextTimer(1)
@@ -257,7 +257,7 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, result)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
         jest.advanceTimersToNextTimer(1)
