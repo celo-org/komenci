@@ -1,3 +1,4 @@
+import { SignatureRule } from '@app/onboarding/gateway/rules/signature.rule'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
@@ -28,11 +29,11 @@ export class GatewayService implements OnModuleInit {
     this.rules = await Promise.all([
       this.moduleRef.create(DailyCapRule),
       this.moduleRef.create(CaptchaRule),
-      this.moduleRef.create(DeviceAttestationRule)
+      this.moduleRef.create(DeviceAttestationRule),
+      this.moduleRef.create(SignatureRule)
     ])
 
     this.ruleEnabled = this.config.enabled
-
     this.ruleConfigs = this.rules.reduce((acc, rule) => {
       return {
         ...acc,
@@ -48,6 +49,7 @@ export class GatewayService implements OnModuleInit {
     const enabledRules = this.rules.filter(
       rule => this.ruleEnabled[rule.getID()]
     )
+
     const context = { req } // must build context
     const results = await Promise.all(
       enabledRules.map(rule => {
@@ -68,6 +70,6 @@ export class GatewayService implements OnModuleInit {
       }
     })
 
-    return hasFailingResult
+    return !hasFailingResult
   }
 }

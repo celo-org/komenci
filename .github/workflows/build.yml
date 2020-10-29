@@ -54,7 +54,7 @@ jobs:
         with:
           path: |
             libs/celo
-          key: ${{ runner.os }}-celo-${{ steps.celo-monorepo-commit.outputs.commit }}
+          key: ${{ runner.os }}-celo-${{ hashFiles('./scripts/build.celo.sh') }}-${{ steps.celo-monorepo-commit.outputs.commit }}
           only-check-key: true
       - name: Restore yarn cache
         uses: bowd/cache@v3
@@ -91,7 +91,7 @@ jobs:
         with:
           path: |
             libs/celo
-          key: ${{ runner.os }}-celo-${{ steps.celo-monorepo-commit.outputs.commit }}
+          key: ${{ runner.os }}-celo-${{ hashFiles('./scripts/build.celo.sh') }}-${{ steps.celo-monorepo-commit.outputs.commit }}
       - name: Restore Komenci cache
         id: restore-komenci
         uses: bowd/cache@v3
