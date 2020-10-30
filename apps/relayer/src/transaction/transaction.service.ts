@@ -36,7 +36,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     // Find pending txs and add to the watch list
-    (await this.getPendingTransactionHashes()).forEach(txHash => this.watchTransaction(txHash))
+    ;(await this.getPendingTransactionHashes()).forEach(txHash => this.watchTransaction(txHash))
     // Monitor the watched transactions for finality
     this.timer = setInterval(
       () => this.checkTransactions(),
@@ -148,9 +148,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private async getPendingTransactionHashes(): Promise<string[]> {
     const txPoolRes = await this.blockchainService.getPendingTxPool()
     if (txPoolRes.ok === false) {
+      if (txPoolRes.error.errorType === 'RPC') {
+        this.logger.error(txPoolRes.error.error)
+      }
       this.logger.error({
         message: 'Could not fetch tx pool',
-        originalError: txPoolRes.error.message
+        originalError: txPoolRes.error
       })
       return []
     } else if (txPoolRes.ok === true) {
