@@ -1,11 +1,18 @@
 import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
 
+export enum SessionQuota {
+    DistributedBlindedPepper = 'distributedBlindedPepper',
+    RequestSubsidisedAttestation = 'requestSubsidisedAttestation',
+    SubmitMetaTransaction = 'submitMetaTransaction',
+}
+
 interface SessionMetadata {
-    walletDeploy: {
+    walletDeploy?: {
         startedAt: number,
         txHash: string,
         implementationAddress: string
     }
+    quota?: {[quotaName in SessionQuota]?: number}
 }
 
 @Entity()
@@ -29,7 +36,7 @@ export class Session {
     @Column()
     completedAttestations: number
 
-    @Column('json', {nullable: true})
+    @Column('json', {nullable: true, default: {quota: {}}})
     meta?: SessionMetadata
 
     @Column('timestamp')
@@ -43,6 +50,14 @@ export class Session {
 
     isOpen(): boolean {
         return !this.expiredAt && !this.completedAt
+    }
+
+    checkQuota(quota: SessionQuota, updateUsage: boolean = true) {
+        const usage = this.meta.quota[quota] || 0
+        if (updateUsage) {
+            this.meta.quota[quota] = usage + 1
+        }
+        return usage
     }
 }
     

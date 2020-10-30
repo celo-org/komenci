@@ -1,15 +1,30 @@
 import { normalizeAddress, trimLeading0x } from '@celo/base'
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 import { v4 as uuidv4 } from 'uuid'
-import { Session } from './session.entity'
+import { Session, SessionQuota } from './session.entity'
 import { SessionRepository } from './session.repository'
+import { quotaConfig } from '../config/quota.config'
+import { ApiError } from '../errors/api-error'
 
+class QuotaExceededError extends ApiError<'QuotaExceededError'> {
+  statusCode = 403
+
+  constructor(quota: SessionQuota) {
+    super('QuotaExceededError')
+    this.message = `Quota '${quota}' exceeded`
+  }
+}
 
 @Injectable()
 export class SessionService {
 
-  constructor(private readonly sessionRepository: SessionRepository,) {}
+  constructor(
+    @Inject(quotaConfig.KEY)
+    private config: ConfigType<typeof quotaConfig>,
+    private readonly sessionRepository: SessionRepository,
+  ) {}
 
   async create(externalAccount: string): Promise<Session> {
     const session = Session.of({
@@ -50,5 +65,16 @@ export class SessionService {
     } else {
       return existingSession
     }
+  }
+
+  async checkSessionQuota(session: Session, quota: SessionQuota, updateUsage: boolean = true) {
+    const usage = session.checkQuota(quota, updateUsage)
+    if (updateUsage) {
+      await this.update(session.id, session)
+    }
+    if (usage >= this.config[quota]) {
+      throw new QuotaExceededError(quota)
+    }
+    return true
   }
 }
