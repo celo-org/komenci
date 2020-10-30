@@ -1,7 +1,7 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
+import { Session as SessionEntity, SessionQuota } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
@@ -129,8 +129,11 @@ export class AppController {
   @UseGuards(AuthGuard('jwt'))
   @Post('distributedBlindedPepper')
   async distributedBlindedPepper(
-    @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto
+    @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto,
+    @Session() session: SessionEntity,
   ): Promise<GetPhoneNumberIdResponse> {
+    await this.sessionService.checkSessionQuota(session, SessionQuota.DistributedBlindedPepper)
+
     const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
     )
@@ -147,6 +150,8 @@ export class AppController {
     @Body() requestAttestationsDto: RequestAttestationsDto,
     @Session() session: SessionEntity,
   ) {
+    await this.sessionService.checkSessionQuota(session, SessionQuota.RequestSubsidisedAttestation)
+
     const res = await this.subsidyService.isValid(requestAttestationsDto, session)
 
     if (res.ok === false) {
@@ -168,6 +173,8 @@ export class AppController {
     @Body() body: SubmitMetaTransactionDto,
     @Session() session: SessionEntity
   ) {
+    await this.sessionService.checkSessionQuota(session, SessionQuota.SubmitMetaTransaction)
+
     const metaTx: RawTransaction = {
       ...body,
       value: "0x0"
