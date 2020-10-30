@@ -10,7 +10,7 @@ import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWa
 import {
   Body,
   Controller,
-  ForbiddenException,
+  ForbiddenException, Get,
   Inject,
   Post,
   Req,
@@ -62,6 +62,18 @@ export class AppController {
     @Inject(appConfig.KEY)
     private readonly cfg: AppConfig
   ) {}
+
+  @Get('health')
+  health(
+    @Req() req
+  ): {status: string} {
+    // TODO: Think about how to have a more clear understanding of
+    // service health here. Think about the relayer load balancer health
+    // or maybe just a toggle that we can do from ENV vars?
+    return {
+      status: 'OK'
+    }
+  }
 
   @Post('startSession')
   async startSession(
