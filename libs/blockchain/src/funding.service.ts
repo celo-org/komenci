@@ -4,7 +4,6 @@ import { TransactionResult } from '@celo/contractkit/lib/utils/tx-result'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { Inject, Injectable } from '@nestjs/common'
 import BigNumber from 'bignumber.js'
-import { Logger } from 'nestjs-pino'
 
 interface RelayerInfo {
   celoBalance: BigNumber,
@@ -29,7 +28,6 @@ export class FundingService {
     private readonly contractKit: ContractKit,
     @Inject(walletConfig.KEY)
     private readonly walletCfg: WalletConfig,
-    private readonly logger: Logger
   ) {}
 
   public async getRelayerBalances(relayers: Address[]): Promise<BalanceSummary> {
