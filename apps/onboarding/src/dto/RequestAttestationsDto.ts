@@ -8,14 +8,6 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-export class RequestAttestationsTransactionsDto {
-  @ValidateNested()
-  approve: RawTransactionDto
-
-  @ValidateNested()
-  request: RawTransactionDto
-}
-
 export class RequestAttestationsDto {
   @IsString()
   @IsNotEmpty()
@@ -29,6 +21,6 @@ export class RequestAttestationsDto {
   walletAddress: string
 
   @ValidateNested()
-  transactions: RequestAttestationsTransactionsDto
+  requestTx: RawTransactionDto
 }
 

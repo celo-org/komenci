@@ -183,6 +183,7 @@ export class AppController {
     if (this._allowedMetaTransaction === undefined) {
       const attestations = await this.contractKit.contracts.getAttestations()
       const accounts = await this.contractKit.contracts.getAccounts()
+      const cUSD = await this.contractKit.contracts.getStableToken()
 
       this._allowedMetaTransaction = [
         {
@@ -196,6 +197,10 @@ export class AppController {
         {
           destination: accounts.address,
           methodId: accounts.methodIds.setAccount
+        },
+        {
+          destination: cUSD.address,
+          methodId: cUSD.methodIds.approve
         }
       ]
     }
