@@ -54,20 +54,25 @@ export class FundCommand {
     const spin = createSpinner()
     const fund = this.walletCfg.address
     spin.start(`Disbursing funds`)
-    const relayers = opts.relayer.length === 0
-      ? this.cfg.relayers
-      : opts.relayers.filter(r => this.cfg.relayers.indexOf(r) > -1)
 
-    if (relayers.length === 0) {
-      if (this.cfg.relayers.length === 0) {
-        spin.fail("Relayer config is empty")
-        process.exit(1)
-      } else if (opts.relayers.length > 0) {
-        spin.fail("Couldn't find selected relayers in config")
-        process.exit(1)
-      }
+    let relayers = []
+    if (opts.relayer.length > 0) {
+      opts.relayer.forEach(r => {
+        if (this.cfg.relayers.indexOf(r) > -1) {
+          relayers.push(r)
+        } else {
+          spin.warn(`Skipping ${r}: relayer not found in config`)
+        }
+      })
+    } else {
+      relayers = this.cfg.relayers
     }
 
+
+    if (relayers.length === 0) {
+      spin.fail("No relayers to fund")
+      process.exit(1)
+    }
 
     spin.info(`Funding relayers: `)
     relayers.forEach(r => {

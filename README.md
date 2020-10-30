@@ -142,6 +142,6 @@ For alfajores this can be a local wallet (private key), but in other envs this w
 
 - `fund getFundBalance` - will query the fund's balance
 - `fund getRelayerBalance` - will resolve all MTW associated with relayers and query for all balances
-- `fund distributeFunds` - will send cUSD to each relayer MTW and celo to each relayer, the amounts can be configured as flags.
+- `fund disburse` - will send cUSD to each relayer MTW and celo to each relayer, the amounts can be configured as flags.
 
 
