@@ -7,7 +7,7 @@ import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
 import { FundingConfig, fundingConfig } from 'apps/tools/src/config/funding.config'
 import { ConsoleModule } from 'nestjs-console'
 import { LoggerModule } from 'nestjs-pino'
-import { FundsService } from './funds.service'
+import { FundCommand } from './fund.command'
 
 @Module({
   imports: [
@@ -48,7 +48,7 @@ import { FundsService } from './funds.service'
     }),
   ],
   providers: [
-    FundsService,
+    FundCommand,
   ],
 })
 export class ToolsModule {}

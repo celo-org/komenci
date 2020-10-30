@@ -7,13 +7,11 @@ const bootstrap = new BootstrapConsole({
 })
 
 bootstrap.init().then(async (app) => {
-  try {
-    // init your app
-    await app.init()
-    // boot the cli
-    await bootstrap.boot()
-    process.exit(0)
-  } catch (e) {
-    process.exit(1)
-  }
+  await app.init()
+  // boot the cli
+  await bootstrap.boot()
+  process.exit(0)
+}).catch(e => {
+  console.error(e)
+  process.exit(1)
 })

@@ -7,6 +7,7 @@ import {
 } from '@app/blockchain/blockchain.providers'
 import { BlockchainService } from '@app/blockchain/blockchain.service'
 import { WalletConfig, } from '@app/blockchain/config/wallet.config'
+import { FundingService } from '@app/blockchain/funding.service'
 import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
 import { NodeConfig } from './config/node.config'
 
@@ -35,10 +36,12 @@ export class BlockchainModule {
           inject: options.inject || [],
         },
         BlockchainService,
+        FundingService,
         ...this.providers()
       ],
       exports: [
         BlockchainService,
+        FundingService,
         ...this.providers().map(p => p.provide)
       ]
     }
