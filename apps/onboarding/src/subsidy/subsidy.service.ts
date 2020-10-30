@@ -32,24 +32,9 @@ export class SubsidyService {
       return walletValid
     }
 
-    const stableToken = await this.contractKit.contracts.getStableToken()
-    const approveValid = await this.walletService.isAllowedMetaTransaction(
-      input.transactions.approve,
-      [
-        {
-          destination: stableToken.address,
-          methodId: stableToken.methodIds.approve,
-        }
-      ]
-    )
-
-    if (approveValid.ok === false) {
-      return approveValid
-    }
-
     const attestations = await this.contractKit.contracts.getAttestations()
     const requestValid = await this.walletService.isAllowedMetaTransaction(
-      input.transactions.request,
+      input.requestTx,
       [
         {
           destination: attestations.address,
@@ -69,13 +54,12 @@ export class SubsidyService {
     input: RequestAttestationsDto
   ): Promise<RawTransaction[]> {
     const {
-      identifier, walletAddress, transactions, attestationsRequested
+      identifier, walletAddress, attestationsRequested, requestTx
     } = input
 
     const batch = [
       await this.buildSubsidyTransfer(attestationsRequested, walletAddress),
-      transactions.approve,
-      transactions.request,
+      requestTx,
     ]
 
     if (!this.cfg.useAttestationGuards) {
