@@ -26,8 +26,6 @@ export class FundingService {
   constructor(
     private readonly deployer: MetaTransactionWalletDeployerWrapper,
     private readonly contractKit: ContractKit,
-    @Inject(walletConfig.KEY)
-    private readonly walletCfg: WalletConfig,
   ) {}
 
   public async getRelayerBalances(relayers: Address[]): Promise<BalanceSummary> {
@@ -81,11 +79,11 @@ export class FundingService {
     return relayers.reduce(async (summary, relayer, idx) => {
       // @ts-ignore
       const cUSDTx = await cUSD.transfer(wallets[relayer], cUSDAmount.toFixed()).send({
-        from: this.walletCfg.address
+        from: fund,
       })
       // @ts-ignore
       const celoTx = await celo.transfer(relayer, celoAmount.toFixed()).send({
-        from: this.walletCfg.address
+        from: fund,
       })
 
       summary[relayer] = {
