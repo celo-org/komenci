@@ -19,6 +19,8 @@ async function bootstrap() {
 
   const logger = app.get(Logger)
   app.useLogger(logger)
+  await app.init()
+
   app.startAllMicroservices(() => {
     logger.log(
       `Microservice is listening on ${appConfig.host}:${appConfig.port}`

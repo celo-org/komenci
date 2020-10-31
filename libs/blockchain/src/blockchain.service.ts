@@ -76,7 +76,8 @@ export class BlockchainService {
         {
           jsonrpc: '2.0',
           method: 'txpool_content',
-          params: []
+          params: [],
+          id: 1
         },
         (error, resp) => {
           if (error) {
