@@ -1,8 +1,10 @@
-import { getBlindedPhoneNumber } from '@celo/phone-number-privacy-common/lib/test/utils'
+
 import {
   normalizeAddressWith0x,
   privateKeyToAddress
 } from '@celo/utils/lib/address'
+import { WasmBlsBlindingClient } from '../../../../libs/celo/packages/contractkit/lib/identity/odis/bls-blinding-client'
+import { getBlindedPhoneNumber } from '../../../../libs/celo/packages/contractkit/lib/identity/odis/phone-number-identifier'
 
 const thresholdBls = require('blind-threshold-bls')
 
@@ -26,9 +28,13 @@ export const BLINDING_FACTOR = new Buffer(
   '0IsBvRfkBrkKCIW6HV0/T1zrzjQSe8wRyU3PKojCnww=',
   'base64'
 )
+
+const odisPubKey =
+'7FsWGsFnmVvRfMDpzz95Np76wf/1sPaK0Og9yiB+P8QbjiC8FV67NBans9hzZEkBaQMhiapzgMR6CkZIZPvgwQboAxl65JWRZecGe5V3XO4sdKeNemdAZ2TzQuWkuZoA'
+const blsBlindingClient = new WasmBlsBlindingClient(odisPubKey)
 export const BLINDED_PHONE_NUMBER = getBlindedPhoneNumber(
   PHONE_NUMBER,
-  BLINDING_FACTOR
+  blsBlindingClient
 )
 
 export const MOCK_ODIS_RESPONSE =

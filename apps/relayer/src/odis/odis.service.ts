@@ -43,7 +43,7 @@ export class OdisService {
   // to accept pre-signed auth header (then we can just expose signPersonalMessage)
   getPhoneNumberIdentifier = async (
     input: DistributedBlindedPepperDto
-  ): Promise<Result<PhoneNumberHashDetails, OdisQueryError>> => {
+  ): Promise<Result<string, OdisQueryError>> => {
     const authSigner: AuthSigner = {
       authenticationMethod: OdisUtils.Query.AuthenticationMethod.WALLET_KEY,
       contractKit: this.contractKit
@@ -60,15 +60,15 @@ export class OdisService {
     let attempts = 0
     while (attempts++ <= 1) {
       try {
-        const phoneHashDetails = await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
-          input.e164Number,
+        const combinedSignature = await OdisUtils.PhoneNumberIdentifier.getBlindedPhoneNumberSignature(
           this.walletCfg.address,
           authSigner,
           serviceContext,
+          input.blindedPhoneNumber,
           undefined,
           input.clientVersion
         )
-        return Ok(phoneHashDetails)
+        return Ok(combinedSignature)
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {

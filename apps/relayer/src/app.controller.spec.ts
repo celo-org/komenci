@@ -12,7 +12,7 @@ import Web3 from 'web3'
 
 import { AppController } from './app.controller'
 import { appConfig } from './config/app.config'
-import { ACCOUNT_ADDRESS, MOCK_ODIS_RESPONSE, ODIS_URL, PHONE_NUMBER, PRIVATE_KEY } from './config/testing-constants'
+import { ACCOUNT_ADDRESS, BLINDED_PHONE_NUMBER, MOCK_ODIS_RESPONSE, ODIS_URL, PRIVATE_KEY } from './config/testing-constants'
 
 const mockWallet: LocalWallet = new LocalWallet()
 mockWallet.addAccount(PRIVATE_KEY)
@@ -93,7 +93,7 @@ describe('AppController', () => {
       )
 
       const input: DistributedBlindedPepperDto = {
-        e164Number: PHONE_NUMBER,
+        blindedPhoneNumber: await BLINDED_PHONE_NUMBER,
         clientVersion: 'v1.0.0'
       }
 
@@ -111,7 +111,7 @@ describe('AppController', () => {
       })
 
       const input: DistributedBlindedPepperDto = {
-        e164Number: PHONE_NUMBER,
+        blindedPhoneNumber: await BLINDED_PHONE_NUMBER,
         clientVersion: 'v1.0.0'
       }
       const result = await appController.getPhoneNumberIdentifier(input)

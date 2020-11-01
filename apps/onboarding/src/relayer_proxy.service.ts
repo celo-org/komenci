@@ -19,7 +19,7 @@ export class RelayerProxyService {
 
   async getPhoneNumberIdentifier(
     input: DistributedBlindedPepperDto
-  ): Promise<RelayerResponse<PhoneNumberHashDetails>> {
+  ): Promise<RelayerResponse<string>> {
     return this.client
       .send({ cmd: `getPhoneNumberIdentifier` }, input)
       .toPromise()

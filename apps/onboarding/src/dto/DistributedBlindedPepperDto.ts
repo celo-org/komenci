@@ -6,9 +6,8 @@ import {
 } from 'class-validator'
 
 export class DistributedBlindedPepperDto {
-  @IsNotEmpty()
-  @IsPhoneNumber('ZZ')
-  e164Number: string
+  @IsString()
+  blindedPhoneNumber: string
 
   @IsString()
   @IsOptional()
