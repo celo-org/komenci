@@ -92,9 +92,9 @@ describe('AppController', () => {
     })
 
     describe('when the requests fails the gateway', () => {
-      it('throws Forbidden', async () => {
+      it('throws Unauthorized', async () => {
         const gatewayVerify = jest.spyOn(gatewayService, 'verify').mockResolvedValue(false)
-        await expect(appController.startSession(payload, req)).rejects.toThrow(/Forbidden/)
+        await expect(appController.startSession(payload, req)).rejects.toThrow(/Unauthorized/)
       })
     })
   })

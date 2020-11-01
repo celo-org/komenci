@@ -1,9 +1,10 @@
 import { SignatureRule } from '@app/onboarding/gateway/rules/signature.rule'
+import { RootError } from '@celo/base/lib/result'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
 import { FastifyRequest } from 'fastify'
-import { Logger } from 'nestjs-pino'
+import { InjectPinoLogger, Logger, PinoLogger } from 'nestjs-pino'
 import { rulesConfig } from '../config/rules.config'
 import { StartSessionDto } from '../dto/StartSessionDto'
 import { CaptchaRule } from './rules/captcha.rule'
@@ -13,7 +14,7 @@ import { Rule } from './rules/rule'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
-  private rules: Array<Rule<any, any>>
+  private rules: Array<Rule<any, RootError<any>>>
   private ruleEnabled: Record<string, boolean>
   // TODO: Better types here
   private ruleConfigs: Record<string, unknown>
@@ -22,7 +23,8 @@ export class GatewayService implements OnModuleInit {
     @Inject(rulesConfig.KEY)
     private config: ConfigType<typeof rulesConfig>,
     private moduleRef: ModuleRef,
-    private logger: Logger
+    @InjectPinoLogger()
+    private logger: PinoLogger
   ) {}
 
   async onModuleInit() {
@@ -64,9 +66,10 @@ export class GatewayService implements OnModuleInit {
     let hasFailingResult = false
     results.forEach(result => {
       if (result.ok === false) {
-        // TODO: Replace with structured logging
         hasFailingResult = true
-        this.logger.warn(result.error)
+        this.logger.error({
+          errorType: result.error.errorType
+        }, result.error.message)
       }
     })
 
