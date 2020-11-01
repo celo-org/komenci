@@ -375,7 +375,7 @@ describe('AppController (e2e)', () => {
             })
         })
 
-        it('Returns 403 when quota is exceeded', async () => {
+        it('Returns 429 when quota is exceeded', async () => {
           const uniqueToken = await authService.startSession(eoa)
           const doRequest = () => 
             request(app.getHttpServer())
