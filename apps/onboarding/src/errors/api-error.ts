@@ -3,7 +3,7 @@ import { RootError } from '@celo/base/lib/result'
 export const apiErrorSymbol = Symbol('ApiError')
 
 export abstract class ApiError<TError, TMetadata = never> extends RootError<TError> {
-  _apiError: Symbol = apiErrorSymbol
+  _apiError: symbol = apiErrorSymbol
   abstract statusCode: number
   metadata?: TMetadata
 

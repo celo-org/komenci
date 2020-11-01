@@ -258,10 +258,14 @@ describe('AppController (e2e)', () => {
         })
 
         describe("when a session already exists", () => {
-          describe("but it's closed", () => {
+          describe("but it finished one action quota", () => {
             it("creates a new session and returns the id in a token", async() => {
               const oldSess = await sessionService.create(eoa)
-              oldSess.completedAt = new Date(Date.now()).toISOString()
+              oldSess.meta = {
+                callCount: {
+                  distributedBlindedPepper: 1
+                }
+              }
               await sessionRepository.save(oldSess)
 
               const save = jest.spyOn(sessionRepository, 'save')

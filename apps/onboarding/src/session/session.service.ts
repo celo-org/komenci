@@ -21,8 +21,6 @@ export class SessionService {
       id: uuidv4(),
       externalAccount: normalizeAddress(externalAccount),
       createdAt: new Date(Date.now()).toISOString(),
-      completedAttestations: 0,
-      requestedAttestations: 0,
     })
     return this.sessionRepository.save(session)
   }
@@ -49,7 +47,7 @@ export class SessionService {
 
   async findOrCreateForAccount(externalAccount: string): Promise<Session> {
     const existingSession = await this.findLastForAccount(externalAccount)
-    if (existingSession === undefined || !existingSession.isOpen()) {
+    if (existingSession === undefined || !this.hasQuota(existingSession)) {
       const newSession = this.create(externalAccount)
       return newSession
     } else {
@@ -75,4 +73,10 @@ export class SessionService {
       return quota
     }, {})
   }
+
+  private hasQuota(session: Session): boolean {
+    const quota = this.quotaLeft(session)
+    return Object.values(quota).every(q => q > 0)
+  }
+
 }

@@ -63,27 +63,13 @@ describe('AuthService', () => {
           expect(mockSessionService.findOne).toBeCalledWith(sessionId)
         })
       })
-
-      describe('and a closed session', () => {
-        it('throws an error', async () => {
-          const session = Session.of({
-            id: sessionId,
-            completedAt: (new Date().toTimeString())
-          })
-          mockSessionService.findOne.mockResolvedValue(session)
-          const payload = {sessionId}
-          await expect(service.recoverSession(payload)).rejects.toThrow(
-            /Session no longer available/
-          )
-        })
-      })
     })
 
     describe('with an invalid token payload', () => {
       it('throws an error', async () => {
         const payload = {not: 'really valid'}
         await expect(service.recoverSession(payload)).rejects.toThrow(
-          /Invalid or outdated token payload/
+          /Invalid or outdated token/
         )
       })
     })

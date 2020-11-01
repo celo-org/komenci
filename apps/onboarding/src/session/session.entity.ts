@@ -26,12 +26,6 @@ export class Session {
     @Column()
     externalAccount: string
 
-    @Column()
-    requestedAttestations: number
-
-    @Column()
-    completedAttestations: number
-
     @Column('json', {nullable: true, default: {callCount: {}}})
     meta?: SessionMetadata
 
@@ -44,12 +38,7 @@ export class Session {
     @Column('timestamp', {nullable: true})
     completedAt?: string
 
-    isOpen(): boolean {
-        return !this.expiredAt && !this.completedAt
-    }
-
     getActionCount(action: TrackedAction): number {
         return this.meta?.callCount[action] || 0
     }
 }
-    

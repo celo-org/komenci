@@ -1,10 +1,10 @@
-import { quotaConfig, QuotaConfig } from '@app/onboarding/config/quota.config'
+import { quotaConfig, QuotaConfig, TrackedAction } from '@app/onboarding/config/quota.config'
 import { ensureLeading0x, normalizeAddress } from '@celo/base'
 import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
-import{ Session } from './session.entity'
+import { Session } from './session.entity'
 import { SessionRepository } from './session.repository'
 import { SessionService } from './session.service'
 
@@ -121,26 +121,15 @@ describe('SessionService', () => {
 
     describe('when a session exists', () => {
       const existingId = 'existing-session-id'
-      describe('but it is expired', () => {
+      describe('but it exhausted at least one action quota', () => {
         beforeEach(() => {
           findOne = mockFindOne(Session.of({
             id: existingId,
-            expiredAt: new Date(Date.now()).toISOString(),
-          }))
-        })
-
-        it('creates a new one', async () => {
-          const session = await service.findOrCreateForAccount(eoa)
-          expect(save).toHaveBeenCalled()
-          expect(session.id).not.toEqual(existingId)
-        })
-      })
-
-      describe('but it is completed', () => {
-        beforeEach(() => {
-          findOne = mockFindOne(Session.of({
-            id: existingId,
-            completedAt: new Date(Date.now()).toISOString(),
+            meta: {
+              callCount: {
+                [TrackedAction.DistributedBlindedPepper]: 1
+              }
+            }
           }))
         })
 
@@ -163,6 +152,36 @@ describe('SessionService', () => {
           expect(save).not.toHaveBeenCalled()
           expect(session.id).toEqual(existingId)
         })
+      })
+    })
+  })
+
+  describe('#quotaLeft', () => {
+    it('determines usage based on config', async () => {
+      const session = Session.of({
+        id: 'session-id',
+        meta: {callCount: {}}
+      })
+
+      const quota = service.quotaLeft(session)
+      expect(quota).toMatchObject(quotaConfigValue)
+    })
+
+    it('takes into account what was counted in meta', async () => {
+      const callCount = {
+        [TrackedAction.DistributedBlindedPepper]: 1,
+        [TrackedAction.SubmitMetaTransaction]: 5,
+        [TrackedAction.RequestSubsidisedAttestation]: 4,
+      }
+
+      const session = Session.of({
+        id: 'session-id',
+        meta: { callCount }
+      })
+
+      const quota = service.quotaLeft(session)
+      Object.values(TrackedAction).forEach(action => {
+        expect(quota[action]).toEqual(quotaConfigValue[action] - callCount[action])
       })
     })
   })

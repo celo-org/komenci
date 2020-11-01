@@ -14,7 +14,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
 
-jest.mock('@app/onboarding/relayer_proxy.service')
+jest.mock('@app/onboarding/relayer/relayer_proxy.service')
 jest.mock('@app/onboarding/session/session.service')
 Web3.providers.HttpProvider = buildMockWeb3Provider(() => null)
 
@@ -288,6 +288,7 @@ describe("WalletService", () => {
               id: 'session-1',
               externalAccount,
               meta: {
+                callCount: {},
                 walletDeploy: {
                   txHash,
                   implementationAddress: validImplementation,
@@ -321,6 +322,7 @@ describe("WalletService", () => {
             id: 'session-1',
             externalAccount,
             meta: {
+              callCount: {},
               walletDeploy: {
                 txHash: oldTxHash,
                 implementationAddress: validImplementation,
@@ -354,6 +356,7 @@ describe("WalletService", () => {
               session.id,
               {
                 meta: {
+                  callCount: {},
                   walletDeploy: expect.objectContaining({
                     txHash,
                     implementationAddress: validImplementation
@@ -420,6 +423,7 @@ describe("WalletService", () => {
             id: 'session-1',
             externalAccount,
             meta: {
+              callCount: {},
               walletDeploy: {
                 txHash,
                 implementationAddress: validImplementation,
@@ -451,6 +455,7 @@ describe("WalletService", () => {
             id: 'session-1',
             externalAccount,
             meta: {
+              callCount: {},
               walletDeploy: {
                 txHash,
                 implementationAddress: validImplementation,
