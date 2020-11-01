@@ -1,10 +1,19 @@
 import { AuthService, TokenPayload } from '@app/onboarding/auth/auth.service'
-import { DeviceType, StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
-import { GatewayService } from '@app/onboarding/gateway/gateway.service'
+import { rulesConfig, RulesConfig } from '@app/onboarding/config/rules.config'
+import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
+import { StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
+import { CaptchaService, CaptchaVerificationFailed } from '@app/onboarding/gateway/captcha/captcha.service'
+import { DeviceCheckService } from '@app/onboarding/gateway/device-check/device-check.service'
+import { RuleID } from '@app/onboarding/gateway/rules/rule'
+import { SafetyNetService } from '@app/onboarding/gateway/safety-net/safety-net.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
+import { serializeSignature } from '@celo/base'
 import { ensureLeading0x, trimLeading0x } from '@celo/base/lib'
+import { Err, Ok } from '@celo/base/lib/result'
+import { ContractKit } from '@celo/contractkit'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
+import { buildLoginTypedData } from '@celo/komencikit/lib/login'
 import { hashMessage } from '@celo/utils/lib/signatureUtils'
 import { ValidationPipe } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
@@ -12,17 +21,21 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { assert } from 'console'
 import { isRight } from 'fp-ts/Either'
-import { Connection, EntityManager, QueryRunner, Repository } from 'typeorm'
+import { Connection, EntityManager, Repository } from 'typeorm'
 import Web3 from 'web3'
 import { AppModule } from '../src/app.module'
 const request = require('supertest')
 
-jest.mock('@app/onboarding/gateway/gateway.service')
+jest.mock('@app/onboarding/gateway/captcha/captcha.service')
+jest.mock('@app/onboarding/gateway/device-check/device-check.service')
+jest.mock('@app/onboarding/gateway/safety-net/safety-net.service')
 
 describe('AppController (e2e)', () => {
-  // @ts-ignore
-  const gatewayService = new GatewayService()
+  let safetyNetService: SafetyNetService
+  let captchaService: CaptchaService
+  let deviceCheckService: DeviceCheckService
   let sessionService: SessionService
+  let contractKit: ContractKit
   let sessionRepository: Repository<Session>
   let authService: AuthService
   let jwtService: JwtService
@@ -30,26 +43,32 @@ describe('AppController (e2e)', () => {
   let dbConn: Connection
   let app
 
+  let rulesConfigValue: RulesConfig
+
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
-    }).overrideProvider(GatewayService).useValue(gatewayService)
-      .compile()
+    }).overrideProvider(rulesConfig.KEY).useValue(rulesConfigValue).compile()
 
     app = module.createNestApplication()
     app.useGlobalPipes(new ValidationPipe())
     await app.init()
 
-    sessionService = module.get<SessionService>(SessionService)
+    safetyNetService = module.get(SafetyNetService)
+    captchaService = module.get(CaptchaService)
+    deviceCheckService = module.get(DeviceCheckService)
+    sessionService = module.get(SessionService)
+    contractKit = module.get(ContractKit)
     sessionRepository = module.get<Repository<Session>>(getRepositoryToken(Session))
-    jwtService = module.get<JwtService>(JwtService)
-    dbConn = module.get<Connection>(Connection)
-    manager = module.get<EntityManager>(EntityManager)
-    authService = module.get<AuthService>(AuthService)
+    jwtService = module.get(JwtService)
+    dbConn = module.get(Connection)
+    manager = module.get(EntityManager)
+    authService = module.get(AuthService)
     // @ts-ignore
     manager.queryRunner = dbConn.createQueryRunner("master") // tslint:disable-line
     await manager.queryRunner.clearTable("session")
+
   })
 
   afterAll(async () => {
@@ -67,14 +86,28 @@ describe('AppController (e2e)', () => {
     await manager.queryRunner.startTransaction()
   })
 
+  rulesConfigValue = {
+    enabled: {
+      [RuleID.DailyCap]: false,
+      [RuleID.DeviceAttestation]: false,
+      [RuleID.Captcha]: true,
+      [RuleID.Signature]: true,
+    },
+    configs: {
+      [RuleID.DailyCap]: "{}",
+      [RuleID.Captcha]: "{}",
+      [RuleID.DeviceAttestation]: "{}",
+      [RuleID.Signature]: "{}",
+    },
+  }
+
   describe('/v1/ (POST) startSession', () => {
-    const startSessionPayload = (eoa: string, signature: string): StartSessionDto => ({
-      captchaResponseToken: "sda",
-      deviceType: DeviceType.iOS,
-      iosDeviceToken: "asdas",
-      externalAccount: eoa,
-      signature
-    })
+    const decodeToken = (token: string): TokenPayload => {
+      const decodeResp = TokenPayload.decode(jwtService.verify(token))
+      expect(isRight(decodeResp)).toBe(true)
+      // @ts-ignore - we're expecting
+      return decodeResp.right
+    }
 
     describe('with invalid payloads', () => {
       it('Returns 400 with empty body', async () => {
@@ -90,60 +123,107 @@ describe('AppController (e2e)', () => {
       })
 
       it('Returns 400 with an invalid ethereum address', async () => {
-        const payload = startSessionPayload("not-an-address", "signature")
+        const payload: StartSessionDto = {
+          externalAccount: "not-a-valid-address",
+          captchaResponseToken: "captcha-token",
+          signature: "0x0"
+        }
         const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
         expect(resp.statusCode).toBe(400)
         expect(resp.body.message[0]).toMatch(/must be a valid Celo address/)
       })
+
+      it('Returns 400 with an invalid signature', async () => {
+        const payload: StartSessionDto = {
+          externalAccount: Web3.utils.randomHex(20),
+          captchaResponseToken: "captcha-token",
+          signature: "not-a-signature"
+        }
+        const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
+        expect(resp.statusCode).toBe(400)
+        expect(resp.body.message[0]).toMatch(/signature must be a hexadecimal number/)
+      })
     })
 
     describe("with a valid payload", () => {
+      let verifyCaptchaSpy: jest.SpyInstance
+      const captchaToken = "captcha-token"
       const privateKey = trimLeading0x(Web3.utils.randomHex(32))
       let eoa: string
       let signature: string
 
-      beforeEach(async () => {
-        const wallet = new LocalWallet()
-        wallet.addAccount(privateKey)
-        eoa = ensureLeading0x(wallet.getAccounts()[0])
-        signature = await wallet.signPersonalMessage(eoa, hashMessage(`komenci:${eoa}`))
-      })
-
-      describe("when the gateway does not pass", () => {
-        let gatewayVerify: jest.SpyInstance
-        beforeEach(() => {
-          gatewayVerify = jest.spyOn(gatewayService, 'verify').mockResolvedValue(false)
+      describe("but an invalid signer on the signature", () => {
+        beforeEach(async () => {
+          eoa = Web3.utils.randomHex(20)
+          const wallet = new LocalWallet()
+          wallet.addAccount(privateKey)
+          const signer = ensureLeading0x(wallet.getAccounts()[0])
+          signature = await wallet.signTypedData(signer, buildLoginTypedData(eoa, captchaToken))
+          verifyCaptchaSpy = jest.spyOn(captchaService, 'verifyCaptcha').mockResolvedValue(Ok(true))
         })
 
-        it("Returns 403 with an error", async () => {
-          const payload = startSessionPayload(eoa, signature)
+        it('returns a 401', async () => {
+          const payload: StartSessionDto = {
+            externalAccount: eoa,
+            captchaResponseToken: captchaToken,
+            signature
+          }
+
           const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
-          expect(resp.statusCode).toEqual(403)
+          expect(resp.statusCode).toEqual(401)
           expect(resp.body).toMatchObject({
-            statusCode: 403,
-            message: 'Forbidden'
+            statusCode: 401,
+            message: 'Unauthorized'
           })
         })
       })
 
-      describe("when the gateway passes", () => {
-        let gatewayVerify: jest.SpyInstance
-        beforeEach(() => {
-          gatewayVerify = jest.spyOn(gatewayService, 'verify').mockResolvedValue(true)
+      describe("but an invalid captcha token", () => {
+        beforeEach(async () => {
+          const wallet = new LocalWallet()
+          wallet.addAccount(privateKey)
+          eoa = ensureLeading0x(wallet.getAccounts()[0])
+          signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
+          verifyCaptchaSpy = jest.spyOn(
+            captchaService, 'verifyCaptcha'
+          ).mockResolvedValue(Err(new CaptchaVerificationFailed([])))
         })
 
-        const decodeToken = (token: string): TokenPayload => {
-          const decodeResp = TokenPayload.decode(jwtService.verify(token))
-          expect(isRight(decodeResp)).toBe(true)
-          // @ts-ignore - we're expecting
-          return decodeResp.right
-        }
+        it('returns a 401', async () => {
+          const payload: StartSessionDto = {
+            externalAccount: eoa,
+            captchaResponseToken: captchaToken,
+            signature
+          }
+
+          const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
+          expect(resp.statusCode).toEqual(401)
+          expect(resp.body).toMatchObject({
+            statusCode: 401,
+            message: 'Unauthorized'
+          })
+        })
+      })
+
+      describe('and a valid captcha and signature', () => {
+        beforeEach(async () => {
+          const wallet = new LocalWallet()
+          wallet.addAccount(privateKey)
+          eoa = ensureLeading0x(wallet.getAccounts()[0])
+          signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
+          verifyCaptchaSpy = jest.spyOn(
+            captchaService, 'verifyCaptcha'
+          ).mockResolvedValue(Ok(true))
+        })
 
         const subject = async () => {
-          const payload = startSessionPayload(eoa, signature)
-          const resp = await request(app.getHttpServer()).post('/v1/startSession').send(payload)
-          expect(resp.status).toEqual(201)
-          return resp
+          const payload = {
+            externalAccount: eoa,
+            captchaResponseToken: captchaToken,
+            signature
+          }
+
+          return request(app.getHttpServer()).post('/v1/startSession').send(payload)
         }
 
         describe("when no session exist for the account", () => {
@@ -167,7 +247,6 @@ describe('AppController (e2e)', () => {
               await sessionRepository.save(oldSess)
 
               const save = jest.spyOn(sessionRepository, 'save')
-              const payload = startSessionPayload(eoa, signature)
               const resp = await subject()
               const tokenPayload = decodeToken(resp.body.token)
 
@@ -185,7 +264,6 @@ describe('AppController (e2e)', () => {
               await sessionRepository.save(oldSess)
 
               const save = jest.spyOn(sessionRepository, 'save')
-              const payload = startSessionPayload(eoa, signature)
               const resp = await subject()
               const tokenPayload = decodeToken(resp.body.token)
 
@@ -193,6 +271,34 @@ describe('AppController (e2e)', () => {
               expect(await sessionRepository.count()).toEqual(1)
             })
           })
+        })
+      })
+    })
+  })
+
+  describe.only('/v1/ (POST) deployWallet', () => {
+    let token: string = ""
+
+    const eoa = Web3.utils.randomHex(20)
+    const impl = Web3.utils.randomHex(20)
+
+    beforeEach(async () => {
+      token = await authService.startSession(eoa)
+    })
+
+    describe('with an invalid implementation', () => {
+      it('returns a 400:InvalidImplementation', async () => {
+        const payload: DeployWalletDto = {
+          implementationAddress: impl
+        }
+        const resp = await request(app.getHttpServer())
+          .post('/v1/deployWallet')
+          .auth(token, {type: 'bearer'})
+          .send(payload)
+
+        expect(resp.status).toBe(400)
+        expect(resp.body).toMatchObject({
+          errorType: 'InvalidImplementation'
         })
       })
     })
@@ -213,7 +319,6 @@ describe('AppController (e2e)', () => {
     describe('with a token', () => {
       beforeEach(async () => {
         token = await authService.startSession(eoa)
-        console.log(token)
       })
 
       describe('with an invalid payload', () => {

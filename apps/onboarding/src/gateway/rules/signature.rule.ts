@@ -14,6 +14,7 @@ export enum SignatureErrorTypes {
 export class InvalidSignature extends RootError<SignatureErrorTypes> {
   constructor(public readonly error: Error) {
     super(SignatureErrorTypes.InvalidSignature)
+    this.message = "Signature is not valid"
   }
 }
 
