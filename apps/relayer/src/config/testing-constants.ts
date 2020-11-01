@@ -1,10 +1,10 @@
 
+import { WasmBlsBlindingClient } from '@celo/contractkit/lib/identity/odis/bls-blinding-client'
+import { getBlindedPhoneNumber } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import {
   normalizeAddressWith0x,
   privateKeyToAddress
 } from '@celo/utils/lib/address'
-import { WasmBlsBlindingClient } from '../../../../libs/celo/packages/contractkit/lib/identity/odis/bls-blinding-client'
-import { getBlindedPhoneNumber } from '../../../../libs/celo/packages/contractkit/lib/identity/odis/phone-number-identifier'
 
 const thresholdBls = require('blind-threshold-bls')
 
