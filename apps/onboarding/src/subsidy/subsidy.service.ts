@@ -1,11 +1,10 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { MetaTxValidationError } from '@app/onboarding/wallet/errors'
+import { InvalidWallet, MetaTxValidationError } from '@app/onboarding/wallet/errors'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { WalletValidationError } from '@celo/komencikit/lib/errors'
 import { Inject, Injectable } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { Session } from '../session/session.entity'
@@ -22,7 +21,7 @@ export class SubsidyService {
   public async isValid(
     input: RequestAttestationsDto,
     session: Session
-  ): Promise<Result<boolean, WalletValidationError | MetaTxValidationError>> {
+  ): Promise<Result<boolean, InvalidWallet | MetaTxValidationError>> {
     const walletValid = await this.walletService.isValidWallet(
       input.walletAddress,
       session.externalAccount
