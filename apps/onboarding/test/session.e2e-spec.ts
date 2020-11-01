@@ -1,4 +1,5 @@
 import { databaseConfig } from '@app/onboarding/config/database.config'
+import { quotaConfig } from '@app/onboarding/config/quota.config'
 import { Session } from '@app/onboarding/session/session.entity'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config'
@@ -21,7 +22,7 @@ describe('SessionController (e2e)', () => {
         SessionModule,
         ConfigModule.forRoot({
           isGlobal: true,
-          load: [databaseConfig],
+          load: [databaseConfig, quotaConfig],
           envFilePath: ['apps/onboarding/.env.test']
         }),
         TypeOrmModule.forRootAsync({

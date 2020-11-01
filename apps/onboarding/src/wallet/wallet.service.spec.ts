@@ -1,7 +1,7 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
-import { RelayerProxyService } from '@app/onboarding/relayer_proxy.service'
+import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
 import { buildMockWeb3Provider } from '@app/onboarding/utils/testing/mock-web3-provider'

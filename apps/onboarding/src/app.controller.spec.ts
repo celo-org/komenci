@@ -10,7 +10,7 @@ import { AppController } from './app.controller'
 import { AuthService } from './auth/auth.service'
 import { DeviceType, StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
-import { RelayerProxyService } from './relayer_proxy.service'
+import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from './session/session.service'
 
 jest.mock('./gateway/gateway.service')

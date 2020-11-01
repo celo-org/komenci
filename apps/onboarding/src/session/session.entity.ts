@@ -1,10 +1,6 @@
 import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
+import { ActionCounts, TrackedAction } from '../config/quota.config'
 
-export enum SessionQuota {
-    DistributedBlindedPepper = 'distributedBlindedPepper',
-    RequestSubsidisedAttestation = 'requestSubsidisedAttestation',
-    SubmitMetaTransaction = 'submitMetaTransaction',
-}
 
 interface SessionMetadata {
     walletDeploy?: {
@@ -12,7 +8,7 @@ interface SessionMetadata {
         txHash: string,
         implementationAddress: string
     }
-    quota?: {[quotaName in SessionQuota]?: number}
+    callCount: ActionCounts
 }
 
 @Entity()
@@ -36,7 +32,7 @@ export class Session {
     @Column()
     completedAttestations: number
 
-    @Column('json', {nullable: true, default: {quota: {}}})
+    @Column('json', {nullable: true, default: {callCount: {}}})
     meta?: SessionMetadata
 
     @Column('timestamp')
@@ -52,12 +48,8 @@ export class Session {
         return !this.expiredAt && !this.completedAt
     }
 
-    checkQuota(quota: SessionQuota, updateUsage: boolean = true) {
-        const usage = this.meta.quota[quota] || 0
-        if (updateUsage) {
-            this.meta.quota[quota] = usage + 1
-        }
-        return usage
+    getActionCount(action: TrackedAction): number {
+        return this.meta?.callCount[action] || 0
     }
 }
     

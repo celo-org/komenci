@@ -19,7 +19,7 @@ import { rulesConfig } from './config/rules.config'
 import { quotaConfig } from './config/quota.config'
 import { thirdPartyConfig } from './config/third-party.config'
 import { GatewayModule } from './gateway/gateway.module'
-import { RelayerProxyService } from './relayer_proxy.service'
+import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionModule } from './session/session.module'
 
 @Module({

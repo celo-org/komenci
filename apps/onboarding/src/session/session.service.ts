@@ -1,21 +1,11 @@
+import { ActionCounts, quotaConfig, TrackedAction } from '@app/onboarding/config/quota.config'
 import { normalizeAddress, trimLeading0x } from '@celo/base'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 import { v4 as uuidv4 } from 'uuid'
-import { Session, SessionQuota } from './session.entity'
+import { Session } from './session.entity'
 import { SessionRepository } from './session.repository'
-import { quotaConfig } from '../config/quota.config'
-import { ApiError } from '../errors/api-error'
-
-class QuotaExceededError extends ApiError<'QuotaExceededError'> {
-  statusCode = 403
-
-  constructor(quota: SessionQuota) {
-    super('QuotaExceededError')
-    this.message = `Quota '${quota}' exceeded`
-  }
-}
 
 @Injectable()
 export class SessionService {
@@ -67,14 +57,22 @@ export class SessionService {
     }
   }
 
-  async checkSessionQuota(session: Session, quota: SessionQuota, updateUsage: boolean = true) {
-    const usage = session.checkQuota(quota, updateUsage)
-    if (updateUsage) {
-      await this.update(session.id, session)
-    }
-    if (usage >= this.config[quota]) {
-      throw new QuotaExceededError(quota)
-    }
-    return true
+  async incrementUsage(session: Session, action: TrackedAction, count: number = 1) {
+    return this.update(session.id, {
+      meta: {
+        ...session.meta,
+        callCount: {
+          ...(session.meta?.callCount || {}),
+          [action]: session.getActionCount(action) + count
+        }
+      }
+    })
+  }
+
+  quotaLeft(session: Session): ActionCounts {
+    return Object.values(TrackedAction).reduce((quota, action) => {
+      quota[action] = this.config[action] - session.getActionCount(action)
+      return quota
+    }, {})
   }
 }

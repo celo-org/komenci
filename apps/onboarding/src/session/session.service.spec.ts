@@ -1,3 +1,4 @@
+import { quotaConfig, QuotaConfig } from '@app/onboarding/config/quota.config'
 import { ensureLeading0x, normalizeAddress } from '@celo/base'
 import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
@@ -12,6 +13,11 @@ describe('SessionService', () => {
   let service: SessionService
   let repository: SessionRepository
   let findOne: jest.SpyInstance
+  const quotaConfigValue: QuotaConfig = {
+    distributedBlindedPepper: 1,
+    requestSubsidisedAttestation: 10,
+    submitMetaTransaction: 20
+  }
 
   const mockFindOne = (result: Session | undefined): jest.SpyInstance => {
     return jest.spyOn(repository, 'findOne').mockImplementation(
@@ -27,6 +33,11 @@ describe('SessionService', () => {
           provide: getRepositoryToken(Session),
           useClass: Repository,
         },
+        {
+          provide: quotaConfig.KEY,
+          useValue: quotaConfigValue
+
+        }
       ]
     }).compile()
 

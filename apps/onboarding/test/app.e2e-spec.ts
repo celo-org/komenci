@@ -1,20 +1,20 @@
 import { AuthService, TokenPayload } from '@app/onboarding/auth/auth.service'
-import { rulesConfig, RulesConfig } from '@app/onboarding/config/rules.config'
+import { RulesConfig, rulesConfig } from '@app/onboarding/config/rules.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
 import { CaptchaService, CaptchaVerificationFailed } from '@app/onboarding/gateway/captcha/captcha.service'
 import { DeviceCheckService } from '@app/onboarding/gateway/device-check/device-check.service'
+import { GatewayService } from '@app/onboarding/gateway/gateway.service'
 import { RuleID } from '@app/onboarding/gateway/rules/rule'
 import { SafetyNetService } from '@app/onboarding/gateway/safety-net/safety-net.service'
+import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
-import { serializeSignature } from '@celo/base'
 import { ensureLeading0x, trimLeading0x } from '@celo/base/lib'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
 import { buildLoginTypedData } from '@celo/komencikit/lib/login'
-import { hashMessage } from '@celo/utils/lib/signatureUtils'
 import { ValidationPipe } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -29,6 +29,7 @@ const request = require('supertest')
 jest.mock('@app/onboarding/gateway/captcha/captcha.service')
 jest.mock('@app/onboarding/gateway/device-check/device-check.service')
 jest.mock('@app/onboarding/gateway/safety-net/safety-net.service')
+jest.mock('@app/onboarding/relayer/relayer_proxy.service.ts')
 
 describe('AppController (e2e)', () => {
   let safetyNetService: SafetyNetService
@@ -41,15 +42,21 @@ describe('AppController (e2e)', () => {
   let jwtService: JwtService
   let manager: EntityManager
   let dbConn: Connection
+  let relayerProxyService: RelayerProxyService
   let app
 
   let rulesConfigValue: RulesConfig
+  const relayerProxyServiceMock = {
+    getPhoneNumberIdentifier: jest.fn(() => ({payload: {}}))
+  }
+
 
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     }).overrideProvider(rulesConfig.KEY).useValue(rulesConfigValue).compile()
+
 
     app = module.createNestApplication()
     app.useGlobalPipes(new ValidationPipe())
@@ -65,6 +72,7 @@ describe('AppController (e2e)', () => {
     dbConn = module.get(Connection)
     manager = module.get(EntityManager)
     authService = module.get(AuthService)
+    relayerProxyService = module.get(RelayerProxyService)
     // @ts-ignore
     manager.queryRunner = dbConn.createQueryRunner("master") // tslint:disable-line
     await manager.queryRunner.clearTable("session")
@@ -84,6 +92,16 @@ describe('AppController (e2e)', () => {
 
   beforeEach(async () => {
     await manager.queryRunner.startTransaction()
+    jest.spyOn(relayerProxyService, 'getPhoneNumberIdentifier').mockResolvedValue(
+      {
+        payload: {
+          e164Number: "+402222",
+          pepper: "pepper",
+          phoneHash: "0xa23"
+        },
+        relayerAddress: "0x0"
+      }
+    )
   })
 
   rulesConfigValue = {
@@ -276,7 +294,7 @@ describe('AppController (e2e)', () => {
     })
   })
 
-  describe.only('/v1/ (POST) deployWallet', () => {
+  describe('/v1/ (POST) deployWallet', () => {
     let token: string = ""
 
     const eoa = Web3.utils.randomHex(20)
@@ -339,6 +357,40 @@ describe('AppController (e2e)', () => {
             .expect(400)
             .then(res => {
               assert(res.body.message, ['e164Number must be a valid phone number'])
+            })
+        })
+      })
+
+      describe('with an valid payload', () => {
+        it('Returns 200', async () => {
+          return request(app.getHttpServer())
+            .post('/v1/distributedBlindedPepper')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+              e164Number: '+34600000000'
+            })
+            .expect(201)
+            .then(res => {
+              assert(res.body.message, ['e164Number must be a valid phone number'])
+            })
+        })
+
+        it('Returns 403 when quota is exceeded', async () => {
+          const uniqueToken = await authService.startSession(eoa)
+          const doRequest = () => 
+            request(app.getHttpServer())
+              .post('/v1/distributedBlindedPepper')
+              .set('Authorization', `Bearer ${uniqueToken}`)
+              .send({
+                e164Number: '+34600000000'
+              })
+
+          await doRequest().expect(201)
+          await doRequest().expect(429)
+            .then(res => {
+              expect(res.body.message).toMatch(
+                /Quota exceeded on distributedBlindedPepper/
+              )
             })
         })
       })
