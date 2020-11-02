@@ -1,4 +1,5 @@
 import {
+  IsBase64,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
@@ -7,6 +8,7 @@ import {
 
 export class DistributedBlindedPepperDto {
   @IsString()
+  @IsBase64()
   blindedPhoneNumber: string
 
   @IsString()
