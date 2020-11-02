@@ -5,14 +5,12 @@ const Web3 = require('web3')
 const LocalWallet = require('./libs/celo/packages/contractkit/lib/wallets/local-wallet').LocalWallet
 const CeloProvider = require('./libs/celo/packages/contractkit/lib/providers/celo-provider').CeloProvider
 const generateUtils = require('./libs/celo/packages/celotool/lib/lib/generate_utils')
+const networkConfig = require('./network-config')
+
 const generatePrivateKey = generateUtils.generatePrivateKey;
 const coerceMnemonicAccountType = generateUtils.coerceMnemonicAccountType;
 
-const DEV_WALLET_PRIVATE_KEY = "0x7403568bea8a303d7645bb66f10c9df31fe549cb07a7a908cb9a6cc17b1d6415"
-const WALLET_ADDRESS = "0xa7d74cb4fca9458757cfc8b90d9b38a126f68b47"
-const NODE_URL = "https://alfajores-forno.celo-testnet.org"
 
-const fornoURLForEnv = (env) => "https://"+env+"-forno.celo-testnet.org"
 const getMnemonicForEnv = (env) => {
   const envMemonicResult = config({ path: './libs/celo/.env.mnemonic.'+env })
   if (envMemonicResult.error) {
@@ -40,7 +38,7 @@ const walletForEnv = (env) => {
 const providerForEnv = (env) => {
   const wallet = walletForEnv(env)
   const httpProvider = new Web3.providers.HttpProvider(
-    fornoURLForEnv(env)
+    networkConfig[env].fornoURL
   );
   return new CeloProvider(httpProvider, wallet)
 }

@@ -8,6 +8,7 @@ import { Session as SessionEntity } from '@app/onboarding/session/session.entity
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
+import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import {
@@ -68,9 +69,9 @@ export class AppController {
     private readonly sessionService: SessionService,
     private readonly walletService: WalletService,
     private readonly contractKit: ContractKit,
-    @Inject(appConfig.KEY)
-    private readonly cfg: AppConfig
-  ) {}
+    @Inject(networkConfig.KEY)
+    private readonly networkCfg: NetworkConfig
+) {}
 
   @Get('health')
   health(
@@ -145,7 +146,7 @@ export class AppController {
       return {
         status: 'in-progress',
         txHash: deployResp.result,
-        deployerAddress: this.cfg.mtwDeployerAddress
+        deployerAddress: this.networkCfg.contracts.MetaTransactionWalletDeployer
       }
     } else {
       throw(deployResp.error)
