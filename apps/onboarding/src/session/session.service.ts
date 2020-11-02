@@ -1,23 +1,26 @@
+import { ActionCounts, quotaConfig, TrackedAction } from '@app/onboarding/config/quota.config'
 import { normalizeAddress, trimLeading0x } from '@celo/base'
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { ConfigType } from '@nestjs/config'
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 import { v4 as uuidv4 } from 'uuid'
 import { Session } from './session.entity'
 import { SessionRepository } from './session.repository'
 
-
 @Injectable()
 export class SessionService {
 
-  constructor(private readonly sessionRepository: SessionRepository,) {}
+  constructor(
+    @Inject(quotaConfig.KEY)
+    private config: ConfigType<typeof quotaConfig>,
+    private readonly sessionRepository: SessionRepository,
+  ) {}
 
   async create(externalAccount: string): Promise<Session> {
     const session = Session.of({
       id: uuidv4(),
       externalAccount: normalizeAddress(externalAccount),
       createdAt: new Date(Date.now()).toISOString(),
-      completedAttestations: 0,
-      requestedAttestations: 0,
     })
     return this.sessionRepository.save(session)
   }
@@ -44,11 +47,36 @@ export class SessionService {
 
   async findOrCreateForAccount(externalAccount: string): Promise<Session> {
     const existingSession = await this.findLastForAccount(externalAccount)
-    if (existingSession === undefined || !existingSession.isOpen()) {
+    if (existingSession === undefined || !this.hasQuota(existingSession)) {
       const newSession = this.create(externalAccount)
       return newSession
     } else {
       return existingSession
     }
   }
+
+  async incrementUsage(session: Session, action: TrackedAction, count: number = 1) {
+    return this.update(session.id, {
+      meta: {
+        ...session.meta,
+        callCount: {
+          ...(session.meta?.callCount || {}),
+          [action]: session.getActionCount(action) + count
+        }
+      }
+    })
+  }
+
+  quotaLeft(session: Session): ActionCounts {
+    return Object.values(TrackedAction).reduce((quota, action) => {
+      quota[action] = this.config[action] - session.getActionCount(action)
+      return quota
+    }, {})
+  }
+
+  private hasQuota(session: Session): boolean {
+    const quota = this.quotaLeft(session)
+    return Object.values(quota).every(q => q > 0)
+  }
+
 }

@@ -1,11 +1,14 @@
 import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
+import { ActionCounts, TrackedAction } from '../config/quota.config'
+
 
 interface SessionMetadata {
-    walletDeploy: {
+    walletDeploy?: {
         startedAt: number,
         txHash: string,
         implementationAddress: string
     }
+    callCount: ActionCounts
 }
 
 @Entity()
@@ -23,13 +26,7 @@ export class Session {
     @Column()
     externalAccount: string
 
-    @Column()
-    requestedAttestations: number
-
-    @Column()
-    completedAttestations: number
-
-    @Column('json', {nullable: true})
+    @Column('json', {nullable: true, default: {callCount: {}}})
     meta?: SessionMetadata
 
     @Column('timestamp')
@@ -41,8 +38,7 @@ export class Session {
     @Column('timestamp', {nullable: true})
     completedAt?: string
 
-    isOpen(): boolean {
-        return !this.expiredAt && !this.completedAt
+    getActionCount(action: TrackedAction): number {
+        return this.meta?.callCount[action] || 0
     }
 }
-    

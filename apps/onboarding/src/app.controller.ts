@@ -1,6 +1,9 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
+import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
+import { QuotaAction } from '@app/onboarding/session/quota.decorator'
+import { QuotaGuard } from '@app/onboarding/session/quota.guard'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
@@ -10,11 +13,12 @@ import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWa
 import {
   Body,
   Controller,
-  ForbiddenException, Get,
+  Get,
   Inject,
   Post,
   Req,
-  Session, UnauthorizedException,
+  Session,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
@@ -23,10 +27,10 @@ import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransac
 
 import { AuthService } from './auth/auth.service'
 
+import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 import { StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
-import { RelayerProxyService } from './relayer_proxy.service'
 
 interface GetPhoneNumberIdResponse {
   identifier: string
@@ -45,6 +49,11 @@ interface DeployWalletDeployed {
 }
 
 type DeployWalletResp = DeployWalletInProgress | DeployWalletDeployed
+
+interface CheckSessionResponse {
+  quotaLeft: ActionCounts
+  metaTxWalletAddress?: string
+}
 
 @Controller("v1")
 export class AppController {
@@ -89,6 +98,23 @@ export class AppController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Get('checkSession')
+  async checkSession(
+    @Session() session: SessionEntity,
+  ): Promise<CheckSessionResponse> {
+    const getResp = await this.walletService.getWallet(session)
+    let walletAddress: string | undefined
+    if (getResp.ok) {
+      walletAddress = getResp.result
+    }
+
+    return {
+      quotaLeft: this.sessionService.quotaLeft(session),
+      metaTxWalletAddress: walletAddress
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('deployWallet')
   async deployWallet(
     @Body() deployWalletDto: DeployWalletDto,
@@ -126,13 +152,23 @@ export class AppController {
     }
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @QuotaAction(TrackedAction.DistributedBlindedPepper)
+  @UseGuards(
+    AuthGuard('jwt'),
+    QuotaGuard,
+  )
   @Post('distributedBlindedPepper')
   async distributedBlindedPepper(
-    @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto
+    @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto,
+    @Session() session: SessionEntity,
   ): Promise<GetPhoneNumberIdResponse> {
     const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
+    )
+
+    await this.sessionService.incrementUsage(
+      session,
+      TrackedAction.DistributedBlindedPepper
     )
 
     return {
@@ -141,7 +177,11 @@ export class AppController {
     }
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @QuotaAction(TrackedAction.RequestSubsidisedAttestation)
+  @UseGuards(
+    AuthGuard('jwt'),
+    QuotaGuard,
+  )
   @Post('requestSubsidisedAttestations')
   async requestSubsidisedAttestations(
     @Body() requestAttestationsDto: RequestAttestationsDto,
@@ -157,12 +197,22 @@ export class AppController {
       transactions: await this.subsidyService.buildTransactionBatch(requestAttestationsDto)
     })
 
+    await this.sessionService.incrementUsage(
+      session,
+      TrackedAction.RequestSubsidisedAttestation,
+      requestAttestationsDto.attestationsRequested
+    )
+
     return {
       txHash: txSubmit.payload
     }
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @QuotaAction(TrackedAction.SubmitMetaTransaction)
+  @UseGuards(
+    AuthGuard('jwt'),
+    QuotaGuard,
+  )
   @Post('submitMetaTransaction')
   async submitMetaTransaction(
     @Body() body: SubmitMetaTransactionDto,
@@ -185,6 +235,11 @@ export class AppController {
     const resp = await this.relayerProxyService.submitTransaction({
       transaction: metaTx
     })
+
+    await this.sessionService.incrementUsage(
+      session,
+      TrackedAction.SubmitMetaTransaction
+    )
 
     return {
       txHash: resp.payload
