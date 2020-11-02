@@ -14,7 +14,8 @@ module.exports = {
   alfajores: {
     relayers: [
       "0x00454cac6dae53f8800f71395b9a174f07a784b1",
-      "0xc6f0f9bfb1aed83620ece3eac0add98a65a8574e"
+      "0xc6f0f9bfb1aed83620ece3eac0add98a65a8574e",
+      "0xa7d74cb4fca9458757cfc8b90d9b38a126f68b47",
     ],
     contracts: {
       MetaTransactionWalletVersions: {
