@@ -1,6 +1,6 @@
 import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
-import { RelayerProxyService } from '@app/onboarding/relayer_proxy.service'
+import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
 import {
@@ -96,7 +96,7 @@ export class WalletService {
     return valid
   }
 
-  async getWallet(session: Session, implementationAddress: string): Promise<Result<string, WalletNotDeployed>> {
+  async getWallet(session: Session, implementationAddress?: string): Promise<Result<string, WalletNotDeployed>> {
     if (this.hasDeployInProgress(session, implementationAddress)) {
       const tx = await this.web3.eth.getTransaction(session.meta.walletDeploy.txHash)
       if (tx.blockNumber !== null) {
@@ -155,10 +155,13 @@ export class WalletService {
     return Ok(resp.payload)
   }
 
-  private hasDeployInProgress(session: Session, implementationAddress: string): boolean {
+  private hasDeployInProgress(session: Session, implementationAddress?: string): boolean {
     if (
       session.meta?.walletDeploy?.txHash !== undefined &&
-      session.meta?.walletDeploy?.implementationAddress === implementationAddress
+      (
+        session.meta?.walletDeploy?.implementationAddress === implementationAddress ||
+        implementationAddress === undefined
+      )
     ) {
       const deployDeadline = new Date(
         session.meta.walletDeploy.startedAt +
