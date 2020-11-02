@@ -35,7 +35,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    // Find pending txs and add to the watch list
     (await this.getPendingTransactionHashes()).forEach(txHash => this.watchTransaction(txHash))
+    // Monitor the watched transactions for finality
     this.timer = setInterval(
       () => this.checkTransactions(),
       this.appCfg.transactionCheckIntervalMs
@@ -59,10 +61,14 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           gasPrice: 10000000000
         })
         const txHash = await result.getHash()
-        this.watchTransaction(txHash, result)
+        this.watchTransaction(txHash)
         return Ok(txHash)
       } catch(e) {
         if (tries === 3) {
+          this.logger.error({
+            message: "Failed to send transaction",
+            tx
+          })
           return Err(e)
         }
       }
@@ -84,6 +90,10 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     await Promise.all(expired.map(tx => this.deadLetter(tx)))
   }
 
+  /**
+   * Replace expired transaction with a dummy transaction
+   * @param tx Expired tx
+   */
   private async deadLetter(tx: Transaction) {
     try {
       const result = await this.kit.sendTransaction({
@@ -94,6 +104,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       })
       const deadLetterHash = await result.getHash()
       this.unwatchTransaction(tx.hash)
+      this.watchTransaction(deadLetterHash)
 
       this.logger.log({
         message: "Dead-lettered transaction",
@@ -110,27 +121,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private watchTransaction(txHash: string, result?: TransactionResult) {
+  private watchTransaction(txHash: string) {
     this.watchedTransactions.add(txHash)
     this.transactionSeenAt.set(txHash, Date.now())
-
-    if (result !== undefined) {
-      this.waitForReceipt(result).catch(e => {
-        // TODO: Handle exception waiting for receipt
-      })
-    }
-  }
-
-  private async waitForReceipt(result: TransactionResult) {
-    const receipt = await result.waitReceipt()
-    if (this.watchedTransactions.has(receipt.transactionHash)) {
-      this.unwatchTransaction(receipt.transactionHash)
-    } else {
-      this.logger.warn({
-        message: 'Tx resolved after being unwatched',
-        txHash: receipt.transactionHash
-      })
-    }
   }
 
   private unwatchTransaction(txHash: string) {
@@ -155,9 +148,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private async getPendingTransactionHashes(): Promise<string[]> {
     const txPoolRes = await this.blockchainService.getPendingTxPool()
     if (txPoolRes.ok === false) {
+      if (txPoolRes.error.errorType === 'RPC') {
+        this.logger.error(txPoolRes.error.error)
+      }
       this.logger.error({
         message: 'Could not fetch tx pool',
-        originalError: txPoolRes.error.message
+        originalError: txPoolRes.error
       })
       return []
     } else if (txPoolRes.ok === true) {

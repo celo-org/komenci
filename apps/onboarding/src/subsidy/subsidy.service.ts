@@ -1,11 +1,10 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { MetaTxValidationError } from '@app/onboarding/wallet/errors'
+import { InvalidWallet, MetaTxValidationError } from '@app/onboarding/wallet/errors'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { WalletValidationError } from '@celo/komencikit/lib/errors'
 import { Inject, Injectable } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { Session } from '../session/session.entity'
@@ -22,7 +21,7 @@ export class SubsidyService {
   public async isValid(
     input: RequestAttestationsDto,
     session: Session
-  ): Promise<Result<boolean, WalletValidationError | MetaTxValidationError>> {
+  ): Promise<Result<boolean, InvalidWallet | MetaTxValidationError>> {
     const walletValid = await this.walletService.isValidWallet(
       input.walletAddress,
       session.externalAccount
@@ -32,24 +31,9 @@ export class SubsidyService {
       return walletValid
     }
 
-    const stableToken = await this.contractKit.contracts.getStableToken()
-    const approveValid = await this.walletService.isAllowedMetaTransaction(
-      input.transactions.approve,
-      [
-        {
-          destination: stableToken.address,
-          methodId: stableToken.methodIds.approve,
-        }
-      ]
-    )
-
-    if (approveValid.ok === false) {
-      return approveValid
-    }
-
     const attestations = await this.contractKit.contracts.getAttestations()
     const requestValid = await this.walletService.isAllowedMetaTransaction(
-      input.transactions.request,
+      input.requestTx,
       [
         {
           destination: attestations.address,
@@ -69,13 +53,12 @@ export class SubsidyService {
     input: RequestAttestationsDto
   ): Promise<RawTransaction[]> {
     const {
-      identifier, walletAddress, transactions, attestationsRequested
+      identifier, walletAddress, attestationsRequested, requestTx
     } = input
 
     const batch = [
       await this.buildSubsidyTransfer(attestationsRequested, walletAddress),
-      transactions.approve,
-      transactions.request,
+      requestTx,
     ]
 
     if (!this.cfg.useAttestationGuards) {

@@ -10,11 +10,11 @@ import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWa
 import {
   Body,
   Controller,
-  ForbiddenException,
+  ForbiddenException, Get,
   Inject,
   Post,
   Req,
-  Session,
+  Session, UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
@@ -63,6 +63,18 @@ export class AppController {
     private readonly cfg: AppConfig
   ) {}
 
+  @Get('health')
+  health(
+    @Req() req
+  ): {status: string} {
+    // TODO: Think about how to have a more clear understanding of
+    // service health here. Think about the relayer load balancer health
+    // or maybe just a toggle that we can do from ENV vars?
+    return {
+      status: 'OK'
+    }
+  }
+
   @Post('startSession')
   async startSession(
     @Body() startSessionDto: StartSessionDto,
@@ -72,7 +84,7 @@ export class AppController {
       const token = await this.authService.startSession(startSessionDto.externalAccount)
       return {token}
     } else {
-      throw new ForbiddenException()
+      throw new UnauthorizedException()
     }
   }
 
@@ -183,6 +195,7 @@ export class AppController {
     if (this._allowedMetaTransaction === undefined) {
       const attestations = await this.contractKit.contracts.getAttestations()
       const accounts = await this.contractKit.contracts.getAccounts()
+      const cUSD = await this.contractKit.contracts.getStableToken()
 
       this._allowedMetaTransaction = [
         {
@@ -196,6 +209,10 @@ export class AppController {
         {
           destination: accounts.address,
           methodId: accounts.methodIds.setAccount
+        },
+        {
+          destination: cUSD.address,
+          methodId: cUSD.methodIds.approve
         }
       ]
     }

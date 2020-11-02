@@ -56,18 +56,11 @@ describe('SubsidyService', () => {
       identifier: Web3.utils.randomHex(10),
       attestationsRequested: 3,
       walletAddress,
-      transactions: {
-        approve: {
-          destination: walletAddress,
-          data: 'approve',
-          value: "0",
-        },
-        request: {
-          destination: walletAddress,
-          data: 'request',
-          value: "0",
-        },
-      }
+      requestTx: {
+        destination: walletAddress,
+        data: 'request',
+        value: "0",
+      },
     }
 
     let getAttestationStat: jest.SpyInstance
@@ -131,7 +124,7 @@ describe('SubsidyService', () => {
 
       it('outputs 5 transactions', async () => {
         const batch = await service.buildTransactionBatch(input)
-        expect(batch.length).toEqual(5)
+        expect(batch.length).toEqual(4)
 
         expect(getAttestationStat).toHaveBeenCalled()
         expect(transfer).toHaveBeenCalledWith(input.walletAddress, new BigNumber(100 * input.attestationsRequested).toFixed())
@@ -159,7 +152,7 @@ describe('SubsidyService', () => {
 
       it('outputs 3 transactions', async () => {
         const batch = await service.buildTransactionBatch(input)
-        expect(batch.length).toEqual(3)
+        expect(batch.length).toEqual(2)
 
         expect(getAttestationStat).not.toHaveBeenCalled()
         expect(transfer).toHaveBeenCalledWith(input.walletAddress, new BigNumber(100 * input.attestationsRequested).toFixed())
