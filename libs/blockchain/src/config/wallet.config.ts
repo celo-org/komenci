@@ -11,7 +11,7 @@ export interface BaseWalletConfig {
 
 export interface LocalWalletConfig extends BaseWalletConfig {
   type: WalletType.Local,
-  privateKey: string
+  privateKeys: string[]
 }
 
 export interface AzureHSMWalletConfig extends BaseWalletConfig {
@@ -37,7 +37,7 @@ export const walletConfig = registerAs('wallet', (): WalletConfig => {
     return {
       ...baseConfig,
       type,
-      privateKey: process.env.WALLET_PRIVATE_KEY
+      privateKeys: [process.env.WALLET_PRIVATE_KEY]
     }
   } else {
     throw Error(`Invalid wallet type: ${type}`)

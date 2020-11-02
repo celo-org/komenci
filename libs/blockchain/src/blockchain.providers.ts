@@ -41,7 +41,9 @@ export const walletDef: FactoryProvider<ReadOnlyWallet> = {
         return new AzureHSMWallet(options.wallet.vaultName)
       case WalletType.Local:
         const localWallet = new LocalWallet()
-        localWallet.addAccount(options.wallet.privateKey)
+        options.wallet.privateKeys.forEach(
+          (key) => localWallet.addAccount(key)
+        )
         return localWallet
     }
   },

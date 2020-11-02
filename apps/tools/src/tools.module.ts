@@ -1,10 +1,10 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
-import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
-import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
+import { NodeProviderType } from '@app/blockchain/config/node.config'
+import { WalletConfig, WalletType } from '@app/blockchain/config/wallet.config'
+import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
-import { FundingConfig, fundingConfig } from 'apps/tools/src/config/funding.config'
+import { ContractDeployerConfig, contractDeployerConfig } from 'apps/tools/src/config/contractDeployer.config'
 import { ConsoleModule } from 'nestjs-console'
 import { LoggerModule } from 'nestjs-pino'
 import { FundCommand } from './fund.command'
@@ -19,7 +19,7 @@ import { FundCommand } from './fund.command'
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [fundingConfig, nodeConfig, walletConfig],
+      load: [networkConfig, contractDeployerConfig],
       envFilePath: [
         'apps/tools/.env.local',
         'apps/tools/.env',
@@ -28,21 +28,32 @@ import { FundCommand } from './fund.command'
     BlockchainModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const networkCfg = config.get<NetworkConfig>('network')
+        const contractDeployerCfg = config.get<ContractDeployerConfig>('contractDeployer')
+
         return {
-          node: config.get<NodeConfig>('node'),
-          wallet: config.get<WalletConfig>('wallet'),
+          node: {
+            providerType: NodeProviderType.HTTP,
+            url: networkCfg.fornoURL
+          },
+          wallet: {
+            type: WalletType.Local,
+            address: contractDeployerCfg.privateKey,
+            privateKeys: [
+              networkCfg.fund.privateKey,
+              contractDeployerCfg.privateKey
+            ].filter(key => key !== "")
+          }
         }
       }
     }),
     ContractsModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const cfg = config.get<FundingConfig>('funding')
-        const wallet = config.get<WalletConfig>('wallet')
+        const networkCfg = config.get<NetworkConfig>('network')
 
         return {
-          deployerAddress: cfg.metaTxWalletDeployer,
-          walletAddress: wallet.address
+          deployerAddress: networkCfg.contracts.MetaTransactionWalletDeployer,
         }
       },
     }),

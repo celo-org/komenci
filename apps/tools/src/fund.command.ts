@@ -1,7 +1,6 @@
-import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
 import { DisbursementSummary, FundingService } from '@app/blockchain/funding.service'
+import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { Inject } from '@nestjs/common'
-import { FundingConfig, fundingConfig } from 'apps/tools/src/config/funding.config'
 import BigNumber from 'bignumber.js'
 import commander from 'commander'
 import { Command, Console, createSpinner } from 'nestjs-console'
@@ -14,10 +13,8 @@ import { TransactionReceipt } from 'web3-core'
 })
 export class FundCommand {
   constructor(
-    @Inject(fundingConfig.KEY)
-    private readonly cfg: FundingConfig,
-    @Inject(walletConfig.KEY)
-    private readonly walletCfg: WalletConfig,
+    @Inject(networkConfig.KEY)
+    private readonly networkCfg: NetworkConfig,
     private readonly fundingSvc: FundingService,
     private readonly logger: Logger
   ) {}
@@ -52,20 +49,20 @@ export class FundCommand {
   async disburse(cmd: commander.Command): Promise<void> {
     const opts = cmd.opts()
     const spin = createSpinner()
-    const fund = this.walletCfg.address
+    const fund = this.networkCfg.fund.address
     spin.start(`Disbursing funds`)
 
     let relayers = []
     if (opts.relayer.length > 0) {
       opts.relayer.forEach(r => {
-        if (this.cfg.relayers.indexOf(r) > -1) {
+        if (this.networkCfg.relayers.indexOf(r) > -1) {
           relayers.push(r)
         } else {
           spin.warn(`Skipping ${r}: relayer not found in config`)
         }
       })
     } else {
-      relayers = this.cfg.relayers
+      relayers = this.networkCfg.relayers
     }
 
 
@@ -137,7 +134,7 @@ export class FundCommand {
   })
   async getFundBalance(cmd: commander.Command): Promise<void> {
     const spin = createSpinner()
-    const wallet = this.walletCfg.address
+    const wallet = this.networkCfg.fund.address
     this.logger.log({fund: wallet})
     spin.start('Getting fund balances')
     const balances = await this.fundingSvc.getFundBalance(wallet)
@@ -159,16 +156,16 @@ export class FundCommand {
   })
   async getBalance(cmd: commander.Command): Promise<void> {
     const flags = cmd.opts()
-    this.logger.log(this.cfg)
+    this.logger.log(this.networkCfg.relayers)
     const spin = createSpinner()
     spin.start('Collecting relayer balances')
 
-    const balanceSummary = await this.fundingSvc.getRelayerBalances(this.cfg.relayers)
+    const balanceSummary = await this.fundingSvc.getRelayerBalances(this.networkCfg.relayers)
 
     spin.start('Done loading balances')
     const exp = new BigNumber(10).pow(18)
 
-    const resp = this.cfg.relayers.reduce<any>(
+    const resp = this.networkCfg.relayers.reduce<any>(
       (acc, r, idx) => {
         acc[r] = {
           "celo": balanceSummary[r].celoBalance.div(exp).toFixed(),
