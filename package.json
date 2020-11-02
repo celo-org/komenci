@@ -83,6 +83,8 @@
     "@typescript-eslint/eslint-plugin": "3.0.2",
     "@typescript-eslint/parser": "3.0.2",
     "bignumber.js": "9.0.0",
+    "bip32": "^2.0.6",
+    "bip39": "^3.0.2",
     "blind-threshold-bls": "https://github.com/celo-org/blind-threshold-bls-wasm#e1e2f8a",
     "class-transformer": "^0.3.1",
     "dotenv": "^8.2.0",

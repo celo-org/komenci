@@ -7,28 +7,15 @@ const CeloProvider = require('./libs/celo/packages/contractkit/lib/providers/cel
 const generateUtils = require('./libs/celo/packages/celotool/lib/lib/generate_utils')
 const networkConfig = require('./network-config')
 
-const generatePrivateKey = generateUtils.generatePrivateKey;
-const coerceMnemonicAccountType = generateUtils.coerceMnemonicAccountType;
-
-
-const getMnemonicForEnv = (env) => {
-  const envMemonicResult = config({ path: './libs/celo/.env.mnemonic.'+env })
-  if (envMemonicResult.error) {
-    throw envMemonicResult.error
-  } else if (envMemonicResult.parsed) {
-    return envMemonicResult.parsed.MNEMONIC
-  }
-  throw new Error('Could not get mnmonic')
-}
+const generatePrivateKey = generateUtils.generatePrivateKeyWithDerivations
 
 const walletCache = {}
 const walletForEnv = (env) => {
   if (walletCache[env] == undefined) {
-    const mnemonic = getMnemonicForEnv(env)
-    const privateKey = generatePrivateKey(mnemonic, coerceMnemonicAccountType('tx_node'), 0)
+    const mnemonic = networkConfig[env].fund.mnemonic
     const wallet = new LocalWallet();
+    const privateKey = generatePrivateKey(mnemonic, [0, 0])
     wallet.addAccount(privateKey);
-
     walletCache[env] = wallet
   }
 

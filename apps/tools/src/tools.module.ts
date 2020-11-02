@@ -1,10 +1,10 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
-import { WalletConfig, WalletType } from '@app/blockchain/config/wallet.config'
+import { WalletType } from '@app/blockchain/config/wallet.config'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { ContractDeployerConfig, contractDeployerConfig } from 'apps/tools/src/config/contractDeployer.config'
+import { DeployerCommand } from 'apps/tools/src/deployer.command'
 import { ConsoleModule } from 'nestjs-console'
 import { LoggerModule } from 'nestjs-pino'
 import { FundCommand } from './fund.command'
@@ -19,7 +19,7 @@ import { FundCommand } from './fund.command'
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [networkConfig, contractDeployerConfig],
+      load: [networkConfig],
       envFilePath: [
         'apps/tools/.env.local',
         'apps/tools/.env',
@@ -29,7 +29,6 @@ import { FundCommand } from './fund.command'
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const networkCfg = config.get<NetworkConfig>('network')
-        const contractDeployerCfg = config.get<ContractDeployerConfig>('contractDeployer')
 
         return {
           node: {
@@ -38,11 +37,8 @@ import { FundCommand } from './fund.command'
           },
           wallet: {
             type: WalletType.Local,
-            address: contractDeployerCfg.privateKey,
-            privateKeys: [
-              networkCfg.fund.privateKey,
-              contractDeployerCfg.privateKey
-            ].filter(key => key !== "")
+            address: networkCfg.fund.address,
+            privateKey: networkCfg.fund.privateKey,
           }
         }
       }
@@ -60,6 +56,7 @@ import { FundCommand } from './fund.command'
   ],
   providers: [
     FundCommand,
+    DeployerCommand,
   ],
 })
 export class ToolsModule {}

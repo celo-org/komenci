@@ -1,6 +1,7 @@
 const MetaTransactionWalletDeployer = artifacts.require("MetaTransactionWalletDeployer");
 
 module.exports = async function (deployer, network, addresses) {
-  const mtwd = await deployer.deploy(MetaTransactionWalletDeployer);
+  await deployer.deploy(MetaTransactionWalletDeployer);
+  const mtwd = await MetaTransactionWalletDeployer.deployed();
   await mtwd.initialize([])
 };
