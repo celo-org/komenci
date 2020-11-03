@@ -32,10 +32,12 @@ export const BLINDING_FACTOR = new Buffer(
 const odisPubKey =
 '7FsWGsFnmVvRfMDpzz95Np76wf/1sPaK0Og9yiB+P8QbjiC8FV67NBans9hzZEkBaQMhiapzgMR6CkZIZPvgwQboAxl65JWRZecGe5V3XO4sdKeNemdAZ2TzQuWkuZoA'
 const blsBlindingClient = new WasmBlsBlindingClient(odisPubKey)
-export const BLINDED_PHONE_NUMBER = getBlindedPhoneNumber(
-  PHONE_NUMBER,
-  blsBlindingClient
-)
+export function getTestBlindedPhoneNumber() {
+  return getBlindedPhoneNumber(
+      PHONE_NUMBER,
+      blsBlindingClient
+    )
+  }
 
 export const MOCK_ODIS_RESPONSE =
   '0Uj+qoAu7ASMVvm6hvcUGx2eO/cmNdyEgGn0mSoZH8/dujrC1++SZ1N6IP6v2I8A'
