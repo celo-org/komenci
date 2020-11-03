@@ -4,7 +4,7 @@ import { MESSAGES } from '@nestjs/core/constants'
 import { InjectPinoLogger, Logger, PinoLogger } from 'nestjs-pino'
 
 import { RootError } from '@celo/base/lib/result'
-import { ApiError } from './api-error'
+import { ApiError, apiErrorSymbol } from './api-error'
 
 @Catch()
 export class ApiErrorFilter extends BaseExceptionFilter {
@@ -59,7 +59,6 @@ export class ApiErrorFilter extends BaseExceptionFilter {
   }
 
   isApiError(exception: any) {
-    return exception._apiError === true
-      && typeof(exception.toJSON) === 'function'
+    return exception._apiError === apiErrorSymbol
   }
 }
