@@ -1,3 +1,4 @@
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { appConfig } from '@app/onboarding/config/app.config'
 import { quotaConfig } from '@app/onboarding/config/quota.config'
 import { Session } from '@app/onboarding/session/session.entity'
@@ -20,6 +21,7 @@ jest.mock('./session/session.service')
 jest.mock('./wallet/wallet.service')
 jest.mock('./subsidy/subsidy.service')
 jest.mock('@celo/contractkit')
+jest.mock('@app/komenci-logger/komenci-logger.service')
 
 describe('AppController', () => {
   let appController: AppController
@@ -44,6 +46,7 @@ describe('AppController', () => {
         WalletService,
         SubsidyService,
         ContractKit,
+        KomenciLoggerService,
         {
           provide: appConfig.KEY,
           useValue: appConfig.call(null)

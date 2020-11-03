@@ -1,3 +1,4 @@
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { HttpModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -9,6 +10,8 @@ import { rulesConfig, RulesConfig } from '../config/rules.config'
 import { thirdPartyConfig } from '../config/third-party.config'
 import { CaptchaService } from './captcha/captcha.service'
 import { GatewayService } from './gateway.service'
+
+jest.mock('@app/komenci-logger/komenci-logger.service')
 
 describe('GatewayService', () => {
   describe("by changing the env", () => {
@@ -25,7 +28,8 @@ describe('GatewayService', () => {
           GatewayService,
           CaptchaService,
           DeviceCheckService,
-          SafetyNetService
+          SafetyNetService,
+          KomenciLoggerService
         ]
       }).compile()
     }
@@ -84,6 +88,7 @@ describe('GatewayService', () => {
           CaptchaService,
           DeviceCheckService,
           SafetyNetService,
+          KomenciLoggerService
         ]
       }).overrideProvider(rulesConfig.KEY).useValue(config).compile()
     }

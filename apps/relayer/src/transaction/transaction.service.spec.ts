@@ -1,5 +1,6 @@
 import { BlockchainService, NodeRPCError, TxPool } from '@app/blockchain/blockchain.service'
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { Test } from '@nestjs/testing'
@@ -10,6 +11,7 @@ import { Transaction, TransactionReceipt } from 'web3-core'
 import { TransactionService } from './transaction.service'
 
 jest.mock('@app/blockchain/blockchain.service')
+jest.mock('@app/komenci-logger/komenci-logger.service')
 jest.mock('@celo/contractkit')
 
 describe('TransactionService', () => {
@@ -21,7 +23,8 @@ describe('TransactionService', () => {
   // @ts-ignore
   contractKit.web3 = {
     eth: {
-      getTransaction: jest.fn()
+      getTransaction: jest.fn(),
+      getTransactionReceipt: jest.fn()
     }
   }
 
@@ -52,7 +55,8 @@ describe('TransactionService', () => {
         { provide: BlockchainService, useValue: blockchainService},
         { provide: ContractKit, useValue: contractKit },
         { provide: walletConfig.KEY, useValue: walletConfigValue },
-        { provide: appConfig.KEY, useValue: appConfigValue }
+        { provide: appConfig.KEY, useValue: appConfigValue },
+        KomenciLoggerService,
       ]
     }).compile()
 
@@ -73,6 +77,22 @@ describe('TransactionService', () => {
       gas: 100000,
       value: "1000",
       ...(params || {}),
+    }
+  }
+
+  const txReceiptFixture = (): TransactionReceipt => {
+    return {
+      gasUsed: 10,
+      cumulativeGasUsed: 10,
+      blockNumber: null,
+      from: Web3.utils.randomHex(20),
+      to: Web3.utils.randomHex(20),
+      logs: [],
+      logsBloom: '',
+      status: true,
+      transactionHash: null,
+      transactionIndex: null,
+      blockHash: null,
     }
   }
 
@@ -211,8 +231,14 @@ describe('TransactionService', () => {
         completedTx.blockHash = "notNull"
         const completedTxPromise = Promise.resolve(completedTx)
         getTransaction.mockReturnValue(completedTxPromise)
+
+        const getTransactionReceipt = jest.spyOn(contractKit.web3.eth, 'getTransactionReceipt')
+        const txReceiptPromise = Promise.resolve(txReceiptFixture())
+        getTransactionReceipt.mockReturnValue(txReceiptPromise)
+
         jest.advanceTimersToNextTimer(2)
         await completedTxPromise
+        await txReceiptPromise
         await setTimeout(() => {
           expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         })
