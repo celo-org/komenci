@@ -55,7 +55,7 @@ export class FundCommand {
     let relayers = []
     if (opts.relayer.length > 0) {
       opts.relayer.forEach(r => {
-        if (this.networkCfg.relayers.indexOf(r) > -1) {
+        if (this.networkCfg.relayers.find(pr => pr.externalAccount === r)) {
           relayers.push(r)
         } else {
           spin.warn(`Skipping ${r}: relayer not found in config`)
@@ -167,10 +167,10 @@ export class FundCommand {
 
     const resp = this.networkCfg.relayers.reduce<any>(
       (acc, r, idx) => {
-        acc[r] = {
-          "celo": balanceSummary[r].celoBalance.div(exp).toFixed(),
-          [balanceSummary[r].metaTxWalletAddress]: {
-            "cUSD": balanceSummary[r].metaTxWalletCUSDBalance.div(exp).toFixed()
+        acc[r.externalAccount] = {
+          "celo": balanceSummary[r.externalAccount].celoBalance.div(exp).toFixed(),
+          [r.metaTransactionWallet]: {
+            "cUSD": balanceSummary[r.externalAccount].cUSDBalance.div(exp).toFixed()
           }
         }
         return acc

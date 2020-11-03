@@ -14,8 +14,13 @@ export enum Network {
   rC1 = 'rc1'
 }
 
+export interface RelayerConfig {
+  externalAccount: Address,
+  metaTransactionWallet: Address
+}
+
 export interface NetworkConfig {
-  relayers: Address[]
+  relayers: RelayerConfig[]
   contracts: {
     MetaTransactionWalletDeployer: Address
     MetaTransactionWalletVersions: Record<Address, string>

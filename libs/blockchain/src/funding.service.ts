@@ -1,17 +1,16 @@
-import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import { RelayerConfig } from '@app/utils/config/network.config'
 import { Address, ContractKit } from '@celo/contractkit'
 import { TransactionResult } from '@celo/contractkit/lib/utils/tx-result'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
-import { Inject, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import BigNumber from 'bignumber.js'
 
-interface RelayerInfo {
+interface RelayerBalance {
   celoBalance: BigNumber,
-  metaTxWalletAddress: string
-  metaTxWalletCUSDBalance: BigNumber
+  cUSDBalance: BigNumber,
 }
 
-export type BalanceSummary = Record<Address, RelayerInfo>
+export type BalanceSummary = Record<Address, RelayerBalance>
 
 export interface RelayerDisbursement {
   celo: TransactionResult
@@ -28,26 +27,24 @@ export class FundingService {
     private readonly contractKit: ContractKit,
   ) {}
 
-  public async getRelayerBalances(relayers: Address[]): Promise<BalanceSummary> {
+  public async getRelayerBalances(relayers: RelayerConfig[]): Promise<BalanceSummary> {
     const cUSD = await this.contractKit.contracts.getStableToken()
     const celo = await this.contractKit.contracts.getGoldToken()
 
-    const wallets = await this.getWallets(relayers)
     const balances = await Promise.all(
       relayers.map(async (r, idx) => {
         return Promise.all([
-          celo.balanceOf(r),
-          cUSD.balanceOf(wallets[r]),
+          celo.balanceOf(r.externalAccount),
+          cUSD.balanceOf(r.metaTransactionWallet),
         ])
       })
     )
 
     return balances.reduce((summary, [celoBalance, cUSDBalance], idx) => {
       const relayer = relayers[idx]
-      summary[relayer] = {
+      summary[relayer.externalAccount] = {
         celoBalance,
-        metaTxWalletAddress: wallets[relayer],
-        metaTxWalletCUSDBalance: cUSDBalance
+        cUSDBalance,
       }
       return summary
     }, {})
@@ -55,7 +52,7 @@ export class FundingService {
 
   public async disburseFunds(
     fund: Address,
-    relayers: Address[],
+    relayers: RelayerConfig[],
     cUSDAmount: number,
     celoAmount: number
   ): Promise<DisbursementSummary> {
@@ -75,18 +72,17 @@ export class FundingService {
       throw(new Error("Fund balance to low to top-up relayers"))
     }
 
-    const wallets = await this.getWallets(relayers)
     return relayers.reduce(async (summary, relayer, idx) => {
       // @ts-ignore
-      const cUSDTx = await cUSD.transfer(wallets[relayer], cUSDAmount.toFixed()).send({
+      const cUSDTx = await cUSD.transfer(relayer.metaTransactionWallet, cUSDAmount.toFixed()).send({
         from: fund,
       })
       // @ts-ignore
-      const celoTx = await celo.transfer(relayer, celoAmount.toFixed()).send({
+      const celoTx = await celo.transfer(relayer.externalAccount, celoAmount.toFixed()).send({
         from: fund,
       })
 
-      summary[relayer] = {
+      summary[relayer.externalAccount] = {
         celo: celoTx,
         cUSD: cUSDTx
       }
@@ -128,18 +124,5 @@ export class FundingService {
     }
 
     return true
-  }
-
-  private async getWallets(relayers: Address[]): Promise<Record<Address, Address>> {
-    const wallets = await Promise.all(
-      relayers.map(async (r) => {
-        return this.deployer.getWallet(r)
-      })
-    )
-
-    return wallets.reduce((walletsMap, wallet, idx) => {
-      walletsMap[relayers[idx]] = wallet
-      return walletsMap
-    }, {})
   }
 }

@@ -13,15 +13,16 @@ const getFundMnemonic = (key) => {
 module.exports = {
   alfajores: {
     relayers: [
-      "0x00454cac6dae53f8800f71395b9a174f07a784b1",
-      "0xc6f0f9bfb1aed83620ece3eac0add98a65a8574e",
-      "0xa7d74cb4fca9458757cfc8b90d9b38a126f68b47",
+      {
+        externalAccount: "0xa7d74cb4fca9458757cfc8b90d9b38a126f68b47",
+        metaTransactionWallet: "0xcb361f5852eefdd5ddfc593924405c86c79840b2"
+      }
     ],
     contracts: {
       MetaTransactionWalletVersions: {
         "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.0.0"
       },
-      MetaTransactionWalletDeployer: "0x5ee40856c2a73e08B645044B6B8466310640DA9E"
+      MetaTransactionWalletDeployer: "0xb1Feb55F2BF2eCfb32CF8E09ce397Acf54414A45"
     },
     fornoURL: fornoURLForEnv('alfajores'),
     fund: {

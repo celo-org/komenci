@@ -3,6 +3,7 @@ import { normalizeAddress, NULL_ADDRESS } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+import { isValidAddress } from '@celo/utils/lib/address'
 import { Inject } from '@nestjs/common'
 import commander from 'commander'
 import { Command, Console, createSpinner } from 'nestjs-console'
@@ -20,39 +21,6 @@ export class DeployerCommand {
     private readonly contractKit: ContractKit,
     private readonly logger: Logger
   ) {}
-
-  @Command({
-    command: 'ensureCanDeploy',
-    description: 'Ensure that all relayers can deploy wallets',
-  })
-  async ensureCanDeploy(cmd: commander.Command): Promise<void> {
-    const spin = createSpinner()
-    spin.start("Ensuring all relayers can deploy")
-    await Promise.all(
-      this.networkCfg.relayers.map(async (relayer) => {
-        const canDeploy = await this.deployer.canDeploy(relayer)
-        if (canDeploy) {
-          spin.info(`Relayer:${relayer} can deploy ✅`)
-        } else {
-          spin.info(`Relayer:${relayer} can not deploy, updating permissions`)
-          const receipt = await this.deployer.changeDeployerPermission(
-            relayer,
-            true
-          // @ts-ignore
-          ).sendAndWaitForReceipt({
-            from: this.networkCfg.fund.address
-          })
-
-          if (receipt.status === true) {
-            spin.info(`Relayer:${relayer} permissions updated `)
-          } else {
-            spin.fail(`Relayer:${relayer} could not update permissions (tx:${receipt.transactionHash}`)
-          }
-        }
-      })
-    )
-    spin.succeed()
-  }
 
   @Command({
     command: 'ensureHasMetaTxWallet',
@@ -92,24 +60,24 @@ export class DeployerCommand {
 
     await Promise.all(
       this.networkCfg.relayers.map(async (relayer) => {
-        const wallet = await this.deployer.getWallet(relayer)
-        if (wallet !== NULL_ADDRESS) {
+        const wallet = relayer.metaTransactionWallet
+        if (isValidAddress(wallet)) {
           spin.info(`Relayer:${relayer} has wallet: ${wallet} ✅`)
         } else {
           spin.info(`Relayer:${relayer} needs wallet. Deploying.`)
           const receipt = await this.deployer.deploy(
-            relayer,
+            relayer.externalAccount,
             implementationAddress,
-            metaTxWallet.methods.initialize(relayer).encodeABI()
+            metaTxWallet.methods.initialize(relayer.externalAccount).encodeABI()
           // @ts-ignore
           ).sendAndWaitForReceipt({
             from: this.networkCfg.fund.address
           })
 
           if (receipt.status === true) {
-            spin.info(`Relayer:${relayer} wallet deployed!`)
+            spin.info(`Relayer:${relayer} wallet deployed! tx:${receipt.transactionHash}`)
           } else {
-            spin.fail(`Relayer:${relayer} could not deploy wallet (tx:${receipt.transactionHash}`)
+            spin.fail(`Relayer:${relayer} could not deploy wallet - tx:${receipt.transactionHash}`)
           }
         }
       })
