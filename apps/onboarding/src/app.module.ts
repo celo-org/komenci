@@ -1,5 +1,6 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { ApiErrorFilter } from '@app/onboarding/errors/api-error.filter'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
@@ -32,10 +33,7 @@ import { SessionModule } from './session/session.module'
         relayerConfig, appConfig, thirdPartyConfig,
         databaseConfig, rulesConfig, nodeConfig, quotaConfig,
       ],
-      envFilePath: [
-        'apps/onboarding/.env.local',
-        'apps/onboarding/.env',
-      ]
+      envFilePath: ['apps/onboarding/.env.local', 'apps/onboarding/.env']
     }),
     LoggerModule.forRootAsync({
       providers: [ConfigService],
@@ -67,31 +65,32 @@ import { SessionModule } from './session/session.module'
     SessionModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => config.get<DatabaseConfig>('database')
+      useFactory: (config: ConfigService) =>
+        config.get<DatabaseConfig>('database')
     }),
     BlockchainModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return {
-          node: config.get<NodeConfig>('node'),
+          node: config.get<NodeConfig>('node')
         }
       }
     }),
     ContractsModule.forRootAsync({
-      inject: [ConfigService],
+      inject: [ConfigService, KomenciLoggerService],
       useFactory: (config: ConfigService) => {
         const cfg = config.get<AppConfig>('app')
-
         return {
-          deployerAddress: cfg.mtwDeployerAddress,
+          deployerAddress: cfg.mtwDeployerAddress
         }
-      },
-    }),
+      }
+    })
   ],
   providers: [
     SubsidyService,
     WalletService,
     SessionService,
+    KomenciLoggerService,
     RelayerProxyService,
     {
       provide: 'RELAYER_SERVICE',
@@ -107,7 +106,7 @@ import { SessionModule } from './session/session.module'
     },
     {
       provide: APP_FILTER,
-      useClass: ApiErrorFilter,
+      useClass: ApiErrorFilter
     }
   ]
 })

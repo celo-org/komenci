@@ -32,8 +32,14 @@ export class SubsidyService {
     }
 
     const attestations = await this.contractKit.contracts.getAttestations()
+    const txMetadata = await this.walletService.extractMetaTxData(
+      input.requestTx
+    )
+    if (txMetadata.ok === false) {
+      return txMetadata
+    }
     const requestValid = await this.walletService.isAllowedMetaTransaction(
-      input.requestTx,
+      txMetadata.result,
       [
         {
           destination: attestations.address,
@@ -53,12 +59,15 @@ export class SubsidyService {
     input: RequestAttestationsDto
   ): Promise<RawTransaction[]> {
     const {
-      identifier, walletAddress, attestationsRequested, requestTx
+      identifier,
+      walletAddress,
+      attestationsRequested,
+      requestTx
     } = input
 
     const batch = [
       await this.buildSubsidyTransfer(attestationsRequested, walletAddress),
-      requestTx,
+      requestTx
     ]
 
     if (!this.cfg.useAttestationGuards) {
@@ -71,37 +80,51 @@ export class SubsidyService {
 
       const beforeRequestsCount = await this.getCurrentRequestedAttestations(
         identifier,
-        walletAddress,
+        walletAddress
       )
       const afterRequestsCount = beforeRequestsCount + attestationsRequested
 
       return [
         await this.buildGuard(identifier, walletAddress, beforeRequestsCount),
         ...batch,
-        await this.buildGuard(identifier, walletAddress, afterRequestsCount),
+        await this.buildGuard(identifier, walletAddress, afterRequestsCount)
       ]
     }
   }
 
-  private async getCurrentRequestedAttestations(identifier: string, account: string): Promise<number> {
+  private async getCurrentRequestedAttestations(
+    identifier: string,
+    account: string
+  ): Promise<number> {
     const attestations = await this.contractKit.contracts.getAttestations()
     const stats = await attestations.getAttestationStat(identifier, account)
     return stats.total
   }
 
-  private async buildGuard(identifier: string, account: string, count: number): Promise<RawTransactionDto> {
+  private async buildGuard(
+    identifier: string,
+    account: string,
+    count: number
+  ): Promise<RawTransactionDto> {
     const attestations = await this.contractKit.contracts.getAttestations()
     return toRawTransaction(
-      (attestations as any).requireNAttestationsRequested(identifier, account, count).txo
+      (attestations as any).requireNAttestationsRequested(
+        identifier,
+        account,
+        count
+      ).txo
     )
   }
 
-  private async buildSubsidyTransfer(attestationsRequested: number, account: string): Promise<RawTransactionDto> {
+  private async buildSubsidyTransfer(
+    attestationsRequested: number,
+    account: string
+  ): Promise<RawTransactionDto> {
     const attestations = await this.contractKit.contracts.getAttestations()
     const stableToken = await this.contractKit.contracts.getStableToken()
-    const fee = await attestations.getAttestationFeeRequired(attestationsRequested)
-    return toRawTransaction(
-      stableToken.transfer(account, fee.toFixed()).txo
+    const fee = await attestations.getAttestationFeeRequired(
+      attestationsRequested
     )
+    return toRawTransaction(stableToken.transfer(account, fee.toFixed()).txo)
   }
 }

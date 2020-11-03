@@ -1,3 +1,4 @@
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
@@ -8,6 +9,7 @@ import { Session as SessionEntity } from '@app/onboarding/session/session.entity
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
+import { normalizeAddress } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import {
@@ -38,13 +40,13 @@ interface GetPhoneNumberIdResponse {
 }
 
 interface DeployWalletInProgress {
-  status: 'in-progress',
-  txHash: string,
-  deployerAddress: string,
+  status: 'in-progress'
+  txHash: string
+  deployerAddress: string
 }
 
 interface DeployWalletDeployed {
-  status: 'deployed',
+  status: 'deployed'
   walletAddress: string
 }
 
@@ -69,13 +71,12 @@ export class AppController {
     private readonly walletService: WalletService,
     private readonly contractKit: ContractKit,
     @Inject(appConfig.KEY)
-    private readonly cfg: AppConfig
+    private readonly cfg: AppConfig,
+    private readonly logger: KomenciLoggerService
   ) {}
 
   @Get('health')
-  health(
-    @Req() req
-  ): {status: string} {
+  health(@Req() req): { status: string } {
     // TODO: Think about how to have a more clear understanding of
     // service health here. Think about the relayer load balancer health
     // or maybe just a toggle that we can do from ENV vars?
@@ -88,11 +89,20 @@ export class AppController {
   async startSession(
     @Body() startSessionDto: StartSessionDto,
     @Req() req
-  ): Promise<{token: string}> {
+  ): Promise<{ token: string }> {
     if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
-      const token = await this.authService.startSession(startSessionDto.externalAccount)
-      return {token}
+      const token = await this.authService.startSession(
+        startSessionDto.externalAccount
+      )
+      this.logger.logSuccessfulSessionStart({
+        sessionId: token,
+        externalAccount: startSessionDto.externalAccount
+      })
+      return { token }
     } else {
+      this.logger.logFailedSessionStart({
+        externalAccount: startSessionDto.externalAccount
+      })
       throw new UnauthorizedException()
     }
   }
@@ -118,7 +128,7 @@ export class AppController {
   @Post('deployWallet')
   async deployWallet(
     @Body() deployWalletDto: DeployWalletDto,
-    @Session() session: SessionEntity,
+    @Session() session: SessionEntity
   ): Promise<DeployWalletResp> {
     const getResp = await this.walletService.getWallet(
       session,
@@ -133,7 +143,7 @@ export class AppController {
     }
 
     if (getResp.error.errorType !== WalletErrorType.NotDeployed) {
-      throw(getResp.error)
+      throw getResp.error
     }
 
     const deployResp = await this.walletService.deployWallet(
@@ -148,7 +158,7 @@ export class AppController {
         deployerAddress: this.cfg.mtwDeployerAddress
       }
     } else {
-      throw(deployResp.error)
+      throw deployResp.error
     }
   }
 
@@ -165,6 +175,10 @@ export class AppController {
     const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
     )
+    this.logger.logBlindedPepperRequest({
+      identifier: resp.payload.phoneHash,
+      relayerAddress: resp.relayerAddress
+    })
 
     await this.sessionService.incrementUsage(
       session,
@@ -185,16 +199,29 @@ export class AppController {
   @Post('requestSubsidisedAttestations')
   async requestSubsidisedAttestations(
     @Body() requestAttestationsDto: RequestAttestationsDto,
-    @Session() session: SessionEntity,
+    @Session() session: SessionEntity
   ) {
-    const res = await this.subsidyService.isValid(requestAttestationsDto, session)
+    const res = await this.subsidyService.isValid(
+      requestAttestationsDto,
+      session
+    )
 
     if (res.ok === false) {
       throw(res.error)
     }
-
+    const transactions = await this.subsidyService.buildTransactionBatch(
+      requestAttestationsDto
+    )
     const txSubmit = await this.relayerProxyService.submitTransactionBatch({
-      transactions: await this.subsidyService.buildTransactionBatch(requestAttestationsDto)
+      transactions
+    })
+    this.logger.logSubsidizedAttestations({
+      sessionId: session.id,
+      externalAccount: session.externalAccount,
+      txHash: txSubmit.payload,
+      relayerAddress: txSubmit.relayerAddress,
+      attestationsRequested: requestAttestationsDto.attestationsRequested,
+      identifier: requestAttestationsDto.identifier
     })
 
     await this.sessionService.incrementUsage(
@@ -220,20 +247,33 @@ export class AppController {
   ) {
     const metaTx: RawTransaction = {
       ...body,
-      value: "0x0"
+      value: '0x0'
+    }
+    const metaTaxMetadata = await this.walletService.extractMetaTxData(metaTx)
+
+    if (metaTaxMetadata.ok === false) {
+      throw metaTaxMetadata.error
     }
 
     const validTx = await this.walletService.isAllowedMetaTransaction(
-      metaTx,
+      metaTaxMetadata.result,
       await this.allowedMetaTransactions()
     )
 
     if (validTx.ok === false) {
-      throw(validTx.error)
+      throw validTx.error
     }
 
     const resp = await this.relayerProxyService.submitTransaction({
       transaction: metaTx
+    })
+    this.logger.logSubmittedMetaTransaction({
+      txHash: resp.payload,
+      sessionId: session.id,
+      externalAccount: session.externalAccount,
+      destination: normalizeAddress(metaTx.destination),
+      metaTxMethodID: metaTaxMetadata.result.methodId,
+      metaTxDestination: metaTaxMetadata.result.destination
     })
 
     await this.sessionService.incrementUsage(

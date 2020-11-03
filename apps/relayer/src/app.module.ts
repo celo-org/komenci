@@ -1,6 +1,10 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
-import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import {
+  WalletConfig,
+  walletConfig
+} from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
@@ -14,22 +18,19 @@ import { TransactionService } from './transaction/transaction.service'
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, nodeConfig, walletConfig],
-      envFilePath: [
-        'apps/relayer/.env.local',
-        'apps/relayer/.env',
-      ]
+      envFilePath: ['apps/relayer/.env.local', 'apps/relayer/.env']
     }),
     BlockchainModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return {
           node: config.get<NodeConfig>('node'),
-          wallet: config.get<WalletConfig>('wallet'),
+          wallet: config.get<WalletConfig>('wallet')
         }
       }
     }),
     ContractsModule.forRootAsync({
-      inject: [ConfigService],
+      inject: [ConfigService, KomenciLoggerService],
       useFactory: (config: ConfigService) => {
         const cfg = config.get<AppConfig>('app')
         const wallet = config.get<WalletConfig>('wallet')
@@ -38,7 +39,7 @@ import { TransactionService } from './transaction/transaction.service'
           deployerAddress: cfg.mtwDeployerAddress,
           walletAddress: wallet.address
         }
-      },
+      }
     }),
     LoggerModule.forRootAsync({
       providers: [ConfigService],
@@ -56,9 +57,6 @@ import { TransactionService } from './transaction/transaction.service'
     HttpModule
   ],
   controllers: [AppController],
-  providers: [
-    OdisService,
-    TransactionService
-  ]
+  providers: [OdisService, TransactionService, KomenciLoggerService]
 })
 export class AppModule {}

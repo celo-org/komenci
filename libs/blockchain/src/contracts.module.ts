@@ -1,7 +1,9 @@
 import { AsyncOptions } from '@app/blockchain/blockchain.module'
+import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
 import { ContractKit } from '@celo/contractkit'
 import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+
 import { DynamicModule, Module } from '@nestjs/common'
 import { Logger } from 'nestjs-pino'
 
@@ -14,19 +16,23 @@ export interface ContractsOptions {
 
 const metaTransactionWalletDeployer = {
   provide: MetaTransactionWalletDeployerWrapper,
-  useFactory: async (options: ContractsOptions, contractKit: ContractKit, logger: Logger) => {
+  useFactory: async (
+    options: ContractsOptions,
+    contractKit: ContractKit,
+    logger: Logger
+  ) => {
     const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(
       options.deployerAddress
     )
 
     logger.log({
       message: 'Initialized MetaTxWalletDeployer',
-      address: options.deployerAddress,
+      address: options.deployerAddress
     })
 
     return deployer
   },
-  inject: [CONTRACTS_MODULE_OPTIONS, ContractKit, Logger]
+  inject: [CONTRACTS_MODULE_OPTIONS, ContractKit, KomenciLoggerService]
 }
 
 const metaTransactionWallet = {
@@ -38,10 +44,12 @@ const metaTransactionWallet = {
     logger: Logger
   ) => {
     if (options.walletAddress) {
-      const metaTxWalletAddress = await deployer.getWallet(options.walletAddress)
+      const metaTxWalletAddress = await deployer.getWallet(
+        options.walletAddress
+      )
       logger.log({
         message: 'Found Relayer MetaTxWallet',
-        address: metaTxWalletAddress,
+        address: metaTxWalletAddress
       })
       return contractKit.contracts.getMetaTransactionWallet(metaTxWalletAddress)
     }
@@ -50,25 +58,27 @@ const metaTransactionWallet = {
     CONTRACTS_MODULE_OPTIONS,
     MetaTransactionWalletDeployerWrapper,
     ContractKit,
-    Logger
+    KomenciLoggerService
   ]
 }
 
 @Module({})
 export class ContractsModule {
-  public static forRootAsync(options: AsyncOptions<ContractsOptions>): DynamicModule {
+  public static forRootAsync(
+    options: AsyncOptions<ContractsOptions>
+  ): DynamicModule {
     return {
       global: true,
       module: ContractsModule,
-      imports: options.imports,
+      imports: [KomenciLoggerModule],
       providers: [
         {
           provide: CONTRACTS_MODULE_OPTIONS,
           useFactory: options.useFactory,
-          inject: options.inject || [],
+          inject: options.inject || []
         },
         metaTransactionWallet,
-        metaTransactionWalletDeployer,
+        metaTransactionWalletDeployer
       ],
       exports: [
         MetaTransactionWalletWrapper,

@@ -2,14 +2,22 @@
 /// <reference path="../../../../libs/celo/packages/contractkit/types/web3-celo.d.ts" />
 
 import { BlockchainService } from '@app/blockchain/blockchain.service'
-import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import {
+  WalletConfig,
+  walletConfig
+} from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { TransactionResult } from '@celo/contractkit/lib/utils/tx-result'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit
+} from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
-import { Logger } from 'nestjs-pino'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
 import { TransactionObject } from 'web3-eth'
@@ -24,10 +32,10 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly kit: ContractKit,
-    private readonly logger: Logger,
+    private readonly logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     @Inject(appConfig.KEY) private appCfg: AppConfig,
-    private readonly blockchainService: BlockchainService,
+    private readonly blockchainService: BlockchainService
   ) {
     this.watchedTransactions = new Set()
     this.transactionSeenAt = new Map()
@@ -36,7 +44,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     // Find pending txs and add to the watch list
-    (await this.getPendingTransactionHashes()).forEach(txHash => this.watchTransaction(txHash))
+    ;(await this.getPendingTransactionHashes()).forEach(txHash =>
+      this.watchTransaction(txHash)
+    )
     // Monitor the watched transactions for finality
     this.timer = setInterval(
       () => this.checkTransactions(),
@@ -48,9 +58,11 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.timer)
   }
 
-  submitTransaction = async (tx: RawTransactionDto): Promise<Result<string, any>> => {
+  submitTransaction = async (
+    tx: RawTransactionDto
+  ): Promise<Result<string, any>> => {
     let tries = 0
-    while(++tries < 3) {
+    while (++tries < 3) {
       try {
         const result = await this.kit.sendTransaction({
           to: tx.destination,
@@ -63,10 +75,10 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         const txHash = await result.getHash()
         this.watchTransaction(txHash)
         return Ok(txHash)
-      } catch(e) {
+      } catch (e) {
         if (tries === 3) {
           this.logger.error({
-            message: "Failed to send transaction",
+            message: 'Failed to send transaction',
             tx
           })
           return Err(e)
@@ -75,18 +87,39 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async submitTransactionObject(txo: TransactionObject<any>): Promise<Result<string, any>> {
+  async submitTransactionObject(
+    txo: TransactionObject<any>
+  ): Promise<Result<string, any>> {
     return this.submitTransaction(toRawTransaction(txo))
   }
 
   private async checkTransactions() {
     const txs = await Promise.all(
-      [...this.watchedTransactions].map(txHash => this.kit.web3.eth.getTransaction(txHash))
+      [...this.watchedTransactions].map(txHash =>
+        this.kit.web3.eth.getTransaction(txHash)
+      )
     )
 
     const completed = txs.filter(tx => tx.blockHash !== null)
-    completed.forEach(tx => this.unwatchTransaction(tx.hash))
-    const expired = txs.filter(tx => tx.blockHash == null && this.isExpired(tx.hash))
+
+    for (const tx of completed) {
+      const txReceipt = await this.kit.web3.eth.getTransactionReceipt(tx.hash)
+
+      const gasPrice = parseInt(tx.gasPrice, 10)
+      this.logger.logCompletedTransaction({
+        txHash: tx.hash,
+        gasUsed: txReceipt.gasUsed,
+        gasPrice: gasPrice,
+        gasCost: gasPrice * txReceipt.gasUsed,
+        relayerAddress: tx.from,
+        destination: tx.to
+      })
+      this.unwatchTransaction(tx.hash)
+    }
+
+    const expired = txs.filter(
+      tx => tx.blockHash == null && this.isExpired(tx.hash)
+    )
     await Promise.all(expired.map(tx => this.deadLetter(tx)))
   }
 
@@ -99,7 +132,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       const result = await this.kit.sendTransaction({
         to: this.walletCfg.address,
         from: this.walletCfg.address,
-        value: "0",
+        value: '0',
         nonce: tx.nonce
       })
       const deadLetterHash = await result.getHash()
@@ -107,14 +140,14 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       this.watchTransaction(deadLetterHash)
 
       this.logger.log({
-        message: "Dead-lettered transaction",
+        message: 'Dead-lettered transaction',
         txHash: tx.hash,
         deadLetterHash,
-        nonce: tx.nonce,
+        nonce: tx.nonce
       })
-    } catch(e) {
+    } catch (e) {
       this.logger.error({
-        message: "Could not dead-letter transaction",
+        message: 'Could not dead-letter transaction',
         txHash: tx.hash,
         nonce: tx.nonce
       })
@@ -133,17 +166,19 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   private isExpired(txHash: string): boolean {
     if (this.transactionSeenAt.has(txHash)) {
-      return Date.now() - this.transactionSeenAt.get(txHash) > this.appCfg.transactionTimeoutMs
+      return (
+        Date.now() - this.transactionSeenAt.get(txHash) >
+        this.appCfg.transactionTimeoutMs
+      )
     } else {
       // This should never happen
       this.logger.error({
-        message: "Transaction not in set",
+        message: 'Transaction not in set',
         txHash
       })
       return true
     }
   }
-
 
   private async getPendingTransactionHashes(): Promise<string[]> {
     const txPoolRes = await this.blockchainService.getPendingTxPool()
@@ -159,7 +194,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     } else if (txPoolRes.ok === true) {
       const txPool = txPoolRes.result
       if (this.checksumWalletAddress in txPool.pending) {
-        return Object.values(txPool.pending[this.checksumWalletAddress]).map(tx => tx.hash)
+        return Object.values(txPool.pending[this.checksumWalletAddress]).map(
+          tx => tx.hash
+        )
       } else {
         this.logger.log('No pending transactions found for relayer')
         return []

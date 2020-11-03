@@ -1,7 +1,14 @@
-import { ArgumentsHost, Catch, HttpServer, HttpStatus, Inject, Optional } from '@nestjs/common'
+import { KomenciLoggerService } from '@app/komenci-logger'
+import {
+  ArgumentsHost,
+  Catch,
+  HttpServer,
+  HttpStatus,
+  Inject,
+  Optional
+} from '@nestjs/common'
 import { AbstractHttpAdapter, BaseExceptionFilter } from '@nestjs/core'
 import { MESSAGES } from '@nestjs/core/constants'
-import { InjectPinoLogger, Logger, PinoLogger } from 'nestjs-pino'
 
 import { RootError } from '@celo/base/lib/result'
 import { ApiError, apiErrorSymbol } from './api-error'
@@ -9,8 +16,8 @@ import { ApiError, apiErrorSymbol } from './api-error'
 @Catch()
 export class ApiErrorFilter extends BaseExceptionFilter {
   @Optional()
-  @InjectPinoLogger("ApiErrorFilter")
-  protected readonly logger?: PinoLogger
+  @Inject()
+  protected readonly logger?: KomenciLoggerService
 
   handleUnknownError(
     exception: any,
@@ -32,7 +39,7 @@ export class ApiErrorFilter extends BaseExceptionFilter {
     } else {
       const body = {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: MESSAGES.UNKNOWN_EXCEPTION_MESSAGE,
+        message: MESSAGES.UNKNOWN_EXCEPTION_MESSAGE
       }
       applicationRef.reply(host.getArgByIndex(1), body, body.statusCode)
       if (this.isRootError(exception)) {
