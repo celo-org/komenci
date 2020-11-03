@@ -6,7 +6,7 @@ import { Test } from '@nestjs/testing'
 import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
 import { OdisQueryErrorTypes, OdisService } from 'apps/relayer/src/odis/odis.service'
 import Web3 from 'web3'
-import { ACCOUNT_ADDRESS, BLINDED_PHONE_NUMBER, MOCK_ODIS_RESPONSE, ODIS_URL, PRIVATE_KEY } from '../config/testing-constants'
+import { ACCOUNT_ADDRESS, getTestBlindedPhoneNumber, MOCK_ODIS_RESPONSE, ODIS_URL, PRIVATE_KEY } from '../config/testing-constants'
 
 jest.mock('@celo/phone-number-privacy-common/lib/test/utils', () => {
   return {
@@ -63,7 +63,7 @@ describe('OdisService', () => {
       ).mockResolvedValue(combinedSignature)
 
 
-      const blindedPhoneNumber = await BLINDED_PHONE_NUMBER
+      const blindedPhoneNumber = await getTestBlindedPhoneNumber()
       const input: DistributedBlindedPepperDto = {
         blindedPhoneNumber: blindedPhoneNumber,
         clientVersion: "1"
@@ -85,7 +85,7 @@ describe('OdisService', () => {
           'getBlindedPhoneNumberSignature'
         ).mockRejectedValue(odisErrorOutOfQuota)
 
-        const blindedPhoneNumber = await BLINDED_PHONE_NUMBER
+        const blindedPhoneNumber = await getTestBlindedPhoneNumber()
         const input: DistributedBlindedPepperDto = {
           blindedPhoneNumber: blindedPhoneNumber,
           clientVersion: "1"
@@ -114,7 +114,7 @@ describe('OdisService', () => {
           }
         })
 
-        const blindedPhoneNumber = await BLINDED_PHONE_NUMBER
+        const blindedPhoneNumber = await getTestBlindedPhoneNumber()
         const input: DistributedBlindedPepperDto = {
           blindedPhoneNumber: blindedPhoneNumber,
           clientVersion: "1"
@@ -139,7 +139,7 @@ describe('OdisService', () => {
           'getBlindedPhoneNumberSignature'
         ).mockRejectedValue(odisErrorUnknown)
 
-        const blindedPhoneNumber = await BLINDED_PHONE_NUMBER
+        const blindedPhoneNumber = await getTestBlindedPhoneNumber()
         const input: DistributedBlindedPepperDto = {
           blindedPhoneNumber: blindedPhoneNumber,
           clientVersion: "1"
