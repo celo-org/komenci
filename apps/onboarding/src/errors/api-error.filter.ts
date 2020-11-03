@@ -5,7 +5,6 @@ import {
   HttpServer,
   HttpStatus,
   Inject,
-  Optional
 } from '@nestjs/common'
 import { AbstractHttpAdapter, BaseExceptionFilter } from '@nestjs/core'
 import { MESSAGES } from '@nestjs/core/constants'
@@ -15,9 +14,8 @@ import { ApiError, apiErrorSymbol } from './api-error'
 
 @Catch()
 export class ApiErrorFilter extends BaseExceptionFilter {
-  @Optional()
   @Inject()
-  protected readonly logger?: KomenciLoggerService
+  protected readonly logger: KomenciLoggerService
 
   handleUnknownError(
     exception: any,

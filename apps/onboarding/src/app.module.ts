@@ -90,8 +90,8 @@ import { SessionModule } from './session/session.module'
     SubsidyService,
     WalletService,
     SessionService,
-    KomenciLoggerService,
     RelayerProxyService,
+    KomenciLoggerService,
     {
       provide: 'RELAYER_SERVICE',
       inject: [ConfigService],

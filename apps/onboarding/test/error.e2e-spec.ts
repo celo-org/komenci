@@ -1,3 +1,4 @@
+import { KomenciLoggerService} from '@app/komenci-logger'
 import { RootError } from '@celo/base/lib/result'
 import { Controller, Get, UseFilters } from '@nestjs/common'
 import { APP_FILTER } from '@nestjs/core'
@@ -79,6 +80,7 @@ describe('ErrorController (e2e)', () => {
       ],
       controllers: [ErrorController],
       providers: [
+        KomenciLoggerService,
         {
           provide: APP_FILTER,
           useClass: ApiErrorFilter,
