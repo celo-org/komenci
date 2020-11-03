@@ -44,7 +44,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     // Find pending txs and add to the watch list
-    ;(await this.getPendingTransactionHashes()).forEach(txHash =>
+    (await this.getPendingTransactionHashes()).forEach(txHash =>
       this.watchTransaction(txHash)
     )
     // Monitor the watched transactions for finality
