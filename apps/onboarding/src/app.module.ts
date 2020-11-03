@@ -7,9 +7,10 @@ import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER } from '@nestjs/core'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
-import { TypeOrmModule } from "@nestjs/typeorm"
+import { TypeOrmModule } from '@nestjs/typeorm'
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
+import https from 'https'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { AuthModule } from './auth/auth.module'
@@ -29,13 +30,15 @@ import { SessionModule } from './session/session.module'
     ConfigModule.forRoot({
       isGlobal: true,
       load: [
-        relayerConfig, appConfig, thirdPartyConfig,
-        databaseConfig, rulesConfig, nodeConfig, quotaConfig,
+        relayerConfig,
+        appConfig,
+        thirdPartyConfig,
+        databaseConfig,
+        rulesConfig,
+        nodeConfig,
+        quotaConfig
       ],
-      envFilePath: [
-        'apps/onboarding/.env.local',
-        'apps/onboarding/.env',
-      ]
+      envFilePath: ['apps/onboarding/.env.local', 'apps/onboarding/.env']
     }),
     LoggerModule.forRootAsync({
       providers: [ConfigService],
@@ -63,17 +66,22 @@ import { SessionModule } from './session/session.module'
       }
     }),
     GatewayModule,
-    HttpModule,
+    HttpModule.register({
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
+    }),
     SessionModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => config.get<DatabaseConfig>('database')
+      useFactory: (config: ConfigService) =>
+        config.get<DatabaseConfig>('database')
     }),
     BlockchainModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return {
-          node: config.get<NodeConfig>('node'),
+          node: config.get<NodeConfig>('node')
         }
       }
     }),
@@ -83,10 +91,10 @@ import { SessionModule } from './session/session.module'
         const cfg = config.get<AppConfig>('app')
 
         return {
-          deployerAddress: cfg.mtwDeployerAddress,
+          deployerAddress: cfg.mtwDeployerAddress
         }
-      },
-    }),
+      }
+    })
   ],
   providers: [
     SubsidyService,
@@ -107,7 +115,7 @@ import { SessionModule } from './session/session.module'
     },
     {
       provide: APP_FILTER,
-      useClass: ApiErrorFilter,
+      useClass: ApiErrorFilter
     }
   ]
 })
