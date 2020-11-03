@@ -1,7 +1,6 @@
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { RootError } from '@celo/base/lib/result'
-import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import { Inject, Injectable } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
 import { RelayerResponse } from 'apps/relayer/src/app.controller'
