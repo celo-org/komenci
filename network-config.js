@@ -20,6 +20,7 @@ module.exports = {
     ],
     contracts: {
       MetaTransactionWalletVersions: {
+        "0x88a2b9B8387A1823D821E406b4e951337fa1D46D": "1.0.0",
         "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.0.0"
       },
       MetaTransactionWalletDeployer: "0xb1Feb55F2BF2eCfb32CF8E09ce397Acf54414A45"

@@ -1,5 +1,5 @@
 import { DisbursementSummary, FundingService } from '@app/blockchain/funding.service'
-import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
+import { networkConfig, NetworkConfig, RelayerConfig } from '@app/utils/config/network.config'
 import { Inject } from '@nestjs/common'
 import BigNumber from 'bignumber.js'
 import commander from 'commander'
@@ -52,11 +52,12 @@ export class FundCommand {
     const fund = this.networkCfg.fund.address
     spin.start(`Disbursing funds`)
 
-    let relayers = []
+    let relayers: RelayerConfig[] = []
     if (opts.relayer.length > 0) {
       opts.relayer.forEach(r => {
-        if (this.networkCfg.relayers.find(pr => pr.externalAccount === r)) {
-          relayers.push(r)
+        const relayer = this.networkCfg.relayers.find(pr => pr.externalAccount === r)
+        if (relayer) {
+          relayers.push(relayer)
         } else {
           spin.warn(`Skipping ${r}: relayer not found in config`)
         }
@@ -73,7 +74,7 @@ export class FundCommand {
 
     spin.info(`Funding relayers: `)
     relayers.forEach(r => {
-      spin.info(`   - ${r}`)
+      spin.info(`   - ${r.externalAccount}`)
     })
 
     let summary: DisbursementSummary
