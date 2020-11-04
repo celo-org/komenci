@@ -26,7 +26,7 @@
     "tools": "node dist/apps/tools/main.js",
     "tools:dev": "nest start tools --",
     "secrets:decrypt": "bash scripts/secrets.sh decrypt",
-    "secrets:encrypt": "bash scripts/secrets.sh encrypt",
+    "secrets:encrypt": "bash scripts/secrets.sh encrypt"
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",
