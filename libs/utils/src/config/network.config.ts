@@ -1,9 +1,5 @@
 import { Address } from '@celo/base'
-import { privateKeyToAddress } from '@celo/utils/lib/address'
 import { registerAs } from '@nestjs/config'
-
-import * as bip32 from 'bip32'
-import * as bip39 from 'bip39'
 
 const fornoURLForEnv = (env) => "https://"+env+"-forno.celo-testnet.org"
 
@@ -43,8 +39,8 @@ const configs: Record<Network, NetworkConfig> = {
     ],
     contracts: {
       MetaTransactionWalletVersions: {
-        "0x88a2b9B8387A1823D821E406b4e951337fa1D46D": "1.0.0",
-        "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.0.0"
+        "0x88a2b9B8387A1823D821E406b4e951337fa1D46D": "1.1.0.0-p1",
+        "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.1.0.0-p2"
       },
       MetaTransactionWalletDeployer: "0xb1Feb55F2BF2eCfb32CF8E09ce397Acf54414A45"
     },
@@ -101,12 +97,17 @@ const configs: Record<Network, NetworkConfig> = {
   },
 
   [Network.rc1]: {
-    relayers: [ ],
+    relayers: [
+      {
+        externalAccount: "0xa7d74cb4fca9458757cfc8b90d9b38a126f68b47",
+        metaTransactionWallet: "2b239845e2b5ae12846e723717e84ebf33af4f88",
+      }
+    ],
     contracts: {
       MetaTransactionWalletVersions: {
-        "0x0": "1.0.0"
+        "0x63004Acf0Ace666651E191ad17BC8D85077A09e6": "1.1.0.0"
       },
-      MetaTransactionWalletDeployer: "0x0",
+      MetaTransactionWalletDeployer: "0x82908811f5fa74cfdA29E325af02fF046B8947aF"
     },
     fornoURL: fornoURLForEnv('rc1'),
     odis: {

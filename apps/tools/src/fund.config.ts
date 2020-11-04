@@ -37,7 +37,8 @@ export const fundConfig = registerAs<() => WalletConfig>('fund', () => {
     return {
       type: WalletType.AzureHSM,
       address: process.env.FUND_ADDRESS,
-      vaultName: process.env.FUND_AZURE_VAULT_NAME
+      vaultName: process.env.AZURE_VAULT_NAME,
+      keyName: process.env.AZURE_KEY_NAME
     }
   }
 

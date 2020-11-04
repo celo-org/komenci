@@ -64,24 +64,25 @@ export class DeployerCommand {
 
     await Promise.all(
       this.networkCfg.relayers.map(async (relayer) => {
+        const relayerEOA = relayer.externalAccount
         const wallet = relayer.metaTransactionWallet
         if (isValidAddress(wallet)) {
-          spin.info(`Relayer:${relayer} has wallet: ${wallet} ✅`)
+          spin.info(`Relayer:${relayerEOA} has wallet: ${wallet} ✅`)
         } else {
-          spin.info(`Relayer:${relayer} needs wallet. Deploying.`)
+          spin.info(`Relayer:${relayerEOA} needs wallet. Deploying.`)
           const receipt = await this.deployer.deploy(
-            relayer.externalAccount,
+            relayerEOA,
             implementationAddress,
-            metaTxWallet.methods.initialize(relayer.externalAccount).encodeABI()
+            metaTxWallet.methods.initialize(relayerEOA).encodeABI()
           // @ts-ignore
           ).sendAndWaitForReceipt({
             from: this.fundCfg.address
           })
 
           if (receipt.status === true) {
-            spin.info(`Relayer:${relayer} wallet deployed! tx:${receipt.transactionHash}`)
+            spin.info(`Relayer:${relayerEOA} wallet deployed! tx:${receipt.transactionHash}`)
           } else {
-            spin.fail(`Relayer:${relayer} could not deploy wallet - tx:${receipt.transactionHash}`)
+            spin.fail(`Relayer:${relayerEOA} could not deploy wallet - tx:${receipt.transactionHash}`)
           }
         }
       })
