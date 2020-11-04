@@ -1,3 +1,4 @@
+import { WalletConfig } from '@app/blockchain/config/wallet.config'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { normalizeAddress, NULL_ADDRESS } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
@@ -5,6 +6,7 @@ import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTr
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { isValidAddress } from '@celo/utils/lib/address'
 import { Inject } from '@nestjs/common'
+import { fundConfig } from 'apps/tools/src/fund.config'
 import commander from 'commander'
 import { Command, Console, createSpinner } from 'nestjs-console'
 import { Logger } from 'nestjs-pino'
@@ -17,6 +19,8 @@ export class DeployerCommand {
   constructor(
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
+    @Inject(fundConfig.KEY)
+    private readonly fundCfg: WalletConfig,
     private readonly deployer: MetaTransactionWalletDeployerWrapper,
     private readonly contractKit: ContractKit,
     private readonly logger: Logger
@@ -71,7 +75,7 @@ export class DeployerCommand {
             metaTxWallet.methods.initialize(relayer.externalAccount).encodeABI()
           // @ts-ignore
           ).sendAndWaitForReceipt({
-            from: this.networkCfg.fund.address
+            from: this.fundCfg.address
           })
 
           if (receipt.status === true) {

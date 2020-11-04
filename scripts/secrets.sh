@@ -4,7 +4,7 @@ echo "Processing encrypted files"
 
 # Set list of secret files to encrypt and decrypt.
 files=(
-  ".env.mnemonic.fund"
+  ".env.mnemonic.deployer"
 )
 
 if [[ -z "$1" ]]; then

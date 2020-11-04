@@ -1,6 +1,8 @@
+import { WalletConfig } from '@app/blockchain/config/wallet.config'
 import { DisbursementSummary, FundingService } from '@app/blockchain/funding.service'
-import { networkConfig, NetworkConfig, RelayerConfig } from '@app/utils/config/network.config'
+import { networkConfig, NetworkConfig, RelayerAccounts } from '@app/utils/config/network.config'
 import { Inject } from '@nestjs/common'
+import { fundConfig } from 'apps/tools/src/fund.config'
 import BigNumber from 'bignumber.js'
 import commander from 'commander'
 import { Command, Console, createSpinner } from 'nestjs-console'
@@ -15,6 +17,8 @@ export class FundCommand {
   constructor(
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
+    @Inject(fundConfig.KEY)
+    private readonly fundCfg: WalletConfig,
     private readonly fundingSvc: FundingService,
     private readonly logger: Logger
   ) {}
@@ -49,10 +53,10 @@ export class FundCommand {
   async disburse(cmd: commander.Command): Promise<void> {
     const opts = cmd.opts()
     const spin = createSpinner()
-    const fund = this.networkCfg.fund.address
+    const fund = this.fundCfg.address
     spin.start(`Disbursing funds`)
 
-    let relayers: RelayerConfig[] = []
+    let relayers: RelayerAccounts[] = []
     if (opts.relayer.length > 0) {
       opts.relayer.forEach(r => {
         const relayer = this.networkCfg.relayers.find(pr => pr.externalAccount === r)
@@ -135,7 +139,7 @@ export class FundCommand {
   })
   async getFundBalance(cmd: commander.Command): Promise<void> {
     const spin = createSpinner()
-    const wallet = this.networkCfg.fund.address
+    const wallet = this.fundCfg.address
     this.logger.log({fund: wallet})
     spin.start('Getting fund balances')
     const balances = await this.fundingSvc.getFundBalance(wallet)

@@ -1,18 +1,17 @@
-const path = require('path');
-const config = require('dotenv').config
 const Web3 = require('web3')
 
 const LocalWallet = require('./libs/celo/packages/contractkit/lib/wallets/local-wallet').LocalWallet
 const CeloProvider = require('./libs/celo/packages/contractkit/lib/providers/celo-provider').CeloProvider
 const generateUtils = require('./libs/celo/packages/celotool/lib/lib/generate_utils')
-const networkConfig = require('./network-config')
+const mnemonics = require('./truffle-deployer-config')
 
 const generatePrivateKey = generateUtils.generatePrivateKeyWithDerivations
+const fornoURLForEnv = (env) => "https://"+env+"-forno.celo-testnet.org"
 
 const walletCache = {}
 const walletForEnv = (env) => {
   if (walletCache[env] == undefined) {
-    const mnemonic = networkConfig[env].fund.mnemonic
+    const mnemonic = mnemonics[env]
     const wallet = new LocalWallet();
     const privateKey = generatePrivateKey(mnemonic, [0, 0])
     wallet.addAccount(privateKey);
@@ -25,7 +24,7 @@ const walletForEnv = (env) => {
 const providerForEnv = (env) => {
   const wallet = walletForEnv(env)
   const httpProvider = new Web3.providers.HttpProvider(
-    networkConfig[env].fornoURL
+    fornoURLForEnv(env),
   );
   return new CeloProvider(httpProvider, wallet)
 }

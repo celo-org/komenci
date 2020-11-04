@@ -1,4 +1,4 @@
-import { RelayerConfig } from '@app/utils/config/network.config'
+import { RelayerAccounts } from '@app/utils/config/network.config'
 import { Address, ContractKit } from '@celo/contractkit'
 import { TransactionResult } from '@celo/contractkit/lib/utils/tx-result'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
@@ -27,7 +27,7 @@ export class FundingService {
     private readonly contractKit: ContractKit,
   ) {}
 
-  public async getRelayerBalances(relayers: RelayerConfig[]): Promise<BalanceSummary> {
+  public async getRelayerBalances(relayers: RelayerAccounts[]): Promise<BalanceSummary> {
     const cUSD = await this.contractKit.contracts.getStableToken()
     const celo = await this.contractKit.contracts.getGoldToken()
 
@@ -52,7 +52,7 @@ export class FundingService {
 
   public async disburseFunds(
     fund: Address,
-    relayers: RelayerConfig[],
+    relayers: RelayerAccounts[],
     cUSDAmount: number,
     celoAmount: number
   ): Promise<DisbursementSummary> {
