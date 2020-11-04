@@ -23,7 +23,7 @@ jobs:
             -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
             -t celotestnet.azurecr.io/komenci/komenci:latest \
             --cache-from celotestnet.azurecr.io/komenci/komenci:latest \
-            --build-arg BUILDKIT_INLINE_CACHE=1
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
             .
 
         docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
