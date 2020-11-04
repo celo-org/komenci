@@ -8,8 +8,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
     - uses: Azure/docker-login@v1
       with:
         login-server: celotestnet.azurecr.io
@@ -17,7 +19,12 @@ jobs:
         password: ${{ secrets.ACR_PASSWORD }}
     
     - run: |
-        docker build -t celotestnet.azurecr.io/komenci/onboarding:${{ github.sha }} --build-arg SERVICE=onboarding . 
-        docker push celotestnet.azurecr.io/komenci/onboarding:${{ github.sha }}
-        docker build -t celotestnet.azurecr.io/komenci/relayer:${{ github.sha }} --build-arg SERVICE=relayer . 
-        docker push celotestnet.azurecr.io/komenci/relayer:${{ github.sha }}
+        docker build \
+            -t celotestnet.azurecr.io/komenci/onboarding:${{ github.sha }} \
+            -t celotestnet.azurecr.io/komenci/onboarding:latest \
+            --cache-from celotestnet.azurecr.io/komenci/onboarding:latest \
+            .
+        docker push \
+            celotestnet.azurecr.io/komenci/onboarding:${{ github.sha }} \
+            celotestnet.azurecr.io/komenci/onboarding:latest
+
