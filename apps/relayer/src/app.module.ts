@@ -16,32 +16,22 @@ import { TransactionService } from './transaction/transaction.service'
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-<<<<<<< HEAD
-      load: [appConfig, nodeConfig, walletConfig],
-      envFilePath: ['apps/relayer/.env.local', 'apps/relayer/.env']
-=======
       load: [appConfig, networkConfig, walletConfig],
       envFilePath: [
         'apps/relayer/.env.local',
         'apps/relayer/.env',
       ]
->>>>>>> master
     }),
     BlockchainModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const networkCfg = config.get<NetworkConfig>('network')
         return {
-<<<<<<< HEAD
-          node: config.get<NodeConfig>('node'),
-          wallet: config.get<WalletConfig>('wallet')
-=======
           node: {
             providerType: NodeProviderType.HTTP,
             url: networkCfg.fornoURL
           },
           wallet: config.get<WalletConfig>('wallet'),
->>>>>>> master
         }
       }
     }),
@@ -73,14 +63,11 @@ import { TransactionService } from './transaction/transaction.service'
     HttpModule
   ],
   controllers: [AppController],
-<<<<<<< HEAD
-  providers: [OdisService, TransactionService, KomenciLoggerService]
-=======
   providers: [
     OdisService,
     TransactionService,
     metaTransactionWalletProvider,
+    KomenciLoggerService
   ]
->>>>>>> master
 })
 export class AppModule {}
