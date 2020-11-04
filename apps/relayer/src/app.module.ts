@@ -4,11 +4,11 @@ import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet.contract'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { appConfig, AppConfig } from './config/app.config'
+import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet.contract'
 import { TransactionService } from './transaction/transaction.service'
 
 @Module({
