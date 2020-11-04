@@ -3,11 +3,9 @@ import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlin
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
-import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import { AuthSigner, ServiceContext } from '@celo/contractkit/lib/identity/odis/query'
 import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { Inject, Injectable } from '@nestjs/common'
-import { AppConfig, appConfig } from 'apps/relayer/src/config/app.config'
 
 export enum OdisQueryErrorTypes {
   OutOfQuota = "OutOfQuota",
@@ -27,10 +25,6 @@ export class OdisUnknownError extends RootError<OdisQueryErrorTypes.Unknown> {
 }
 
 export type OdisQueryError = OdisOutOfQuotaError | OdisUnknownError
-
-export type GetPhoneNumberIdResponse = {
-  identifier: string
-}
 
 @Injectable()
 export class OdisService {
