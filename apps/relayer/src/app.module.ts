@@ -1,19 +1,21 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
-import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
+import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
 import { appConfig, AppConfig } from './config/app.config'
+import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet.contract'
 import { TransactionService } from './transaction/transaction.service'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, nodeConfig, walletConfig],
+      load: [appConfig, networkConfig, walletConfig],
       envFilePath: [
         'apps/relayer/.env.local',
         'apps/relayer/.env',
@@ -22,8 +24,12 @@ import { TransactionService } from './transaction/transaction.service'
     BlockchainModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const networkCfg = config.get<NetworkConfig>('network')
         return {
-          node: config.get<NodeConfig>('node'),
+          node: {
+            providerType: NodeProviderType.HTTP,
+            url: networkCfg.fornoURL
+          },
           wallet: config.get<WalletConfig>('wallet'),
         }
       }
@@ -31,11 +37,11 @@ import { TransactionService } from './transaction/transaction.service'
     ContractsModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const cfg = config.get<AppConfig>('app')
         const wallet = config.get<WalletConfig>('wallet')
+        const network = config.get<NetworkConfig>('network')
 
         return {
-          deployerAddress: cfg.mtwDeployerAddress,
+          deployerAddress: network.contracts.MetaTransactionWalletDeployer,
           walletAddress: wallet.address
         }
       },
@@ -58,7 +64,8 @@ import { TransactionService } from './transaction/transaction.service'
   controllers: [AppController],
   providers: [
     OdisService,
-    TransactionService
+    TransactionService,
+    metaTransactionWalletProvider,
   ]
 })
 export class AppModule {}

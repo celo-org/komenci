@@ -40,3 +40,9 @@ apps/relayer/.env.local
 apps/relayer/.env.test
 apps/relayer/.env
 apps/onboarding/.env
+apps/tools/.env.local
+apps/tools/.env.test
+apps/tools/.env
+
+# Encrypted file
+.env.mnemonic.deployer

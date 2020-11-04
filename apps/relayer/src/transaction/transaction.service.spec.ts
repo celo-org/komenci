@@ -30,11 +30,6 @@ describe('TransactionService', () => {
     testWalletConfig: Partial<WalletConfig>
   ): Promise<TransactionService>  => {
     const appConfigValue: Partial<AppConfig> = {
-      networkConfig: {
-        fullNodeUrl: '',
-        odisPubKey: '',
-        odisUrl: '',
-      },
       ...testAppConfig
     }
 

@@ -115,3 +115,38 @@ relayer_proxy_1  | [WARNING] 245/063307 (6) : Server relayer_pool/relayer1 is UP
 ```
 
 After that navigate to [localhost:3000/distributedBlindedPepper](http://localhost:3000/distributedBlindedPepper) and you should see the payload composed in `apps/relayer/src/relayer.service.ts` and we can see how relayers are rotated.
+
+## Relayer funding (and the `tools` app)
+
+For the first release Relayer funding happens manually by using the `tools` app which is a Commander CLI.
+In order to get started first run:
+
+```
+nest build tools
+```
+
+Then we can run the tools like so:
+```
+env NETWORK=alfajores yarn tools fund getRelayerBalance
+```
+
+> This command will resolve all relayers and wallets and query for their celo and cUSD balance respectively.
+
+The tools cli depends on a network config that needs to be populated with the list of relayers.
+There is no relayer discovery system in this release. Therefore we will manually add all the HSM addresses
+in the config.
+
+### Fund
+
+The fund tools relly on access to a wallet.
+For alfajores this can be a local wallet (private key), but in other envs this will use an HSM.
+
+> TODO: Figure out if there's anything special that needs to happen to connect to Azure and access the HSM.
+
+### Available commands:
+
+- `fund getFundBalance` - will query the fund's balance
+- `fund getRelayerBalance` - will resolve all MTW associated with relayers and query for all balances
+- `fund disburse` - will send cUSD to each relayer MTW and celo to each relayer, the amounts can be configured as flags.
+
+

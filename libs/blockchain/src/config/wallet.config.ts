@@ -17,6 +17,7 @@ export interface LocalWalletConfig extends BaseWalletConfig {
 export interface AzureHSMWalletConfig extends BaseWalletConfig {
   type: WalletType.AzureHSM,
   vaultName: string,
+  keyName: string
 }
 
 export type WalletConfig = LocalWalletConfig | AzureHSMWalletConfig
@@ -31,7 +32,8 @@ export const walletConfig = registerAs('wallet', (): WalletConfig => {
     return {
       ...baseConfig,
       type,
-      vaultName: process.env.WALLET_AZURE_VAULT_NAME,
+      vaultName: process.env.AZURE_VAULT_NAME,
+      keyName: process.env.AZURE_KEY_NAME
     }
   } else if (type === WalletType.Local) {
     return {
