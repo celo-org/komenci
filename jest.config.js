@@ -15,6 +15,7 @@ module.exports = {
   roots: [
     "<rootDir>/apps/",
     "<rootDir>/libs/blockchain",
+    "<rootDir>/libs/celo/packages/utils",
   ],
   collectCoverageFrom: [
     "**/*.{js,jsx}",
@@ -31,5 +32,7 @@ module.exports = {
     ),
     "apps/onboarding/(.*)": "<rootDir>/apps/onboarding/$1",
     "apps/relayer/(.*)": "<rootDir>/apps/relayer/$1",
-  }
+  },
+  globalSetup: '<rootDir>/apps/relayer/test/utils/setup.global.ts',
+  globalTeardown: '<rootDir>/apps/relayer/test/utils/teardown.global.ts',
 }

@@ -84,6 +84,10 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     return this.submitTransaction(toRawTransaction(txo))
   }
 
+  async getTransactionCount(address: string): Promise<number> {
+    return this.kit.web3.eth.getTransactionCount(address)
+  }
+
   private async checkTransactions() {
     const txs = await Promise.all(
       [...this.watchedTransactions].map(txHash => this.kit.web3.eth.getTransaction(txHash))
