@@ -347,16 +347,16 @@ describe('AppController (e2e)', () => {
           expect(resp.statusCode).toBe(400)
         })
 
-        it('Returns 400 with invalid phone number', async () => {
+        it('Returns 400 with invalid blindedPhoneNumber', async () => {
           return request(app.getHttpServer())
             .post('/v1/distributedBlindedPepper')
             .set('Authorization', `Bearer ${token}`)
             .send({
-              e164Number: 'invalid'
+              blindedPhoneNumber: 'invalid base64'
             })
             .expect(400)
             .then(res => {
-              assert(res.body.message, ['e164Number must be a valid phone number'])
+              assert(res.body.message, ['blindedPhoneNumber must be a valid base64 string'])
             })
         })
       })
@@ -367,11 +367,11 @@ describe('AppController (e2e)', () => {
             .post('/v1/distributedBlindedPepper')
             .set('Authorization', `Bearer ${token}`)
             .send({
-              e164Number: '+34600000000'
+              blindedPhoneNumber: Buffer.from('+34600000000').toString('base64')
             })
             .expect(201)
             .then(res => {
-              assert(res.body.message, ['e164Number must be a valid phone number'])
+              assert(res.body.message, ['blindedPhoneNumber must be a valid base64 string'])
             })
         })
 
@@ -382,7 +382,7 @@ describe('AppController (e2e)', () => {
               .post('/v1/distributedBlindedPepper')
               .set('Authorization', `Bearer ${uniqueToken}`)
               .send({
-                e164Number: '+34600000000'
+                blindedPhoneNumber: Buffer.from('+34600000000').toString('base64')
               })
 
           await doRequest().expect(201)
