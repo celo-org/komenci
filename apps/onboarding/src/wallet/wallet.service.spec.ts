@@ -10,6 +10,7 @@ import { buildMockWeb3Provider } from '@app/onboarding/utils/testing/mock-web3-p
 import { MetaTxValidationErrorTypes, WalletErrorType } from '@app/onboarding/wallet/errors'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { normalizeAddress } from '@celo/base'
+import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
@@ -23,7 +24,7 @@ jest.mock('@app/onboarding/session/session.service')
 Web3.providers.HttpProvider = buildMockWeb3Provider(() => null)
 
 describe("WalletService", () => {
-  const buildModule = async (cfg: Partial<AppConfig>) => {
+  const buildModule = async (appCfg: Partial<AppConfig>, networkCfg: Partial<NetworkConfig>) => {
     return Test.createTestingModule({
       imports: [
         LoggerModule.forRoot(),
@@ -52,7 +53,11 @@ describe("WalletService", () => {
         SessionService,
         {
           provide: appConfig.KEY,
-          useValue: cfg
+          useValue: appCfg
+        },
+        {
+          provide: networkConfig.KEY,
+          useValue: networkCfg
         },
       ]
     }).compile()
@@ -61,7 +66,7 @@ describe("WalletService", () => {
   describe('#extractMetaTxData', () => {
     describe('with a random transaction', () => {
       it('returns a DecodeError', async () => {
-        const module = await buildModule({})
+        const module = await buildModule({}, {})
         const walletService = module.get(WalletService)
         const contractKit = module.get(ContractKit)
 
@@ -78,7 +83,7 @@ describe("WalletService", () => {
       })
 
       it('returns an InvalidRootMethod', async () => {
-        const module = await buildModule({})
+        const module = await buildModule({}, {})
         const walletService = module.get(WalletService)
         const contractKit = module.get(ContractKit)
 
@@ -128,7 +133,7 @@ describe("WalletService", () => {
     describe('with a meta transaction', () => {
       describe('pointing to an invalid destination', () => {
         it('returns an InvalidDestination error', async () => {
-          const module = await buildModule({})
+          const module = await buildModule({}, {})
           const walletService = module.get(WalletService)
           const contractKit = module.get(ContractKit)
 
@@ -166,7 +171,7 @@ describe("WalletService", () => {
 
       describe('pointing to an invalid method', () => {
         it('returns an InvalidChildMethod error', async () => {
-          const module = await buildModule({})
+          const module = await buildModule({}, {})
           const walletService = module.get(WalletService)
           const contractKit = module.get(ContractKit)
 
@@ -203,7 +208,7 @@ describe("WalletService", () => {
 
       describe('which is allowed', () => {
         it('returns ok!', async () => {
-          const module = await buildModule({})
+          const module = await buildModule({}, {})
           const walletService = module.get(WalletService)
           const contractKit = module.get(ContractKit)
 
@@ -248,10 +253,14 @@ describe("WalletService", () => {
     let module: TestingModule
     beforeEach(async () => {
       module = await buildModule({
-        mtwImplementations: {
-          [validImplementation]: "1.1.0"
-        },
         transactionTimeoutMs: 1000
+      }, {
+        contracts: {
+          MetaTransactionWalletVersions: {
+            [validImplementation]: "1.1.0.0"
+          },
+          MetaTransactionWalletDeployer: "0x0"
+        }
       })
     })
 
@@ -410,10 +419,14 @@ describe("WalletService", () => {
     let module: TestingModule
     beforeEach(async () => {
       module = await buildModule({
-        mtwImplementations: {
-          [validImplementation]: "1.1.0"
-        },
         transactionTimeoutMs: 1000
+      }, {
+        contracts: {
+          MetaTransactionWalletVersions: {
+            [validImplementation]: "1.1.0.0"
+          },
+          MetaTransactionWalletDeployer: "0x0"
+        }
       })
     })
 

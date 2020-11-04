@@ -1,7 +1,6 @@
 import { AsyncOptions } from '@app/blockchain/blockchain.module'
 import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
 import { ContractKit } from '@celo/contractkit'
-import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 
 import { DynamicModule, Module } from '@nestjs/common'
@@ -11,7 +10,6 @@ export const CONTRACTS_MODULE_OPTIONS = 'CONTRACTS_MODULE_OPTIONS'
 
 export interface ContractsOptions {
   deployerAddress: string
-  walletAddress?: string
 }
 
 const metaTransactionWalletDeployer = {
@@ -26,40 +24,13 @@ const metaTransactionWalletDeployer = {
     )
 
     logger.log({
-      message: 'Initialized MetaTxWalletDeployer',
-      address: options.deployerAddress
+      message: 'Initialized MetaTransactionWalletDeployer',
+      address: options.deployerAddress,
     })
 
     return deployer
   },
   inject: [CONTRACTS_MODULE_OPTIONS, ContractKit, KomenciLoggerService]
-}
-
-const metaTransactionWallet = {
-  provide: MetaTransactionWalletWrapper,
-  useFactory: async (
-    options: ContractsOptions,
-    deployer: MetaTransactionWalletDeployerWrapper,
-    contractKit: ContractKit,
-    logger: Logger
-  ) => {
-    if (options.walletAddress) {
-      const metaTxWalletAddress = await deployer.getWallet(
-        options.walletAddress
-      )
-      logger.log({
-        message: 'Found Relayer MetaTxWallet',
-        address: metaTxWalletAddress
-      })
-      return contractKit.contracts.getMetaTransactionWallet(metaTxWalletAddress)
-    }
-  },
-  inject: [
-    CONTRACTS_MODULE_OPTIONS,
-    MetaTransactionWalletDeployerWrapper,
-    ContractKit,
-    KomenciLoggerService
-  ]
 }
 
 @Module({})
@@ -77,11 +48,9 @@ export class ContractsModule {
           useFactory: options.useFactory,
           inject: options.inject || []
         },
-        metaTransactionWallet,
-        metaTransactionWalletDeployer
+        metaTransactionWalletDeployer,
       ],
       exports: [
-        MetaTransactionWalletWrapper,
         MetaTransactionWalletDeployerWrapper
       ]
     }

@@ -47,7 +47,7 @@ export class AppController {
   @MessagePattern({ cmd: 'getPhoneNumberIdentifier' })
   async getPhoneNumberIdentifier(
     @Body() input: DistributedBlindedPepperDto,
-  ): Promise<RelayerResponse<PhoneNumberHashDetails>> {
+  ): Promise<RelayerResponse<string>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
         this.odisService.getPhoneNumberIdentifier,

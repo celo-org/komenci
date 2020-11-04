@@ -1,9 +1,11 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
-import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
+import { nodeConfig, NodeConfig, NodeProviderType } from '@app/blockchain/config/node.config'
+import { WalletConfig } from '@app/blockchain/config/wallet.config'
 import { KomenciLoggerService } from '@app/komenci-logger'
 import { ApiErrorFilter } from '@app/onboarding/errors/api-error.filter'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
+import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { HttpModule, Logger, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER } from '@nestjs/core'
@@ -31,7 +33,7 @@ import { SessionModule } from './session/session.module'
       isGlobal: true,
       load: [
         relayerConfig, appConfig, thirdPartyConfig,
-        databaseConfig, rulesConfig, nodeConfig, quotaConfig,
+        databaseConfig, rulesConfig, networkConfig, quotaConfig,
       ],
       envFilePath: ['apps/onboarding/.env.local', 'apps/onboarding/.env']
     }),
@@ -71,18 +73,22 @@ import { SessionModule } from './session/session.module'
     BlockchainModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const networkCfg = config.get<NetworkConfig>('network')
         return {
-          node: config.get<NodeConfig>('node')
+          node: {
+            providerType: NodeProviderType.HTTP,
+            url: networkCfg.fornoURL
+          }
         }
       }
     }),
     ContractsModule.forRootAsync({
       inject: [ConfigService, KomenciLoggerService],
       useFactory: (config: ConfigService) => {
-        const cfg = config.get<AppConfig>('app')
+        const network = config.get<NetworkConfig>('network')
+
         return {
-          deployerAddress: cfg.mtwDeployerAddress
-        }
+          deployerAddress: network.contracts.MetaTransactionWalletDeployer,
       }
     })
   ],

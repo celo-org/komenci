@@ -4,6 +4,7 @@ import { quotaConfig } from '@app/onboarding/config/quota.config'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
+import { networkConfig } from '@app/utils/config/network.config'
 import { ContractKit } from '@celo/contractkit'
 import { JwtModule, JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -54,6 +55,10 @@ describe('AppController', () => {
         {
           provide: quotaConfig.KEY,
           useValue: quotaConfig.call(null)
+        },
+        {
+          provide: networkConfig.KEY,
+          useValue: {}
         }
       ]
     }).compile()

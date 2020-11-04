@@ -18,6 +18,7 @@ import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
 import { normalizeAddress } from '@celo/base'
+import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import {
@@ -43,8 +44,7 @@ import { StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
 
 interface GetPhoneNumberIdResponse {
-  identifier: string
-  pepper: string
+  combinedSignature: string
 }
 
 interface DeployWalletInProgress {
@@ -78,10 +78,10 @@ export class AppController {
     private readonly sessionService: SessionService,
     private readonly walletService: WalletService,
     private readonly contractKit: ContractKit,
-    @Inject(appConfig.KEY)
-    private readonly cfg: AppConfig,
+    @Inject(networkConfig.KEY)
+    private readonly networkCfg: NetworkConfig,
     private readonly logger: KomenciLoggerService
-  ) {}
+) {}
 
   @Get('health')
   health(@Req() req): { status: string } {
@@ -163,7 +163,7 @@ export class AppController {
       return {
         status: 'in-progress',
         txHash: deployResp.result,
-        deployerAddress: this.cfg.mtwDeployerAddress
+        deployerAddress: this.networkCfg.contracts.MetaTransactionWalletDeployer
       }
     } else {
       throw deployResp.error
@@ -196,8 +196,7 @@ export class AppController {
     )
 
     return {
-      identifier: resp.payload.phoneHash,
-      pepper: resp.payload.pepper
+      combinedSignature: resp.payload
     }
   }
 

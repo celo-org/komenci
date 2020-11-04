@@ -8,7 +8,7 @@ describe('AppController (e2e)', () => {
 
     // const moduleFixture: TestingModule = await Test.createTestingModule({
     //   imports: [
-    //     AppModule,
+    //     ToolsModule,
     //     ClientsModule.register([
     //       { name: 'RELAYER_SERVICE', transport: Transport.TCP },
     //     ]),
