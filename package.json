@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",
+    "@azure/identity": "^1.1.0",
     "@nestjs/common": "^7.0.0",
     "@nestjs/config": "^0.5.0",
     "@nestjs/core": "^7.0.0",

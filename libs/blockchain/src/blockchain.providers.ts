@@ -1,6 +1,7 @@
 import { BlockchainOptions } from '@app/blockchain/blockchain.module'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { WalletType } from '@app/blockchain/config/wallet.config'
+import { DefaultAzureCredential } from '@azure/identity'
 import { ContractKit } from '@celo/contractkit'
 import { AzureKeyVaultSigningAlgorithm } from '@celo/contractkit/lib/utils/azure-key-vault-client'
 import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet'
@@ -39,6 +40,9 @@ export const walletDef: FactoryProvider<Promise<ReadOnlyWallet>> = {
     }
     switch (options.wallet.type) {
       case WalletType.AzureHSM:
+        const credentials = new DefaultAzureCredential()
+        console.log(credentials)
+
         const azureWallet = new AzureHSMWallet(
           options.wallet.vaultName,
           AzureKeyVaultSigningAlgorithm.ES256K
