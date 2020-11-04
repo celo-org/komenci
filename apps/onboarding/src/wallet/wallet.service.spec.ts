@@ -102,7 +102,7 @@ describe("WalletService", () => {
     describe('with a meta transaction', () => {
       describe('which is correct', () => {
         it('returns the methodId and destination!', async () => {
-          const module = await buildModule({})
+          const module = await buildModule({}, {})
           const walletService = module.get(WalletService)
           const contractKit = module.get(ContractKit)
 

@@ -83,14 +83,15 @@ import { SessionModule } from './session/session.module'
       }
     }),
     ContractsModule.forRootAsync({
-      inject: [ConfigService, KomenciLoggerService],
+      inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const network = config.get<NetworkConfig>('network')
 
         return {
           deployerAddress: network.contracts.MetaTransactionWalletDeployer,
-      }
-    })
+        }
+      },
+    }),
   ],
   providers: [
     SubsidyService,

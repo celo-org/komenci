@@ -186,7 +186,7 @@ export class AppController {
     this.logger.logEvent<PepperRequested>(KomenciEventType.PepperRequested, {
       sessionId: session.id,
       externalAccount: session.externalAccount,
-      identifier: resp.payload.phoneHash,
+      identifier: resp.payload,
       relayerAddress: resp.relayerAddress
     })
 
