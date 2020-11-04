@@ -305,7 +305,7 @@ describe('AppController (e2e)', () => {
     const impl = Web3.utils.randomHex(20)
 
     beforeEach(async () => {
-      token = await authService.startSession(eoa)
+      token = (await authService.startSession(eoa)).token
     })
 
     describe('with an invalid implementation', () => {
@@ -340,7 +340,7 @@ describe('AppController (e2e)', () => {
 
     describe('with a token', () => {
       beforeEach(async () => {
-        token = await authService.startSession(eoa)
+        token = (await authService.startSession(eoa)).token
       })
 
       describe('with an invalid payload', () => {
@@ -380,11 +380,11 @@ describe('AppController (e2e)', () => {
         })
 
         it('Returns 429 when quota is exceeded', async () => {
-          const uniqueToken = await authService.startSession(eoa)
+          const response = await authService.startSession(eoa)
           const doRequest = () => 
             request(app.getHttpServer())
               .post('/v1/distributedBlindedPepper')
-              .set('Authorization', `Bearer ${uniqueToken}`)
+              .set('Authorization', `Bearer ${response.token}`)
               .send({
                 e164Number: '+34600000000'
               })

@@ -42,10 +42,10 @@ describe('AuthService', () => {
       const sessionId = 'test-session-id'
       const session = Session.of({id: sessionId})
       mockSessionService.findOrCreateForAccount.mockResolvedValue(session)
-      const token = await service.startSession("0x1234")
+      const response = await service.startSession("0x1234")
 
-      expect(jwtService.verify(token)).toBeTruthy()
-      expect(jwtService.decode(token)).toMatchObject({ sessionId })
+      expect(jwtService.verify(response.token)).toBeTruthy()
+      expect(jwtService.decode(response.token)).toMatchObject({ sessionId })
     })
   })
 

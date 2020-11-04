@@ -1,8 +1,8 @@
-import { KomenciLoggerService } from '@app/komenci-logger'
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { TcpOptions, Transport } from '@nestjs/microservices'
+import { Logger } from 'nestjs-pino'
 import { AppModule } from './app.module'
 import { AppConfig } from './config/app.config'
 
@@ -17,7 +17,7 @@ async function bootstrap() {
     }
   })
 
-  const logger = app.get(KomenciLoggerService)
+  const logger = app.get(Logger)
   app.useLogger(logger)
   await app.init()
 

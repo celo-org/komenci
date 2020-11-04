@@ -4,7 +4,8 @@ import { KomenciLoggerService } from '@app/komenci-logger'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { Test } from '@nestjs/testing'
-import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config' 
+import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
+import BigNumber from 'bignumber.js'
 import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
@@ -93,6 +94,15 @@ describe('TransactionService', () => {
       transactionHash: null,
       transactionIndex: null,
       blockHash: null,
+    }
+  }
+
+  const relayerBalanceFixture = () => {
+    return {
+      CELO: new BigNumber(10),
+      cUSD: new BigNumber(100),
+      lockedCELO: new BigNumber(0),
+      pending: new BigNumber(0),
     }
   }
 
@@ -236,9 +246,14 @@ describe('TransactionService', () => {
         const txReceiptPromise = Promise.resolve(txReceiptFixture())
         getTransactionReceipt.mockReturnValue(txReceiptPromise)
 
+        const getTotalBalance = jest.spyOn(contractKit, 'getTotalBalance')
+        const relayerBalancePromise = Promise.resolve(relayerBalanceFixture())
+        getTotalBalance.mockReturnValue(relayerBalancePromise)
+
         jest.advanceTimersToNextTimer(2)
         await completedTxPromise
         await txReceiptPromise
+        await relayerBalancePromise
         await setTimeout(() => {
           expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         })
@@ -266,6 +281,8 @@ describe('TransactionService', () => {
         // @ts-ignore
         const checkTransactions = jest.spyOn(service, 'checkTransactions')
         // @ts-ignore
+        const finalizeTransaction = jest.spyOn(service, 'finalizeTransaction')
+        // @ts-ignore
         const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(true)
 
         const rawTx = {
@@ -289,6 +306,7 @@ describe('TransactionService', () => {
         jest.advanceTimersToNextTimer(1)
 
         expect(checkTransactions).toHaveBeenCalled()
+        expect(finalizeTransaction).not.toHaveBeenCalled()
         await txPromise
         await resultPromise
         await result.getHash()

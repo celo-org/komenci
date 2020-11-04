@@ -1,4 +1,4 @@
-import { KomenciLoggerService } from '@app/komenci-logger'
+import { KomenciEventType, KomenciLoggerService, RuleVerified } from '@app/komenci-logger'
 import { SignatureRule } from '@app/onboarding/gateway/rules/signature.rule'
 import { RootError } from '@celo/base/lib/result'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
@@ -66,7 +66,8 @@ export class GatewayService implements OnModuleInit {
 
     let hasFailingResult = false
     results.forEach((result, idx) => {
-      this.logger.logRuleChecked({
+      this.logger.logEvent<RuleVerified>(KomenciEventType.RuleVerified, {
+        externalAccount: startSessionDto.externalAccount,
         ruleId: enabledRules[idx].getID(),
         result
       })

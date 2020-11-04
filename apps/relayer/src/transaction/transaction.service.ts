@@ -6,10 +6,9 @@ import {
   WalletConfig,
   walletConfig
 } from '@app/blockchain/config/wallet.config'
-import { KomenciLoggerService } from '@app/komenci-logger'
+import { KomenciEventType, KomenciLoggerService, SendTransactionFailure, TxEvent } from '@app/komenci-logger'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
-import { TransactionResult } from '@celo/contractkit/lib/utils/tx-result'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import {
   Inject,
@@ -77,9 +76,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         return Ok(txHash)
       } catch (e) {
         if (tries === 3) {
-          this.logger.error({
-            message: 'Failed to send transaction',
-            tx
+          this.logger.logEvent<SendTransactionFailure>(KomenciEventType.SendTransactionFailure, {
+            destination: tx.destination
           })
           return Err(e)
         }
@@ -93,6 +91,23 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     return this.submitTransaction(toRawTransaction(txo))
   }
 
+  private async finalizeTransaction(tx: Transaction) {
+    this.unwatchTransaction(tx.hash)
+    const txReceipt = await this.kit.web3.eth.getTransactionReceipt(tx.hash)
+    const relayerBalance = await this.kit.getTotalBalance(tx.from)
+    const gasPrice = parseInt(tx.gasPrice, 10)
+    this.logger.logEvent<TxEvent>(KomenciEventType.TxEvent, {
+      txHash: tx.hash,
+      gasUsed: txReceipt.gasUsed,
+      gasPrice: gasPrice,
+      gasCost: gasPrice * txReceipt.gasUsed,
+      relayerAddress: tx.from,
+      destination: tx.to,
+      relayerCeloBalance: relayerBalance.CELO.toString(),
+      relayerCUSDBalance: relayerBalance.cUSD.toString()
+    })
+  }
+
   private async checkTransactions() {
     const txs = await Promise.all(
       [...this.watchedTransactions].map(txHash =>
@@ -102,25 +117,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
     const completed = txs.filter(tx => tx.blockHash !== null)
 
-    for (const tx of completed) {
-      const txReceipt = await this.kit.web3.eth.getTransactionReceipt(tx.hash)
-
-      const gasPrice = parseInt(tx.gasPrice, 10)
-      this.logger.logCompletedTransaction({
-        txHash: tx.hash,
-        gasUsed: txReceipt.gasUsed,
-        gasPrice: gasPrice,
-        gasCost: gasPrice * txReceipt.gasUsed,
-        relayerAddress: tx.from,
-        destination: tx.to
-      })
-      this.unwatchTransaction(tx.hash)
-    }
 
     const expired = txs.filter(
       tx => tx.blockHash == null && this.isExpired(tx.hash)
     )
     await Promise.all(expired.map(tx => this.deadLetter(tx)))
+    await Promise.all(completed.map(tx => this.finalizeTransaction(tx)))
   }
 
   /**

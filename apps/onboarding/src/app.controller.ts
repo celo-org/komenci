@@ -1,4 +1,12 @@
-import { KomenciLoggerService } from '@app/komenci-logger'
+import {
+  AttestationsRequested,
+  KomenciEventType,
+  KomenciLoggerService,
+  MetaTransactionSubmitted,
+  PepperRequested,
+  SessionStartEvent,
+  SessionStartFailureEvent
+} from '@app/komenci-logger'
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
@@ -91,16 +99,16 @@ export class AppController {
     @Req() req
   ): Promise<{ token: string }> {
     if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
-      const token = await this.authService.startSession(
+      const response = await this.authService.startSession(
         startSessionDto.externalAccount
       )
-      this.logger.logSuccessfulSessionStart({
-        sessionId: token,
+      this.logger.logEvent<SessionStartEvent>(KomenciEventType.SessionStartEvent, {
+        sessionId: response.sessionId,
         externalAccount: startSessionDto.externalAccount
       })
-      return { token }
+      return { token: response.token }
     } else {
-      this.logger.logFailedSessionStart({
+      this.logger.logEvent<SessionStartFailureEvent>(KomenciEventType.SessionStartFailureEvent, {
         externalAccount: startSessionDto.externalAccount
       })
       throw new UnauthorizedException()
@@ -175,7 +183,9 @@ export class AppController {
     const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
     )
-    this.logger.logBlindedPepperRequest({
+    this.logger.logEvent<PepperRequested>(KomenciEventType.PepperRequested, {
+      sessionId: session.id,
+      externalAccount: session.externalAccount,
       identifier: resp.payload.phoneHash,
       relayerAddress: resp.relayerAddress
     })
@@ -215,7 +225,7 @@ export class AppController {
     const txSubmit = await this.relayerProxyService.submitTransactionBatch({
       transactions
     })
-    this.logger.logSubsidizedAttestations({
+    this.logger.logEvent<AttestationsRequested>(KomenciEventType.AttestationsRequested, {
       sessionId: session.id,
       externalAccount: session.externalAccount,
       txHash: txSubmit.payload,
@@ -267,10 +277,10 @@ export class AppController {
     const resp = await this.relayerProxyService.submitTransaction({
       transaction: metaTx
     })
-    this.logger.logSubmittedMetaTransaction({
-      txHash: resp.payload,
+    this.logger.logEvent<MetaTransactionSubmitted>(KomenciEventType.MetaTransactionSubmitted, {
       sessionId: session.id,
       externalAccount: session.externalAccount,
+      txHash: resp.payload,
       destination: normalizeAddress(metaTx.destination),
       metaTxMethodID: metaTaxMetadata.result.methodId,
       metaTxDestination: metaTaxMetadata.result.destination

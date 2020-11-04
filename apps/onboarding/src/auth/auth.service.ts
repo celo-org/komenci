@@ -40,12 +40,15 @@ export class AuthService {
     private readonly sessionService: SessionService
   ) {}
 
-  public async startSession(externalAccount: string): Promise<string> {
+  public async startSession(externalAccount: string): Promise<{ sessionId: string, token: string }> {
     const session = await this.sessionService.findOrCreateForAccount(externalAccount)
     const payload: TokenPayload = {
       sessionId: session.id
     }
-    return this.jwtService.sign(payload)
+    return {
+      sessionId: session.id,
+      token: this.jwtService.sign(payload)
+    }
   }
 
   public async recoverSession(tokenPayload: unknown): Promise<Session> {

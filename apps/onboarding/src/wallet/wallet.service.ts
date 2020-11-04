@@ -1,5 +1,5 @@
 import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
-import { KomenciLoggerService } from '@app/komenci-logger'
+import { DeployWalletTxSent, KomenciEventType, KomenciLoggerService } from '@app/komenci-logger'
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
@@ -165,7 +165,7 @@ export class WalletService {
       transaction: txn
     })
 
-    this.logger.logWalletDeployed({
+    this.logger.logEvent<DeployWalletTxSent>(KomenciEventType.DeployWalletTxSent, {
       txHash: resp.payload,
       sessionId: session.id,
       externalAccount: session.externalAccount
