@@ -94,11 +94,7 @@ describe('AppController (e2e)', () => {
     await manager.queryRunner.startTransaction()
     jest.spyOn(relayerProxyService, 'getPhoneNumberIdentifier').mockResolvedValue(
       {
-        payload: {
-          e164Number: "+402222",
-          pepper: "pepper",
-          phoneHash: "0xa23"
-        },
+        payload: "abcd1234",
         relayerAddress: "0x0"
       }
     )
