@@ -34,8 +34,7 @@ import { StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
 
 interface GetPhoneNumberIdResponse {
-  identifier: string
-  pepper: string
+  combinedSignature: string
 }
 
 interface DeployWalletInProgress {
@@ -173,8 +172,7 @@ export class AppController {
     )
 
     return {
-      identifier: resp.payload.phoneHash,
-      pepper: resp.payload.pepper
+      combinedSignature: resp.payload
     }
   }
 

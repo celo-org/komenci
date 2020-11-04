@@ -22,18 +22,23 @@ In our case we have:
 ## Installation
 
 ```bash
-> git clone git@github.com:celo-org/komenci.git
-> cd komenci
+git clone git@github.com:celo-org/komenci.git
+cd komenci
 # Install Komenci dependencies
-> yarn 
-> npm install -g @nestjs/cli
+yarn 
+npm install -g @nestjs/cli
 # `celo-monorepo` is a git submodule -- update downloads it in place
-> git submodule update --init
+git submodule update --init
 # install `celo-monorepo` dependencies
-> yarn deps:celo:install
-> yarn deps:celo:build
+yarn deps:celo:install
+yarn deps:celo:build
 ```
 
+Occasionally, you may need to pull in changes from `celo-monorepo`. To update it, run the following:
+```bash
+git submodule update --remote libs/celo
+yarn deps:celo:build
+```
 
 #### Database
 
