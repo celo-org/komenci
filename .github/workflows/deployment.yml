@@ -20,11 +20,11 @@ jobs:
     
     - run: |
         docker build \
-            -t celotestnet.azurecr.io/komenci/onboarding:${{ github.sha }} \
-            -t celotestnet.azurecr.io/komenci/onboarding:latest \
-            --cache-from celotestnet.azurecr.io/komenci/onboarding:latest \
+            -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
+            -t celotestnet.azurecr.io/komenci/komenci:latest \
+            --cache-from celotestnet.azurecr.io/komenci/komenci:latest \
             .
         docker push \
-            celotestnet.azurecr.io/komenci/onboarding:${{ github.sha }} \
-            celotestnet.azurecr.io/komenci/onboarding:latest
+            celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
+            celotestnet.azurecr.io/komenci/komenci:latest
 
