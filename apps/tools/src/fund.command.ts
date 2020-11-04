@@ -100,7 +100,7 @@ export class FundCommand {
 
     const receipts: Array<Promise<TransactionReceipt>> = []
 
-    await Promise.all(Object.keys(summary).map(async (relayer) => {
+    const results = await Promise.all(Object.keys(summary).map(async (relayer) => {
       const celoTxHash = await summary[relayer].celo.getHash()
       spin.info(`-celo-> Relayer#${relayer}`)
       spin.info(`        ${celoTxHash}`)
@@ -109,25 +109,26 @@ export class FundCommand {
       spin.info(`-cUSD-> Relayer#${relayer}`)
       spin.info(`        ${cUSDTxHash}`)
 
-      receipts.push(
+      return Promise.all([
         summary[relayer].celo.waitReceipt(),
         summary[relayer].cUSD.waitReceipt()
-      )
+      ])
     }))
 
-    const receiptResults = await Promise.all(receipts)
     let failedTxs = 0
-    receiptResults.forEach((receipt) => {
-      if (receipt.status === true) {
-        spin.succeed(`Tx:${receipt.transactionHash} [OK]`)
-      } else {
-        spin.warn(`Tx:${receipt.transactionHash} [REVERT]`)
-        failedTxs += 1
-      }
+    results.forEach((relayerReceipts) => {
+      relayerReceipts.forEach((receipt) => {
+        if (receipt.status === true) {
+          spin.succeed(`Tx:${receipt.transactionHash} [OK]`)
+        } else {
+          spin.warn(`Tx:${receipt.transactionHash} [REVERT]`)
+          failedTxs += 1
+        }
+      })
     })
 
     if (failedTxs > 0) {
-      spin.fail(`${failedTxs}/${receiptResults.length} failed txs. Check summary`)
+      spin.fail(`${failedTxs}/${results.length * 2} failed txs. Check summary`)
     } else {
       spin.succeed('All transfers completed successfully!')
     }
