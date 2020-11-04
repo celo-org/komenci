@@ -17,8 +17,8 @@ import { Session as SessionEntity } from '@app/onboarding/session/session.entity
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
-import { normalizeAddress } from '@celo/base'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
+import { normalizeAddress } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import {
