@@ -62,6 +62,11 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         })
         const txHash = await result.getHash()
         this.watchTransaction(txHash)
+        this.logger.log({
+          message: "Transaction Submitted",
+          ...tx,
+          hash: txHash
+        })
         return Ok(txHash)
       } catch(e) {
         if (tries === 3) {

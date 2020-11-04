@@ -1,5 +1,4 @@
 import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
-import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
@@ -11,17 +10,17 @@ import {
   MetaTxValidationError,
   WalletNotDeployed
 } from '@app/onboarding/wallet/errors'
-import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
+import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
+import { Address, normalizeAddress } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ABI as MetaTxWalletABI, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
-import { WalletValidationError } from '@celo/komencikit/lib/errors'
 import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
 import { Inject, Injectable } from '@nestjs/common'
-import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
+import { AppConfig, appConfig } from '../config/app.config'
 
 const InputDataDecoder = require('ethereum-input-data-decoder')
 const MetaTxWalletDecoder = new InputDataDecoder(MetaTxWalletABI)
@@ -39,9 +38,11 @@ export class WalletService {
     private readonly walletDeployer: MetaTransactionWalletDeployerWrapper,
     private readonly web3: Web3,
     private readonly contractKit: ContractKit,
+    @Inject(networkConfig.KEY)
+    private readonly networkCfg: NetworkConfig,
     @Inject(appConfig.KEY)
-    private readonly cfg: AppConfig
-  ) {}
+    private readonly appCfg: AppConfig
+) {}
 
   async isAllowedMetaTransaction(
     transaction: RawTransaction,
@@ -85,7 +86,7 @@ export class WalletService {
     const valid = await verifyWallet(
       this.contractKit,
       walletAddress,
-      Object.keys(this.cfg.mtwImplementations),
+      Object.keys(this.networkCfg.contracts.MetaTransactionWalletVersions),
       expectedSigner
     )
 
@@ -165,7 +166,7 @@ export class WalletService {
     ) {
       const deployDeadline = new Date(
         session.meta.walletDeploy.startedAt +
-        this.cfg.transactionTimeoutMs
+        this.appCfg.transactionTimeoutMs
       )
 
       if (new Date() < deployDeadline) {
@@ -176,7 +177,7 @@ export class WalletService {
   }
 
   private isValidImplementation(implementationAddress: string): boolean {
-    return implementationAddress in this.cfg.mtwImplementations
+    return implementationAddress in this.networkCfg.contracts.MetaTransactionWalletVersions
   }
 
   private decodeMetaTransaction(tx: RawTransaction): Result<RawTransaction, MetaTxValidationError> {

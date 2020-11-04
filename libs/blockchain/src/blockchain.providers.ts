@@ -2,6 +2,7 @@ import { BlockchainOptions } from '@app/blockchain/blockchain.module'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { WalletType } from '@app/blockchain/config/wallet.config'
 import { ContractKit } from '@celo/contractkit'
+import { AzureKeyVaultSigningAlgorithm } from '@celo/contractkit/lib/utils/azure-key-vault-client'
 import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
 import { ReadOnlyWallet, Wallet } from '@celo/contractkit/lib/wallets/wallet'
@@ -30,15 +31,20 @@ export const web3ProviderDef: FactoryProvider<provider> = {
   inject: [BLOCKCHAIN_MODULE_OPTIONS]
 }
 
-export const walletDef: FactoryProvider<ReadOnlyWallet> = {
+export const walletDef: FactoryProvider<Promise<ReadOnlyWallet>> = {
   provide: WALLET,
-  useFactory: (options: BlockchainOptions) => {
+  useFactory: async (options: BlockchainOptions) => {
     if (options.wallet === undefined) {
       return null
     }
     switch (options.wallet.type) {
       case WalletType.AzureHSM:
-        return new AzureHSMWallet(options.wallet.vaultName)
+        const azureWallet = new AzureHSMWallet(
+          options.wallet.vaultName,
+          AzureKeyVaultSigningAlgorithm.ES256K
+        )
+        await azureWallet.init()
+        return azureWallet
       case WalletType.Local:
         const localWallet = new LocalWallet()
         localWallet.addAccount(options.wallet.privateKey)

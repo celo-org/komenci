@@ -1,6 +1,5 @@
 import { AsyncOptions } from '@app/blockchain/blockchain.module'
 import { ContractKit } from '@celo/contractkit'
-import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { DynamicModule, Module } from '@nestjs/common'
 import { Logger } from 'nestjs-pino'
@@ -9,7 +8,6 @@ export const CONTRACTS_MODULE_OPTIONS = 'CONTRACTS_MODULE_OPTIONS'
 
 export interface ContractsOptions {
   deployerAddress: string
-  walletAddress?: string
 }
 
 const metaTransactionWalletDeployer = {
@@ -20,38 +18,13 @@ const metaTransactionWalletDeployer = {
     )
 
     logger.log({
-      message: 'Initialized MetaTxWalletDeployer',
+      message: 'Initialized MetaTransactionWalletDeployer',
       address: options.deployerAddress,
     })
 
     return deployer
   },
   inject: [CONTRACTS_MODULE_OPTIONS, ContractKit, Logger]
-}
-
-const metaTransactionWallet = {
-  provide: MetaTransactionWalletWrapper,
-  useFactory: async (
-    options: ContractsOptions,
-    deployer: MetaTransactionWalletDeployerWrapper,
-    contractKit: ContractKit,
-    logger: Logger
-  ) => {
-    if (options.walletAddress) {
-      const metaTxWalletAddress = await deployer.getWallet(options.walletAddress)
-      logger.log({
-        message: 'Found Relayer MetaTxWallet',
-        address: metaTxWalletAddress,
-      })
-      return contractKit.contracts.getMetaTransactionWallet(metaTxWalletAddress)
-    }
-  },
-  inject: [
-    CONTRACTS_MODULE_OPTIONS,
-    MetaTransactionWalletDeployerWrapper,
-    ContractKit,
-    Logger
-  ]
 }
 
 @Module({})
@@ -67,11 +40,9 @@ export class ContractsModule {
           useFactory: options.useFactory,
           inject: options.inject || [],
         },
-        metaTransactionWallet,
         metaTransactionWalletDeployer,
       ],
       exports: [
-        MetaTransactionWalletWrapper,
         MetaTransactionWalletDeployerWrapper
       ]
     }

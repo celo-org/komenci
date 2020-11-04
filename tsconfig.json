@@ -17,6 +17,12 @@
     "baseUrl": ".",
     "incremental": true,
     "paths": {
+      "@app/utils": [
+        "libs/utils/src"
+      ],
+      "@app/utils/*": [
+        "libs/utils/src/*"
+      ],
       "@app/blockchain": [
         "libs/blockchain/src"
       ],

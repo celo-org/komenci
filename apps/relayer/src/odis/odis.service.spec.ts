@@ -1,12 +1,13 @@
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
+import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
 import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { Test } from '@nestjs/testing'
 import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
 import { OdisQueryErrorTypes, OdisService } from 'apps/relayer/src/odis/odis.service'
 import Web3 from 'web3'
-import { ACCOUNT_ADDRESS, getTestBlindedPhoneNumber, MOCK_ODIS_RESPONSE, ODIS_URL, PRIVATE_KEY } from '../config/testing-constants'
+import { getTestBlindedPhoneNumber } from '../config/testing-constants'
 
 jest.mock('@celo/phone-number-privacy-common/lib/test/utils', () => {
   return {
@@ -18,15 +19,19 @@ describe('OdisService', () => {
   const contractKit = jest.fn()
   const setupService = async (
     testAppConfig: Partial<AppConfig>,
-    testWalletConfig: Partial<WalletConfig>
+    testWalletConfig: Partial<WalletConfig>,
+    testNetworkConfig: Partial<NetworkConfig>
   ): Promise<OdisService>  => {
     const appConfigValue: Partial<AppConfig> = {
-      networkConfig: {
-        fullNodeUrl: '',
-        odisPubKey: '',
-        odisUrl: '',
-      },
       ...testAppConfig
+    }
+
+    const networkConfigValue: Partial<NetworkConfig> = {
+      odis: {
+        url: '',
+        publicKey: ''
+      },
+      ...testNetworkConfig
     }
 
     const walletConfigValue: Partial<WalletConfig> = {
@@ -39,7 +44,8 @@ describe('OdisService', () => {
         OdisService,
         { provide: ContractKit, useValue: contractKit },
         { provide: walletConfig.KEY, useValue: walletConfigValue },
-        { provide: appConfig.KEY, useValue: appConfigValue }
+        { provide: appConfig.KEY, useValue: appConfigValue },
+        { provide: networkConfig.KEY, useValue: networkConfigValue }
       ]
     }).compile()
 
@@ -69,7 +75,7 @@ describe('OdisService', () => {
         clientVersion: "1"
       }
       
-      const svc = await setupService({}, {})
+      const svc = await setupService({}, {}, {})
       const res = await svc.getPhoneNumberIdentifier(input)
       expect(res.ok).toBe(true)
       if (res.ok) {
@@ -91,7 +97,7 @@ describe('OdisService', () => {
           clientVersion: "1"
         }
 
-        const svc = await setupService({}, {})
+        const svc = await setupService({}, {}, {})
         const res = await svc.getPhoneNumberIdentifier(input)
         expect(res.ok).toBe(false)
         if (res.ok === false) {
@@ -120,7 +126,7 @@ describe('OdisService', () => {
           clientVersion: "1"
         }
 
-        const svc = await setupService({}, {})
+        const svc = await setupService({}, {}, {})
         const res = await svc.getPhoneNumberIdentifier(input)
         expect(res.ok).toBe(true)
         if (res.ok) {
@@ -145,7 +151,7 @@ describe('OdisService', () => {
           clientVersion: "1"
         }
 
-        const svc = await setupService({}, {})
+        const svc = await setupService({}, {}, {})
         const res = await svc.getPhoneNumberIdentifier(input)
         expect(res.ok).toBe(false)
         if (res.ok === false) {
