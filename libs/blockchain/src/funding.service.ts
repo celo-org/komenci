@@ -72,22 +72,27 @@ export class FundingService {
       throw(new Error("Fund balance to low to top-up relayers"))
     }
 
+    const relayerTxs = await Promise.all(
+      relayers.map(async (relayer, idx) => {
+        // @ts-ignore
+        const cUSDTx = cUSD.transfer(relayer.metaTransactionWallet, cUSDAmountSubunit.toFixed()).send({
+          from: fund,
+        })
+        // @ts-ignore
+        const celoTx = celo.transfer(relayer.externalAccount, celoAmountSubunit.toFixed()).send({
+          from: fund,
+        })
 
-    return relayers.reduce(async (summary, relayer, idx) => {
-      // @ts-ignore
-      const cUSDTx = await cUSD.transfer(relayer.metaTransactionWallet, cUSDAmountSubunit.toFixed()).send({
-        from: fund,
-      })
-      // @ts-ignore
-      const celoTx = await celo.transfer(relayer.externalAccount, celoAmountSubunit.toFixed()).send({
-        from: fund,
-      })
 
+        return Promise.all([cUSDTx, celoTx])
+      })
+    )
+
+    return relayers.reduce((summary, relayer, idx) => {
       summary[relayer.externalAccount] = {
-        celo: celoTx,
-        cUSD: cUSDTx
+        cUSD: relayerTxs[idx][0],
+        celo: relayerTxs[idx][1],
       }
-
       return summary
     }, {})
   }
