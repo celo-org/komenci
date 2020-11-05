@@ -19,6 +19,8 @@ jobs:
         password: ${{ secrets.ACR_PASSWORD }}
     
     - run: |
+        docker pull celotestnet.azurecr.io/komenci/komenci:latest
+
         docker build \
             -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
             -t celotestnet.azurecr.io/komenci/komenci:latest \
