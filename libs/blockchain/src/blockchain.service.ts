@@ -71,6 +71,7 @@ export class BlockchainService {
   ) {}
 
   public async getPendingTxPool(): Promise<Result<TxPool, BlockchainServiceError>> {
+    console.log("entering pending")
     return new Promise((resolve) => {
       this.web3Provider.send(
         {

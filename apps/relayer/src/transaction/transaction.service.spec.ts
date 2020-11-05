@@ -8,7 +8,6 @@ import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
 import { TransactionService } from './transaction.service'
-import teardown from '@celo/dev-utils/lib/ganache-teardown'
 
 jest.mock('@app/blockchain/blockchain.service')
 jest.mock('@celo/contractkit')
