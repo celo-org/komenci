@@ -1,10 +1,10 @@
 import { Injectable, LoggerService } from '@nestjs/common'
 import { Logger } from "nestjs-pino"
 
-import { KomenciEventType } from '@app/komenci-logger/events'
+import { KEvent } from '@app/komenci-logger/events'
 
 export interface KomenciLogger extends LoggerService {
-    logEvent: <KEvent>(eventName: keyof typeof KomenciEventType, event: KEvent) => void
+    logEvent: (event: KEvent) => void
 }
 
 @Injectable()
@@ -27,7 +27,7 @@ export class KomenciLoggerService implements KomenciLogger {
         this.logger.error(message, context, ...args)
     }
 
-    logEvent<KEvent>(eventName: keyof typeof KomenciEventType, event: KEvent): void {
-        this.log(eventName, event)
+    logEvent(event: KEvent): void {
+        this.log(event.type, event)
     }
 }
