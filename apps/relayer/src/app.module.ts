@@ -1,6 +1,7 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { KomenciLoggerService } from '@app/komenci-logger'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
