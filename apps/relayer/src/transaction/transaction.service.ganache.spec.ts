@@ -118,7 +118,7 @@ testWithGanache('TransactionService', (web3) => {
         await contract.createAccount().send({ from: contractKit.defaultAccount })
         const isAccount = await contract.isAccount(contractKit.defaultAccount)
         expect(isAccount).toBeTruthy()
-        
+
         const rawTx = {
           destination: tx.to,
           data: tx.input,
@@ -136,6 +136,9 @@ testWithGanache('TransactionService', (web3) => {
         const txHash = await result.getHash()
         console.log('hash', txHash)
         expect(getTxPool).toHaveBeenCalled()
+
+        // this times out:
+        // const hash = await service.submitTransaction(rawTx)
 
       })
     })
