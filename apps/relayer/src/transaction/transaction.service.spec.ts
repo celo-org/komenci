@@ -21,8 +21,7 @@ describe('TransactionService', () => {
   // @ts-ignore
   contractKit.web3 = {
     eth: {
-      getTransaction: jest.fn(),
-      getTransactionCount: jest.fn()
+      getTransaction: jest.fn()
     }
   }
 
@@ -231,7 +230,6 @@ describe('TransactionService', () => {
         const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
         const txPromise = Promise.resolve(tx)
         const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
-    
         // @ts-ignore
         const deadLetter = jest.spyOn(service, 'deadLetter')
         // @ts-ignore
@@ -271,66 +269,5 @@ describe('TransactionService', () => {
         jest.advanceTimersToNextTimer(1)
       })
     })
-
-    describe('when the transaction nonce exists', () => {
-      it('gets incremented lettered when it exists', async () => {
-        const tx = txFixture()
-        const receipt = receiptFixture(tx)
-        const result: any = {
-          getHash: () => Promise.resolve(tx.hash)
-        }
-        const resultPromise = Promise.resolve(result)
-        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockReturnValue(resultPromise)
-        // @ts-ignore
-        const watchTransaction = jest.spyOn(service, 'watchTransaction')
-        // @ts-ignore
-        const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
-        const txPromise = Promise.resolve(tx)
-        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
-        const getTransactionCount = jest.spyOn(contractKit.web3.eth, 'getTransactionCount').mockReturnValue(Promise.resolve(1))
-    
-        // @ts-ignore
-        const deadLetter = jest.spyOn(service, 'deadLetter')
-        // @ts-ignore
-        const checkTransactions = jest.spyOn(service, 'checkTransactions')
-        // @ts-ignore
-        const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(true)
-
-        const rawTx = {
-          destination: tx.to,
-          data: tx.input,
-          value: tx.value
-        }
-
-        const hash = await service.submitTransaction(rawTx)
-        const nonce = await service.getTransactionCount(tx.from)
-        console.log(nonce)
-        expect(getTransactionCount).toHaveBeenCalled()
-
-        expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
-          to: rawTx.destination,
-          data: rawTx.data,
-          value: rawTx.value,
-          from: relayerAddress
-        }))
-
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash)
-        expect(unwatchTransaction).not.toHaveBeenCalled()
-
-        jest.advanceTimersToNextTimer(1)
-
-        expect(checkTransactions).toHaveBeenCalled()
-        await txPromise
-        await resultPromise
-        await result.getHash()
-        await setTimeout(() => {
-          expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
-          expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
-          expect(watchTransaction.mock.calls.length).toBe(2)
-        })
-        jest.advanceTimersToNextTimer(1)
-      })
-   })
-
   })
 })
