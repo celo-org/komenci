@@ -12,6 +12,8 @@ import { TransactionService } from './transaction.service'
 
 import { testWithGanache } from '@celo/dev-utils/lib/ganache-test'
 
+// jest.setTimeout(10000)
+
 testWithGanache('TransactionService', (web3) => {
   let accounts: string[] = []
   let contract: AccountsWrapper
@@ -38,7 +40,7 @@ testWithGanache('TransactionService', (web3) => {
 
     const module = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        LoggerModule.forRoot()
       ],
       providers: [
         TransactionService,
@@ -77,13 +79,12 @@ testWithGanache('TransactionService', (web3) => {
   beforeAll(async () => {
     accounts = await web3.eth.getAccounts()
     contractKit.defaultAccount = accounts[0]
+    contract = await contractKit.contracts.getAccounts()
   })
 
   it('should be defined', async () => {
     const service = await setupService({}, {})
     expect(service).toBeDefined()
-    contract = await contractKit.contracts.getAccounts()
-    // console.log(await contract.getTotalLockedGold())
   })
 
   describe('#submitTransaction', () => {
@@ -134,11 +135,12 @@ testWithGanache('TransactionService', (web3) => {
           gasPrice: 10000000000
         })
         const txHash = await result.getHash()
-        console.log('hash', txHash)
         expect(getTxPool).toHaveBeenCalled()
 
         // this times out:
-        // const hash = await service.submitTransaction(rawTx)
+        // const txHash1 = await service.submitTransaction(rawTx)
+        const txHash2 = await service.submitTransaction2(rawTx)
+        console.log('hash2', txHash2)
 
       })
     })

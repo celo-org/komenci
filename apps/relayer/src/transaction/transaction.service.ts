@@ -48,6 +48,33 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.timer)
   }
 
+  submitTransaction2 = async (tx: RawTransactionDto): Promise<Result<string, any>> => {
+    try {
+      const result = await this.kit.sendTransaction({
+        to: tx.destination,
+        value: tx.value,
+        data: tx.data,
+        from: this.kit.defaultAccount,
+        gas: 10000000,
+        gasPrice: 10000000000
+      })
+      const txHash = await result.getHash()
+      this.watchTransaction(txHash)
+      this.logger.log({
+        message: "Transaction Submitted",
+        ...tx,
+        hash: txHash
+      })
+      return Ok(txHash)
+    } catch(e) {
+      this.logger.error({
+        message: "Failed to send transaction",
+        tx
+      })
+      return Err(e)
+    }
+  }
+
   submitTransaction = async (tx: RawTransactionDto): Promise<Result<string, any>> => {
     let tries = 0
     while(++tries < 3) {
@@ -88,7 +115,6 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     const txs = await Promise.all(
       [...this.watchedTransactions].map(txHash => this.kit.web3.eth.getTransaction(txHash))
     )
-
     const completed = txs.filter(tx => tx.blockHash !== null)
     completed.forEach(tx => this.unwatchTransaction(tx.hash))
     const expired = txs.filter(tx => tx.blockHash == null && this.isExpired(tx.hash))
