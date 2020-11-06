@@ -24,7 +24,7 @@ jobs:
           sleep 15
         done) &
 
-        docker pull celotestnet.azurecr.io/komenci/komenci:latest
+        # docker pull celotestnet.azurecr.io/komenci/komenci:latest
 
         docker build \
             -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
