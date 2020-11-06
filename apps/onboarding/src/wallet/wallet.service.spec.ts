@@ -1,7 +1,7 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { normalizeMethodId } from '@app/blockchain/utils'
-import { KomenciLoggerService } from '@app/komenci-logger'
+import { KomenciLoggerModule } from '@app/komenci-logger'
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
 import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
@@ -15,7 +15,6 @@ import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { Test, TestingModule } from '@nestjs/testing'
-import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
 
 jest.mock('@app/komenci-logger/komenci-logger.service')
@@ -27,7 +26,7 @@ describe("WalletService", () => {
   const buildModule = async (appCfg: Partial<AppConfig>, networkCfg: Partial<NetworkConfig>) => {
     return Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        KomenciLoggerModule.forRoot(),
         BlockchainModule.forRootAsync({
           useFactory: () => {
             return {
@@ -49,7 +48,6 @@ describe("WalletService", () => {
       providers: [
         WalletService,
         RelayerProxyService,
-        KomenciLoggerService,
         SessionService,
         {
           provide: appConfig.KEY,

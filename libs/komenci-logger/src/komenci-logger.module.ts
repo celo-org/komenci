@@ -1,5 +1,5 @@
 import { DynamicModule, Global, Module } from '@nestjs/common'
-import { LoggerModule, LoggerModuleAsyncParams } from 'nestjs-pino'
+import { LoggerModule, LoggerModuleAsyncParams, Params } from 'nestjs-pino'
 
 import { KomenciLoggerService } from './komenci-logger.service'
 
@@ -10,6 +10,15 @@ export class KomenciLoggerModule {
     return {
       module: KomenciLoggerModule,
       imports: [LoggerModule.forRootAsync(params)],
+      providers: [KomenciLoggerService],
+      exports: [KomenciLoggerService],
+    }
+  }
+
+  static forRoot(params?: Params): DynamicModule {
+    return {
+      module: KomenciLoggerModule,
+      imports: [LoggerModule.forRoot(params)],
       providers: [KomenciLoggerService],
       exports: [KomenciLoggerService],
     }

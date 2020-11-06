@@ -1,4 +1,4 @@
-import { KomenciLoggerService} from '@app/komenci-logger'
+import { KomenciLoggerModule } from '@app/komenci-logger'
 import { ApiError } from '@app/komenci-logger/errors'
 import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
 import { RootError } from '@celo/base/lib/result'
@@ -6,7 +6,6 @@ import { Controller, Get } from '@nestjs/common'
 import { APP_FILTER } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 import { assert } from 'console'
-import { LoggerModule } from 'nestjs-pino'
 
 const request = require('supertest')
 
@@ -69,7 +68,7 @@ describe('ErrorController (e2e)', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot({
+        KomenciLoggerModule.forRoot({
           pinoHttp: {
             prettyPrint: true
           }
@@ -77,7 +76,6 @@ describe('ErrorController (e2e)', () => {
       ],
       controllers: [ErrorController],
       providers: [
-        KomenciLoggerService,
         {
           provide: APP_FILTER,
           useClass: ApiErrorFilter,
