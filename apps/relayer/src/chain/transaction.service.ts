@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
+import exp from 'constants'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
 import { TransactionObject } from 'web3-eth'
@@ -115,6 +116,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       )
     )
 
+
     const completed = txs.filter(tx => tx.blockHash !== null)
     if (completed.length > 0) {
       await this.balanceService.logBalance()
@@ -123,6 +125,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     const expired = txs.filter(
       tx => tx.blockHash == null && this.isExpired(tx.hash)
     )
+
     await Promise.all(expired.map(tx => this.deadLetter(tx)))
     await Promise.all(completed.map(tx => this.finalizeTransaction(tx)))
   }

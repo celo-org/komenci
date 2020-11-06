@@ -13,7 +13,6 @@ import { Transaction, TransactionReceipt } from 'web3-core'
 import { TransactionService } from './transaction.service'
 
 jest.mock('@app/blockchain/blockchain.service')
-jest.mock('@app/komenci-logger/komenci-logger.service')
 jest.mock('@celo/contractkit')
 jest.mock('@app/komenci-logger/komenci-logger.service')
 jest.mock('@celo/contractkit/lib/wrappers/MetaTransactionWallet')
@@ -189,9 +188,11 @@ describe('TransactionService', () => {
       }, {})
 
       service = module.get(TransactionService)
+      const balanceService = module.get(BalanceService)
 
       // @ts-ignore
       jest.spyOn(service, 'getPendingTransactionHashes').mockResolvedValue([])
+      jest.spyOn(balanceService, 'logBalance').mockResolvedValue(null)
       await service.onModuleInit()
     })
 
@@ -261,9 +262,8 @@ describe('TransactionService', () => {
         await completedTxPromise
         await txReceiptPromise
         await relayerBalancePromise
-        await setTimeout(() => {
-          expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
-        })
+
+        expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         jest.advanceTimersToNextTimer(1)
       })
     })
@@ -273,7 +273,8 @@ describe('TransactionService', () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
         const result: any = {
-          getHash: () => Promise.resolve(tx.hash)
+          getHash: () => Promise.resolve(tx.hash),
+          waitReceipt: () => Promise.resolve(receipt)
         }
         const resultPromise = Promise.resolve(result)
         const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockReturnValue(resultPromise)
