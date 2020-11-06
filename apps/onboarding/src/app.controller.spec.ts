@@ -101,7 +101,7 @@ describe('AppController', () => {
         expect(sessionFindOrCreate).toHaveBeenCalledWith(payload.externalAccount)
         expect(jwtService.verify(result.token)).toBeTruthy()
         expect(jwtService.decode(result.token)).toMatchObject({sessionId: session.id})
-        expect(result.callbackHostname).toBe('localhost')
+        expect(result.callbackUrl).toBe('http://localhost')
       })
     })
 

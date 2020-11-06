@@ -49,7 +49,7 @@ interface CheckSessionResponse {
 
 interface StartSessionResponse {
   token: string
-  callbackHostname: string
+  callbackUrl: string
 }
 
 @Controller("v1")
@@ -97,7 +97,7 @@ export class AppController {
         sessionId: response.sessionId
       })
 
-      return { token: response.token, callbackHostname: this.appCfg.callbackHostname }
+      return { token: response.token, callbackUrl: this.appCfg.callbackUrl }
     } else {
       throw new UnauthorizedException()
     }
