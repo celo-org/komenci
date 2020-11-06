@@ -5,7 +5,7 @@ docker-compose.proxy.yml
 
 node_modules
 **/node_modules
-*node_modules
+
 # logs
 yarn-error.log
 npm-debug.log
