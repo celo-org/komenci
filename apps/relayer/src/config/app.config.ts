@@ -5,7 +5,7 @@ export interface AppConfig {
   port: number
   logLevel: string
   transactionTimeoutMs: number,
-  transactionCheckIntervalMs: number
+  transactionCheckIntervalMs: number,
 }
 
 export const appConfig = registerAs<() => AppConfig>('app', () => {

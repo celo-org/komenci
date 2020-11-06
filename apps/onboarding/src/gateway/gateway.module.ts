@@ -1,3 +1,4 @@
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { HttpModule, Module } from '@nestjs/common'
 import { CaptchaService } from './captcha/captcha.service'
 import { DeviceCheckService } from './device-check/device-check.service'
@@ -10,7 +11,8 @@ import { SafetyNetService } from './safety-net/safety-net.service'
     GatewayService,
     CaptchaService,
     DeviceCheckService,
-    SafetyNetService
+    SafetyNetService,
+    KomenciLoggerService
   ],
   exports: [GatewayService]
 })

@@ -1,6 +1,8 @@
 import { AsyncOptions } from '@app/blockchain/blockchain.module'
+import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
 import { ContractKit } from '@celo/contractkit'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+
 import { DynamicModule, Module } from '@nestjs/common'
 import { Logger } from 'nestjs-pino'
 
@@ -12,7 +14,11 @@ export interface ContractsOptions {
 
 const metaTransactionWalletDeployer = {
   provide: MetaTransactionWalletDeployerWrapper,
-  useFactory: async (options: ContractsOptions, contractKit: ContractKit, logger: Logger) => {
+  useFactory: async (
+    options: ContractsOptions,
+    contractKit: ContractKit,
+    logger: Logger
+  ) => {
     const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(
       options.deployerAddress
     )
@@ -24,21 +30,23 @@ const metaTransactionWalletDeployer = {
 
     return deployer
   },
-  inject: [CONTRACTS_MODULE_OPTIONS, ContractKit, Logger]
+  inject: [CONTRACTS_MODULE_OPTIONS, ContractKit, KomenciLoggerService]
 }
 
 @Module({})
 export class ContractsModule {
-  public static forRootAsync(options: AsyncOptions<ContractsOptions>): DynamicModule {
+  public static forRootAsync(
+    options: AsyncOptions<ContractsOptions>
+  ): DynamicModule {
     return {
       global: true,
       module: ContractsModule,
-      imports: options.imports,
+      imports: [KomenciLoggerModule],
       providers: [
         {
           provide: CONTRACTS_MODULE_OPTIONS,
           useFactory: options.useFactory,
-          inject: options.inject || [],
+          inject: options.inject || []
         },
         metaTransactionWalletDeployer,
       ],

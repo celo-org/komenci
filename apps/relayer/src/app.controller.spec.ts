@@ -2,6 +2,7 @@ import { BlockchainModule } from '@app/blockchain'
 import { WALLET } from '@app/blockchain/blockchain.providers'
 import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { walletConfig, WalletType } from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
 import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
@@ -16,6 +17,8 @@ import { ACCOUNT_ADDRESS, getTestBlindedPhoneNumber, MOCK_ODIS_RESPONSE, ODIS_UR
 
 const mockWallet: LocalWallet = new LocalWallet()
 mockWallet.addAccount(PRIVATE_KEY)
+
+jest.mock('@app/komenci-logger/komenci-logger.service')
 
 jest.mock('@celo/contractkit/lib/identity/odis/bls-blinding-client', () => {
   class WasmBlsBlindingClient {
@@ -72,7 +75,8 @@ describe('AppController', () => {
         {
           provide: ContractKit,
           useValue: mockContractKit
-        }
+        },
+        KomenciLoggerService
       ]
     }).compile()
 

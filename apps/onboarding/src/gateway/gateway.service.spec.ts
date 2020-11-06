@@ -1,21 +1,23 @@
+import { KomenciLoggerModule } from '@app/komenci-logger'
 import { HttpModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { DeviceCheckService } from 'apps/onboarding/src/gateway/device-check/device-check.service'
 import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 import { SafetyNetService } from 'apps/onboarding/src/gateway/safety-net/safety-net.service'
-import { Logger, LoggerModule } from 'nestjs-pino'
 import { rulesConfig, RulesConfig } from '../config/rules.config'
 import { thirdPartyConfig } from '../config/third-party.config'
 import { CaptchaService } from './captcha/captcha.service'
 import { GatewayService } from './gateway.service'
+
+jest.mock('@app/komenci-logger/komenci-logger.service')
 
 describe('GatewayService', () => {
   describe("by changing the env", () => {
     const buildTestingModule = async (): Promise<TestingModule> => {
       return Test.createTestingModule({
         imports: [
-          LoggerModule.forRoot(),
+          KomenciLoggerModule.forRoot(),
           HttpModule,
           ConfigModule.forRoot({
             load: [thirdPartyConfig, rulesConfig],
@@ -25,7 +27,7 @@ describe('GatewayService', () => {
           GatewayService,
           CaptchaService,
           DeviceCheckService,
-          SafetyNetService
+          SafetyNetService,
         ]
       }).compile()
     }
@@ -73,7 +75,7 @@ describe('GatewayService', () => {
     const buildTestingModuleForConfig = async (config: RulesConfig): Promise<TestingModule> => {
       return Test.createTestingModule({
         imports: [
-          LoggerModule.forRoot(),
+          KomenciLoggerModule.forRoot(),
           HttpModule,
           ConfigModule.forRoot({
             load: [thirdPartyConfig, rulesConfig],

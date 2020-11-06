@@ -1,5 +1,7 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
+import { normalizeMethodId } from '@app/blockchain/utils'
+import { KomenciLoggerModule } from '@app/komenci-logger'
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
 import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
@@ -8,13 +10,14 @@ import { buildMockWeb3Provider } from '@app/onboarding/utils/testing/mock-web3-p
 import { MetaTxValidationErrorTypes, WalletErrorType } from '@app/onboarding/wallet/errors'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
+import { normalizeAddress } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { Test, TestingModule } from '@nestjs/testing'
-import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
 
+jest.mock('@app/komenci-logger/komenci-logger.service')
 jest.mock('@app/onboarding/relayer/relayer_proxy.service')
 jest.mock('@app/onboarding/session/session.service')
 Web3.providers.HttpProvider = buildMockWeb3Provider(() => null)
@@ -23,7 +26,7 @@ describe("WalletService", () => {
   const buildModule = async (appCfg: Partial<AppConfig>, networkCfg: Partial<NetworkConfig>) => {
     return Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        KomenciLoggerModule.forRoot(),
         BlockchainModule.forRootAsync({
           useFactory: () => {
             return {
@@ -58,7 +61,7 @@ describe("WalletService", () => {
     }).compile()
   }
 
-  describe('#isAllowedMetaTransaction', () => {
+  describe('#extractMetaTxData', () => {
     describe('with a random transaction', () => {
       it('returns a DecodeError', async () => {
         const module = await buildModule({}, {})
@@ -67,18 +70,9 @@ describe("WalletService", () => {
 
         const attestations = await contractKit.contracts.getAttestations()
         const testTx = toRawTransaction(
-          (await attestations.request("0x0", 3)).txo
+            (await attestations.request("0x0", 3)).txo
         )
-
-        const res = await walletService.isAllowedMetaTransaction(
-          testTx,
-          [
-            {
-              destination: attestations.address,
-              methodId: attestations.methodIds.request
-            }
-          ]
-        )
+        const res = await walletService.extractMetaTxData(testTx)
 
         expect(res.ok).toBe(false)
         if (res.ok === false) {
@@ -91,19 +85,10 @@ describe("WalletService", () => {
         const walletService = module.get(WalletService)
         const contractKit = module.get(ContractKit)
 
-        const attestations = await contractKit.contracts.getAttestations()
         const wallet = await contractKit.contracts.getMetaTransactionWallet(Web3.utils.randomHex(20))
         const testTx = toRawTransaction(wallet.setSigner(Web3.utils.randomHex(20)).txo)
 
-        const res = await walletService.isAllowedMetaTransaction(
-          testTx,
-          [
-            {
-              destination: attestations.address,
-              methodId: attestations.methodIds.request
-            }
-          ]
-        )
+        const res = await walletService.extractMetaTxData(testTx)
 
         expect(res.ok).toBe(false)
         if (res.ok === false) {
@@ -112,6 +97,37 @@ describe("WalletService", () => {
       })
     })
 
+    describe('with a meta transaction', () => {
+      describe('which is correct', () => {
+        it('returns the methodId and destination!', async () => {
+          const module = await buildModule({}, {})
+          const walletService = module.get(WalletService)
+          const contractKit = module.get(ContractKit)
+
+          const attestations = await contractKit.contracts.getAttestations()
+          const wallet = await contractKit.contracts.getMetaTransactionWallet(Web3.utils.randomHex(20))
+          const testTx = toRawTransaction(
+            wallet.executeMetaTransaction(
+              attestations.selectIssuers("0x0").txo,
+              {v: 0, r: "0x0", s: "0x0"}
+            ).txo
+          )
+          const res = await walletService.extractMetaTxData(testTx)
+
+          expect(res.ok).toBe(true)
+          if (res.ok === true) {
+            expect(res.result).toStrictEqual({
+              methodId: normalizeMethodId(attestations.methodIds.selectIssuers),
+              destination: normalizeAddress(attestations.address)
+            })
+          }
+        })
+      })
+    })
+  })
+
+
+  describe('#isAllowedMetaTransaction', () => {
     describe('with a meta transaction', () => {
       describe('pointing to an invalid destination', () => {
         it('returns an InvalidDestination error', async () => {
@@ -129,19 +145,24 @@ describe("WalletService", () => {
             ).txo
           )
 
-          const res = await walletService.isAllowedMetaTransaction(
-            testTx,
-            [
-              {
-                destination: attestations.address,
-                methodId: attestations.methodIds.request
-              }
-            ]
-          )
+          const txMetadata = await walletService.extractMetaTxData(testTx)
+          expect(txMetadata.ok).toBe(true)
 
-          expect(res.ok).toBe(false)
-          if (res.ok === false) {
-            expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidDestination)
+          if (txMetadata.ok === true) {
+            const res = await walletService.isAllowedMetaTransaction(
+                txMetadata.result,
+                [
+                  {
+                    destination: attestations.address,
+                    methodId: attestations.methodIds.request
+                  }
+                ]
+            )
+
+            expect(res.ok).toBe(false)
+            if (res.ok === false) {
+              expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidDestination)
+            }
           }
         })
       })
@@ -155,27 +176,32 @@ describe("WalletService", () => {
           const attestations = await contractKit.contracts.getAttestations()
           const wallet = await contractKit.contracts.getMetaTransactionWallet(Web3.utils.randomHex(20))
           const testTx = toRawTransaction(
-            wallet.executeMetaTransaction(
-              attestations.selectIssuers("0x0").txo,
-              {v: 0, r: "0x0", s: "0x0"}
-            ).txo
+              wallet.executeMetaTransaction(
+                  attestations.selectIssuers("0x0").txo,
+                  {v: 0, r: "0x0", s: "0x0"}
+              ).txo
           )
 
-          const res = await walletService.isAllowedMetaTransaction(
-            testTx,
-            [
-              {
-                destination: attestations.address,
-                methodId: attestations.methodIds.request
-              }
-            ]
-          )
+          const txMetadata = await walletService.extractMetaTxData(testTx)
+          expect(txMetadata.ok).toBe(true)
 
-          expect(res.ok).toBe(false)
-          if (res.ok === false) {
-            expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidChildMethod)
+          if (txMetadata.ok === true) {
+            const res = await walletService.isAllowedMetaTransaction(
+                txMetadata.result,
+              [
+                  {
+                    destination: attestations.address,
+                    methodId: attestations.methodIds.request
+                  }
+                ]
+            )
+
+            expect(res.ok).toBe(false)
+            if (res.ok === false) {
+              expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidChildMethod)
+            }
           }
-        })
+          })
       })
 
       describe('which is allowed', () => {
@@ -193,19 +219,24 @@ describe("WalletService", () => {
             ).txo
           )
 
-          const res = await walletService.isAllowedMetaTransaction(
-            testTx,
-            [
-              {
-                destination: attestations.address,
-                methodId: attestations.methodIds.request
-              }
-            ]
-          )
+          const txMetadata = await walletService.extractMetaTxData(testTx)
+          expect(txMetadata.ok).toBe(true)
 
-          expect(res.ok).toBe(false)
-          if (res.ok === false) {
-            expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidChildMethod)
+          if (txMetadata.ok === true) {
+            const res = await walletService.isAllowedMetaTransaction(
+                txMetadata.result,
+                [
+                  {
+                    destination: attestations.address,
+                    methodId: attestations.methodIds.request
+                  }
+                ]
+            )
+
+            expect(res.ok).toBe(false)
+            if (res.ok === false) {
+              expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidChildMethod)
+            }
           }
         })
       })

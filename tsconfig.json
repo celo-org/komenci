@@ -40,6 +40,12 @@
       ],
       "@celo/*": [
         "libs/celo/packages/*"
+      ],
+      "@app/komenci-logger": [
+        "libs/komenci-logger/src"
+      ],
+      "@app/komenci-logger/*": [
+        "libs/komenci-logger/src/*"
       ]
     }
   }
