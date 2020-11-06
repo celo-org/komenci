@@ -68,8 +68,7 @@ export class GatewayService implements OnModuleInit {
     results.forEach((result, idx) => {
       this.logger.event(EventType.RuleVerified, {
         externalAccount: startSessionDto.externalAccount,
-        ruleId: enabledRules[idx].getID(),
-        result
+        result: result.ok
       })
 
       if (result.ok === false) {

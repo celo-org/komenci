@@ -29,8 +29,7 @@ export type EventPayload = {
   [EventType.SessionStartFailure]: SessionEvent
   [EventType.RuleVerified]: AccountEvent & {
     ruleId: string
-    metaData?: Record<string, unknown>
-    result: Result<boolean, any>
+    result: boolean
   }
   [EventType.DeployWalletTxSent]: SessionEvent & {
     txHash: string
