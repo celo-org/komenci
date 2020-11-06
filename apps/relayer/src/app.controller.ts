@@ -1,4 +1,5 @@
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import { RpcErrorFilter } from '@app/komenci-logger/filters/rpc-error.filter'
 import { makeAsyncThrowable } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
@@ -6,13 +7,13 @@ import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Body, Controller, Inject } from '@nestjs/common'
+import { Body, Controller, Inject, UseFilters } from '@nestjs/common'
 import { MessagePattern, RpcException } from '@nestjs/microservices'
+import { TransactionService } from 'apps/relayer/src/chain/transaction.service'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
 import { SubmitTransactionBatchDto } from 'apps/relayer/src/dto/SubmitTransactionBatchDto'
 import { SubmitTransactionDto } from 'apps/relayer/src/dto/SubmitTransactionDto'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
-import { TransactionService } from 'apps/relayer/src/transaction/transaction.service'
 import Web3 from 'web3'
 import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
 
@@ -22,6 +23,7 @@ export interface RelayerResponse<T> {
 }
 
 @Controller()
+@UseFilters(new RpcErrorFilter())
 export class AppController {
   constructor(
     private readonly odisService: OdisService,

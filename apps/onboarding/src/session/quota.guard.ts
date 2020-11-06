@@ -1,5 +1,5 @@
+import { ApiError } from '@app/komenci-logger/errors'
 import { quotaConfig, TrackedAction } from '@app/onboarding/config/quota.config'
-import { ApiError } from '@app/onboarding/errors/api-error'
 import { Session } from '@app/onboarding/session/session.entity'
 import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
@@ -9,11 +9,8 @@ class QuotaExceededError extends ApiError<'QuotaExceededError', {action: Tracked
   statusCode = 429
 
   constructor(action: TrackedAction) {
-    super('QuotaExceededError')
+    super('QuotaExceededError', { action })
     this.message = `Quota exceeded on ${action}`
-    this.metadata = {
-      action: action
-    }
   }
 }
 

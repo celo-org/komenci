@@ -1,8 +1,7 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
-import { nodeConfig, NodeConfig, NodeProviderType } from '@app/blockchain/config/node.config'
-import { WalletConfig } from '@app/blockchain/config/wallet.config'
-import { KomenciLoggerService } from '@app/komenci-logger'
-import { ApiErrorFilter } from '@app/onboarding/errors/api-error.filter'
+import { NodeProviderType } from '@app/blockchain/config/node.config'
+import { EventType, KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
+import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
@@ -13,7 +12,7 @@ import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
-import { LoggerModule } from 'nestjs-pino/dist'
+import { v4 as uuidv4 } from "uuid"
 import { AppController } from './app.controller'
 import { AuthModule } from './auth/auth.module'
 import { appConfig, AppConfig } from './config/app.config'
@@ -37,13 +36,22 @@ import { SessionModule } from './session/session.module'
       ],
       envFilePath: ['apps/onboarding/.env.local', 'apps/onboarding/.env']
     }),
-    LoggerModule.forRootAsync({
+    KomenciLoggerModule.forRootAsync({
       providers: [ConfigService],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const appCfg = config.get<AppConfig>('app')
         return {
           pinoHttp: {
+            genReqId: () => {
+              return uuidv4()
+            },
+            customSuccessMessage: (res) => {
+              return "RequestCompleted"
+            },
+            customErrorMessage: (res) => {
+              return "RequestFailed"
+            },
             serializers: {
               req: req => {
                 return {
@@ -98,16 +106,15 @@ import { SessionModule } from './session/session.module'
     WalletService,
     SessionService,
     RelayerProxyService,
-    KomenciLoggerService,
     {
       provide: 'RELAYER_SERVICE',
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
+      inject: [ConfigService, KomenciLoggerService],
+      useFactory: (configService: ConfigService, logger: KomenciLoggerService) => {
         const relayerSvcOptions = configService.get<TcpClientOptions>('relayer')
-        const logger = new Logger('RelayerService')
-        logger.log(
-          `Pointing RelayerProxy to: ${relayerSvcOptions.options.host}:${relayerSvcOptions.options.port}`
-        )
+        logger.event(EventType.RelayerProxyInit, {
+          host: relayerSvcOptions.options.host,
+          port: relayerSvcOptions.options.port
+        })
         return ClientProxyFactory.create(relayerSvcOptions)
       }
     },

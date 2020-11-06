@@ -1,4 +1,4 @@
-import { ApiError } from '@app/onboarding/errors/api-error'
+import { ApiError } from '@app/komenci-logger/errors'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from  '@nestjs/jwt'
 import { Session } from 'apps/onboarding/src/session/session.entity'
@@ -18,17 +18,17 @@ export enum AuthErrorTypes {
 }
 
 export class InvalidToken extends ApiError<AuthErrorTypes.InvalidToken> {
-  statusCode: 401
+  statusCode = 401
   constructor() {
     super(AuthErrorTypes.InvalidToken)
     this.message = 'Invalid or outdated token'
   }
 }
 
-export class SessionUnavailable extends ApiError<AuthErrorTypes.SessionUnavailable> {
-  statusCode: 401
-  constructor() {
-    super(AuthErrorTypes.SessionUnavailable)
+export class SessionUnavailable extends ApiError<AuthErrorTypes.SessionUnavailable, { sessionId: string }> {
+  statusCode = 401
+  constructor(private readonly sessionId: string) {
+    super(AuthErrorTypes.SessionUnavailable, { sessionId })
     this.message = 'Session no longer available'
   }
 }
@@ -61,7 +61,7 @@ export class AuthService {
     if (session) {
       return session
     } else {
-      throw new SessionUnavailable()
+      throw new SessionUnavailable(payload.sessionId)
     }
   }
 }

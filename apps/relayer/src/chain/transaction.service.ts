@@ -6,7 +6,7 @@ import {
   WalletConfig,
   walletConfig
 } from '@app/blockchain/config/wallet.config'
-import { KomenciEventType, KomenciLoggerService, SendTransactionFailure, TxEvent } from '@app/komenci-logger'
+import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
@@ -16,6 +16,7 @@ import {
   OnModuleDestroy,
   OnModuleInit
 } from '@nestjs/common'
+import { BalanceService } from 'apps/relayer/src/chain/balance.service'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
@@ -34,7 +35,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     private readonly logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     @Inject(appConfig.KEY) private appCfg: AppConfig,
-    private readonly blockchainService: BlockchainService
+    private readonly blockchainService: BlockchainService,
+    private readonly balanceService: BalanceService,
   ) {
     this.watchedTransactions = new Set()
     this.transactionSeenAt = new Map()
@@ -73,17 +75,19 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         })
         const txHash = await result.getHash()
         this.watchTransaction(txHash)
-        this.logger.log({
-          message: "Transaction Submitted",
-          ...tx,
-          hash: txHash
+
+        this.logger.event(EventType.TxSubmitted, {
+          txHash: txHash,
+          destination: tx.destination
         })
+
         return Ok(txHash)
       } catch (e) {
         if (tries === 3) {
-          this.logger.logEvent<SendTransactionFailure>(KomenciEventType.SendTransactionFailure, {
+          this.logger.event(EventType.TxSubmitFailure, {
             destination: tx.destination
           })
+
           return Err(e)
         }
       }
@@ -96,23 +100,6 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     return this.submitTransaction(toRawTransaction(txo))
   }
 
-  private async finalizeTransaction(tx: Transaction) {
-    this.unwatchTransaction(tx.hash)
-    const txReceipt = await this.kit.web3.eth.getTransactionReceipt(tx.hash)
-    const relayerBalance = await this.kit.getTotalBalance(tx.from)
-    const gasPrice = parseInt(tx.gasPrice, 10)
-    this.logger.logEvent<TxEvent>(KomenciEventType.TxEvent, {
-      txHash: tx.hash,
-      gasUsed: txReceipt.gasUsed,
-      gasPrice: gasPrice,
-      gasCost: gasPrice * txReceipt.gasUsed,
-      relayerAddress: tx.from,
-      destination: tx.to,
-      relayerCeloBalance: relayerBalance.CELO.toString(),
-      relayerCUSDBalance: relayerBalance.cUSD.toString()
-    })
-  }
-
   private async checkTransactions() {
     const txs = await Promise.all(
       [...this.watchedTransactions].map(txHash =>
@@ -121,7 +108,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     )
 
     const completed = txs.filter(tx => tx.blockHash !== null)
-
+    if (completed.length > 0) {
+      this.balanceService.logBalance()
+    }
 
     const expired = txs.filter(
       tx => tx.blockHash == null && this.isExpired(tx.hash)
@@ -129,6 +118,28 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     await Promise.all(expired.map(tx => this.deadLetter(tx)))
     await Promise.all(completed.map(tx => this.finalizeTransaction(tx)))
   }
+
+  /**
+   * Steps executed after a transaction has finalized
+   * @param tx
+   * @private
+   */
+  private async finalizeTransaction(tx: Transaction) {
+    this.unwatchTransaction(tx.hash)
+
+    const txReceipt = await this.kit.web3.eth.getTransactionReceipt(tx.hash)
+    const gasPrice = parseInt(tx.gasPrice, 10)
+
+    this.logger.event(EventType.TxConfirmed, {
+      isRevert: txReceipt.status === false,
+      txHash: tx.hash,
+      gasUsed: txReceipt.gasUsed,
+      gasPrice: gasPrice,
+      gasCost: gasPrice * txReceipt.gasUsed,
+      destination: tx.to
+    })
+  }
+
 
   /**
    * Replace expired transaction with a dummy transaction
@@ -146,17 +157,19 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       this.unwatchTransaction(tx.hash)
       this.watchTransaction(deadLetterHash)
 
-      this.logger.log({
-        message: 'Dead-lettered transaction',
+      this.logger.event(EventType.TxTimeout, {
+        destination: tx.to,
         txHash: tx.hash,
         deadLetterHash,
         nonce: tx.nonce
       })
     } catch (e) {
-      this.logger.error({
-        message: 'Could not dead-letter transaction',
-        txHash: tx.hash,
-        nonce: tx.nonce
+      this.logger.error(
+        'Could not dead-letter transaction',
+        '',
+        {
+          txHash: tx.hash,
+          nonce: tx.nonce
       })
     }
   }
@@ -179,10 +192,11 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       )
     } else {
       // This should never happen
-      this.logger.error({
-        message: 'Transaction not in set',
-        txHash
-      })
+      this.logger.error(
+        'Transaction not in set',
+        '',
+        { txHash }
+      )
       return true
     }
   }
@@ -191,7 +205,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     const txPoolRes = await this.blockchainService.getPendingTxPool()
     if (txPoolRes.ok === false) {
       if (txPoolRes.error.errorType === 'RPC') {
-        this.logger.error(txPoolRes.error.error)
+        this.logger.error(txPoolRes.error)
       }
       this.logger.error({
         message: 'Could not fetch tx pool',

@@ -1,13 +1,18 @@
-import {  Module } from '@nestjs/common'
-import { LoggerModule } from 'nestjs-pino'
+import { DynamicModule, Global, Module } from '@nestjs/common'
+import { LoggerModule, LoggerModuleAsyncParams } from 'nestjs-pino'
 
 import { KomenciLoggerService } from './komenci-logger.service'
 
-@Module({
-  imports: [LoggerModule],
-  providers: [KomenciLoggerService],
-  exports: [KomenciLoggerService],
-})
-
-export class KomenciLoggerModule {}
+@Global()
+@Module({})
+export class KomenciLoggerModule {
+  static forRootAsync(params: LoggerModuleAsyncParams): DynamicModule {
+    return {
+      module: KomenciLoggerModule,
+      imports: [LoggerModule.forRootAsync(params)],
+      providers: [KomenciLoggerService],
+      exports: [KomenciLoggerService],
+    }
+  }
+}
 

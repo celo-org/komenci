@@ -1,16 +1,16 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
-import { KomenciLoggerService } from '@app/komenci-logger'
+import { KomenciLoggerModule } from '@app/komenci-logger'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { BalanceService } from 'apps/relayer/src/chain/balance.service'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
-import { LoggerModule } from 'nestjs-pino/dist'
 import { AppController } from './app.controller'
+import { TransactionService } from './chain/transaction.service'
 import { appConfig, AppConfig } from './config/app.config'
 import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet.contract'
-import { TransactionService } from './transaction/transaction.service'
 
 @Module({
   imports: [
@@ -36,7 +36,7 @@ import { TransactionService } from './transaction/transaction.service'
       }
     }),
     ContractsModule.forRootAsync({
-      inject: [ConfigService, KomenciLoggerService],
+      inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const wallet = config.get<WalletConfig>('wallet')
         const network = config.get<NetworkConfig>('network')
@@ -47,14 +47,20 @@ import { TransactionService } from './transaction/transaction.service'
         }
       }
     }),
-    LoggerModule.forRootAsync({
+    KomenciLoggerModule.forRootAsync({
       providers: [ConfigService],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const relayerConfig = config.get<AppConfig>('app')
+        const appCfg = config.get<AppConfig>('app')
+        const walletCfg = config.get<WalletConfig>('wallet')
+
         return {
           pinoHttp: {
-            level: relayerConfig.logLevel,
+            name: `relayer-service`,
+            mixin: () => ({
+              relayer: walletCfg.address
+            }),
+            level: appCfg.logLevel,
             prettyPrint: process.env.NODE_ENV !== 'production'
           }
         }
@@ -66,8 +72,8 @@ import { TransactionService } from './transaction/transaction.service'
   providers: [
     OdisService,
     TransactionService,
+    BalanceService,
     metaTransactionWalletProvider,
-    KomenciLoggerService
   ]
 })
 export class AppModule {}

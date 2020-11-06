@@ -1,113 +1,97 @@
 import { Address, Result } from '@celo/base'
 
 export enum EventType {
-    SessionStart = 'SessionStart',
-    SessionStartFailure = 'SessionStartFailure',
-    TxConfirmed = 'TxConfirmed',
-    TxSubmitted = 'TxSubmitted',
-    TxTimeout = 'TxTimeout',
-    RuleVerified = 'RuleVerified',
-    DeployWalletTxSent = 'DeployWalletTxSent',
-    SendTransactionFailure = 'SendTransactionFailure',
-    PepperRequested = 'PepperRequested',
-    AttestationsRequested = 'AttestationsRequested',
-    MetaTransactionSubmitted = 'MetaTransactionSubmitted'
+  // Onboarding service events:
+  RelayerProxyInit = 'RelayerProxyInit',
+  SessionStart = 'SessionStart',
+  SessionStartFailure = 'SessionStartFailure',
+  DeployWalletTxSent = 'DeployWalletTxSent',
+  PepperRequested = 'PepperRequested',
+  AttestationsRequested = 'AttestationsRequested',
+  MetaTransactionSubmitted = 'MetaTransactionSubmitted',
+  // Relayer service events:
+  RelayerMTWInit = 'RelayerMTWInit',
+  TxSubmitted = 'TxSubmitted',
+  TxSubmitFailure = 'TxSubmitFailure',
+  TxConfirmed = 'TxConfirmed',
+  TxTimeout = 'TxTimeout',
+  RuleVerified = 'RuleVerified',
+  RelayerBalance = 'RelayerBalance',
 }
 
-export interface BaseEvent {
-    type: EventType
-}
-
-export interface AccountEvent extends BaseEvent {
-    externalAccount: Address
-}
-
-export interface SessionEvent extends AccountEvent{
-    sessionId: string
-}
-
-export interface SessionStartEvent extends SessionEvent {
-    type: EventType.SessionStart
-}
-
-export interface SessionStartFailureEvent extends BaseEvent {
-    type: EventType.SessionStartFailure
-}
-
-export interface RelayerEvent extends BaseEvent {
-    relayerAddress: Address
-}
-
-export interface RelayerTxEvent extends RelayerEvent {
-    destination: Address
-    txHash: string
-}
-
-export interface TxSubmitted extends RelayerTxEvent {
-    type: EventType.TxSubmitted
-}
-
-export interface TxConfirmed extends RelayerTxEvent {
-    type: EventType.TxConfirmed
-    gasPrice: number
-    gasUsed: number
-    gasCost: number
-    relayerCeloBalance: string
-    relayerCUSDBalance: string
-}
-
-export interface TxTimeout extends RelayerTxEvent {
-    type: EventType.TxTimeout
-}
-
-export interface RuleVerified extends AccountEvent {
-    type: EventType.RuleVerified
+export type EventPayload = {
+  // Onboarding service events payloads:
+  [EventType.RelayerProxyInit]: {
+    host: string,
+    port: number
+  }
+  [EventType.SessionStart]: SessionEvent
+  [EventType.SessionStartFailure]: SessionEvent
+  [EventType.RuleVerified]: AccountEvent & {
     ruleId: string
     metaData?: Record<string, unknown>
     result: Result<boolean, any>
-}
-
-export interface DeployWalletTxSent extends SessionEvent {
-    type: EventType.DeployWalletTxSent
+  }
+  [EventType.DeployWalletTxSent]: SessionEvent & {
     txHash: string
-}
-
-export interface PepperRequested extends RelayerEvent {
-    type: EventType.PepperRequested,
-    identifier: string
-}
-
-export interface AttestationsRequested extends SessionEvent {
-    type: EventType.AttestationsRequested
-    txHash: string
-    relayerAddress: Address
+  }
+  [EventType.PepperRequested]: SessionEvent & RelayerEvent & {
+    blindedPhoneNumber: string
+    clientVersion: string
+  }
+  [EventType.AttestationsRequested]: SessionTxEvent & {
     attestationsRequested: number
     identifier: string
-}
-
-export interface MetaTransactionSubmitted extends SessionEvent {
-    type: EventType.MetaTransactionSubmitted
-    txHash: string
+  }
+  [EventType.MetaTransactionSubmitted]: SessionTxEvent & {
     destination: Address
     metaTxMethodID: string
     metaTxDestination: Address
+  }
+  // Relayer service events payloads:
+  [EventType.RelayerMTWInit]: {
+    mtwAddress: string
+  }
+  [EventType.TxSubmitted]: TxEvent
+  [EventType.TxSubmitFailure]: {
+    destination: string
+  }
+  [EventType.TxConfirmed]: TxEvent & {
+    isRevert: boolean
+    gasPrice: number
+    gasUsed: number
+    gasCost: number
+  }
+  [EventType.RelayerBalance]: {
+    cUSD: string
+    celo: string
+  }
+  [EventType.TxTimeout]: TxEvent & {
+    deadLetterHash: string,
+    nonce: number
+  }
 }
 
-export interface SendTransactionFailure extends SessionEvent {
-    type: EventType.SendTransactionFailure
-    destination: Address
+export type AccountEvent = {
+  externalAccount: Address
 }
 
-export type KEvent =
-  SessionStartEvent |
-  SessionStartFailureEvent |
-  TxConfirmed |
-  TxSubmitted |
-  TxTimeout |
-  RuleVerified |
-  DeployWalletTxSent |
-  SendTransactionFailure |
-  PepperRequested |
-  AttestationsRequested |
-  MetaTransactionSubmitted
+export type SessionEvent = AccountEvent & {
+  sessionId: string
+}
+
+export type RelayerEvent = {
+  relayerAddress: Address
+}
+
+export type TxEvent = {
+  destination: Address,
+  txHash: string
+}
+
+export type SessionTxEvent = SessionEvent & {
+  relayerAddress: Address
+  txHash: string
+}
+
 
