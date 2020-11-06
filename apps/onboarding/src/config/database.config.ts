@@ -9,6 +9,9 @@ export const databaseConfig = registerAs('database', () => ({
   database: process.env.DB_DATABASE || 'postgres',
   autoLoadEntities: true,
   keepConnectionAlive: true,
+  ssl: {
+    ca: process.env.DB_SSL_CERT,
+  },
   synchronize: process.env.DB_SYNCHRONIZE === "true", // Only true for DEV
 }))
 
