@@ -1,7 +1,7 @@
 import { ApiError, isApiError, isMetadataError, isRootError, MetadataError } from '@app/komenci-logger/errors'
 import { RootError } from '@celo/base'
 import { Injectable, LoggerService } from '@nestjs/common'
-import { Logger } from "nestjs-pino"
+import { PinoLogger } from 'nestjs-pino'
 
 import { EventPayload } from '@app/komenci-logger/events'
 
@@ -11,14 +11,14 @@ export interface KomenciLogger extends LoggerService {
 
 @Injectable()
 export class KomenciLoggerService implements KomenciLogger {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: PinoLogger) {}
 
   log(message: any, context?: any, ...args): void {
-    this.logger.log(message, context, ...args)
+    this.logger.info(message, context, ...args)
   }
 
   verbose(message: any, context?: any, ...args): void {
-    this.logger.verbose(message, context, ...args)
+    this.logger.trace(message, context, ...args)
   }
 
   debug(message: any, context?: any, ...args): void {
@@ -47,39 +47,42 @@ export class KomenciLoggerService implements KomenciLogger {
   }
 
   event<K extends keyof EventPayload>(eventType: K, payload: EventPayload[K]): void {
-    this.log(eventType, payload)
+    this.log({
+      event: eventType,
+      payload
+    }, eventType)
   }
 
 
   private logApiError(error: ApiError<any, any>): void {
-    this.logger.error(
+    this.logger.error({
+        error: error.errorType,
+        payload: error.metadata
+      },
       error.message,
       error.stack,
-      {
-        type: error.errorType,
-        ...error.metadata
-      },
+      "KomenciLoggerService",
     )
   }
 
   private logRootError(error: RootError<any>): void {
-    this.error(
+    this.error({
+        error: error.errorType,
+      },
       error.message,
       error.stack,
-      {
-        type: error.errorType,
-      },
+      "KomenciLoggerService",
     )
   }
 
   private logMetadataError(error: MetadataError<any, any>): void {
-    this.logger.error(
+    this.logger.error({
+        error: error.errorType,
+        payload: error.metadata
+      },
       error.message,
       error.stack,
-      {
-        type: error.errorType,
-        ...error.metadata
-      },
+      "KomenciLoggerService",
     )
   }
 }

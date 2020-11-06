@@ -24,7 +24,7 @@ const metaTransactionWalletDeployer = {
     )
 
     logger.log({
-      message: 'Initialized MetaTransactionWalletDeployer',
+      msg: 'Initialized MetaTransactionWalletDeployer',
       address: options.deployerAddress,
     })
 

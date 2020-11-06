@@ -63,8 +63,8 @@ export type EventPayload = {
     gasCost: number
   }
   [EventType.RelayerBalance]: {
-    cUSD: string
-    celo: string
+    cUSD: number
+    celo: number
   }
   [EventType.TxTimeout]: TxEvent & {
     deadLetterHash: string,
