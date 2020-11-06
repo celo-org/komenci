@@ -53,6 +53,15 @@
         "tsConfigPath": "apps/tools/tsconfig.app.json"
       }
     },
+    "komenci-logger": {
+      "type": "library",
+      "root": "libs/komenci-logger",
+      "entryFile": "index",
+      "sourceRoot": "libs/komenci-logger/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/komenci-logger/tsconfig.lib.json"
+      }
+    },
     "utils": {
       "type": "library",
       "root": "libs/utils",
