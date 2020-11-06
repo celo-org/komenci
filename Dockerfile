@@ -21,8 +21,8 @@ WORKDIR /app
 COPY ./libs/celo/. ./libs/celo/.
 COPY ./scripts/. ./scripts/.
 
-RUN sed -ibk 's/"postinstall": ".*",/"postinstall": "echo Skipping post install",/' ./libs/celo/package.json
-RUN yarn --cwd ./libs/celo
+# Postinstall fails but we don't care
+RUN yarn --cwd ./libs/celo || true
 RUN bash ./scripts/build.celo.sh
 
 COPY ./package.json .
@@ -34,4 +34,3 @@ COPY . .
 
 RUN yarn nest build onboarding
 RUN yarn nest build relayer
-
