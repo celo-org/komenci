@@ -1,6 +1,6 @@
 import { BlockchainService, TxPool } from '@app/blockchain/blockchain.service'
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
-import { Err, Ok } from '@celo/base/lib/result'
+import { Err, ErrorResult, Ok, OkResult, Result } from '@celo/base/lib/result'
 import { ContractKit, newKitFromWeb3 } from '@celo/contractkit/lib/kit'
 import { AccountsWrapper } from '@celo/contractkit/lib/wrappers/Accounts'
 import { Test } from '@nestjs/testing'
@@ -12,18 +12,16 @@ import { TransactionService } from './transaction.service'
 
 import { testWithGanache } from '@celo/dev-utils/lib/ganache-test'
 
-// jest.setTimeout(10000)
-
 testWithGanache('TransactionService', (web3) => {
   let accounts: string[] = []
   let contract: AccountsWrapper
 
-  const relayerAddress = Web3.utils.randomHex(20)
   // @ts-ignore
   const contractKit = newKitFromWeb3(web3)
   
   // @ts-ignore
   const blockchainService = new BlockchainService(contractKit.web3.eth.currentProvider)
+  const relayerAddress = contractKit.defaultAccount
   
   const setupService = async (
     testAppConfig: Partial<AppConfig>,
@@ -71,6 +69,21 @@ testWithGanache('TransactionService', (web3) => {
     }
   }
 
+  const txPoolResponse: TxPool = {
+    pending: {
+      [Web3.utils.toChecksumAddress(relayerAddress)]: {
+        1: txFixture({
+          from: relayerAddress
+        })
+      }
+    },
+    queued: {}
+  }
+
+  const getTxPool = jest.spyOn(blockchainService, 'getPendingTxPool').mockResolvedValue(
+    Ok(txPoolResponse)
+  )
+
   beforeEach(() => {
     jest.useFakeTimers()
     jest.clearAllTimers()
@@ -87,35 +100,10 @@ testWithGanache('TransactionService', (web3) => {
     expect(service).toBeDefined()
   })
 
-  describe('#submitTransaction', () => {
-    let service: TransactionService
-    const txPoolResponse: TxPool = {
-      pending: {
-        [Web3.utils.toChecksumAddress(relayerAddress)]: {
-          1: txFixture({
-            from: relayerAddress
-          })
-        }
-      },
-      queued: {}
-    }
-    const getTxPool = jest.spyOn(blockchainService, 'getPendingTxPool').mockResolvedValue(
-      Ok(txPoolResponse)
-    )
-    beforeEach(async () => {
-      service = await setupService({
-        transactionTimeoutMs: 10000,
-        transactionCheckIntervalMs: 500
-      }, {})
-      // @ts-ignore
-      // jest.spyOn(service, 'getPendingTransactionHashes').mockResolvedValue([])
-      await service.onModuleInit()
-    })
-
-    describe('when the transaction result resolves', () => {
-      it('submits the transaction to the chain, watched then unwatches', async () => {
+  describe('#contractKit', () => {
+    describe('when the transaction is confirmed', () => {
+      it('submits the transaction to the chain, checks hash', async () => {
         const tx = txFixture()
-        
         await contract.createAccount().send({ from: contractKit.defaultAccount })
         const isAccount = await contract.isAccount(contractKit.defaultAccount)
         expect(isAccount).toBeTruthy()
@@ -135,13 +123,69 @@ testWithGanache('TransactionService', (web3) => {
           gasPrice: 10000000000
         })
         const txHash = await result.getHash()
-        expect(getTxPool).toHaveBeenCalled()
+        expect(txHash).toBeDefined()
+      })
+    })
+  })
 
-        // this times out:
-        // const txHash1 = await service.submitTransaction(rawTx)
-        const txHash2 = await service.submitTransaction2(rawTx)
-        console.log('hash2', txHash2)
+  describe('#submitTransaction', () => {
+    let service: TransactionService
 
+    beforeEach(async () => {
+      service = await setupService({
+        transactionTimeoutMs: 10000,
+        transactionCheckIntervalMs: 500
+      }, {})
+      await service.onModuleInit()
+    })
+
+    describe('when the transaction result resolves', () => {
+      it('submits the transaction to the chain, watched then unwatches', async () => {
+        const tx = txFixture()
+        
+        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction')
+        // @ts-ignore
+        const watchTransaction = jest.spyOn(service, 'watchTransaction')
+        // @ts-ignore
+        const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
+        // @ts-ignore
+        const checkTransactions = jest.spyOn(service, 'checkTransactions')
+
+        const rawTx = {
+          destination: tx.to,
+          data: tx.input,
+          value: tx.value
+        }
+
+        const txHashResult = await service.submitTransaction(rawTx)
+        const txHash = (txHashResult as OkResult<string>).result
+        expect(txHash).toBeDefined()
+        
+        expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
+          to: rawTx.destination,
+          data: rawTx.data,
+          value: rawTx.value,
+          from: relayerAddress
+        }))
+
+        const completedTx = await contractKit.web3.eth.getTransaction(txHash)
+        expect(completedTx.blockHash).toBeDefined()
+        
+        expect(watchTransaction).toHaveBeenCalledWith(txHash)
+        expect(unwatchTransaction).not.toHaveBeenCalled()
+
+        jest.advanceTimersToNextTimer(1)
+
+        expect(checkTransactions).toHaveBeenCalled()
+        
+        // Shouldn't remove it from the unwatch list until it's finalized
+        await setTimeout(() => {
+          expect(unwatchTransaction).not.toHaveBeenCalledWith(txHash)
+        })
+
+        await setTimeout(() => {
+          expect(unwatchTransaction).toHaveBeenCalledWith(txHash)
+        })
       })
     })
   })
