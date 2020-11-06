@@ -4,14 +4,13 @@ import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { Test } from '@nestjs/testing'
 import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config' 
-import { Logger } from 'nestjs-pino'
+import { LoggerModule } from 'nestjs-pino'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
 import { TransactionService } from './transaction.service'
 
 jest.mock('@app/blockchain/blockchain.service')
 jest.mock('@celo/contractkit')
-jest.mock('nestjs-pino')
 
 describe('TransactionService', () => {
   const relayerAddress = Web3.utils.randomHex(20)
@@ -19,8 +18,6 @@ describe('TransactionService', () => {
   const blockchainService = new BlockchainService()
   // @ts-ignore
   const contractKit = new ContractKit()
-  // @ts-ignore
-  const logger = new Logger()
   // @ts-ignore
   contractKit.web3 = {
     eth: {
@@ -42,9 +39,11 @@ describe('TransactionService', () => {
     }
 
     const module = await Test.createTestingModule({
+      imports: [	
+        LoggerModule.forRoot(),	
+      ],
       providers: [
         TransactionService,
-        { provide: Logger, useValue: logger },
         { provide: BlockchainService, useValue: blockchainService},
         { provide: ContractKit, useValue: contractKit },
         { provide: walletConfig.KEY, useValue: walletConfigValue },
