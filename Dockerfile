@@ -13,10 +13,17 @@ RUN apt update -y && apt install -y \
 RUN alias python='/usr/bin/python3'
 
 RUN mkdir /app
-WORKDIR /app
-# RUN mkdir -p /app/libs/celo
-# RUN mkdir /app/scripts
+RUN mkdir -p /app/libs/celo
+RUN mkdir /app/scripts
 
+WORKDIR /app
+
+COPY ./libs/celo/. ./libs/celo/.
+COPY ./scripts/. ./scripts/.
+
+RUN sed -ibk 's/"postinstall": ".*",/"postinstall": "echo Skipping post install",/' ./libs/celo/package.json
+RUN yarn --cwd ./libs/celo
+RUN bash ./scripts/build.celo.sh
 
 COPY ./package.json .
 COPY ./yarn.lock .
@@ -24,10 +31,6 @@ COPY ./yarn.lock .
 RUN yarn
 
 COPY . .
-
-RUN git submodule update --init
-RUN yarn deps:celo:install || true
-RUN yarn deps:celo:build
 
 RUN yarn nest build onboarding
 RUN yarn nest build relayer
