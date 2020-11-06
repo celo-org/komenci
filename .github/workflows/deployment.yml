@@ -19,19 +19,14 @@ jobs:
         password: ${{ secrets.ACR_PASSWORD }}
 
     - run: |
-        (while true; do
-          df -h
-          sleep 15
-        done) &
-
         docker pull celotestnet.azurecr.io/komenci/komenci:latest
         docker build .\
             -t komenci \
             --cache-from celotestnet.azurecr.io/komenci/komenci:latest \
 
         docker tag komenci celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
-        docker tag komenci celotestnet.azurecr.io/komenci/komenci:latest
+        docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
 
-        docker push komenci celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
+        docker tag komenci celotestnet.azurecr.io/komenci/komenci:latest
         docker push celotestnet.azurecr.io/komenci/komenci:latest
 
