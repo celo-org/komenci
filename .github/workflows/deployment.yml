@@ -17,17 +17,16 @@ jobs:
         login-server: celotestnet.azurecr.io
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
-    
+
     - run: |
         docker pull celotestnet.azurecr.io/komenci/komenci:latest
-
-        docker build \
-            -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
-            -t celotestnet.azurecr.io/komenci/komenci:latest \
+        docker build .\
+            -t komenci \
             --cache-from celotestnet.azurecr.io/komenci/komenci:latest \
-            --build-arg BUILDKIT_INLINE_CACHE=1 \
-            .
 
+        docker tag komenci celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
         docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
+
+        docker tag komenci celotestnet.azurecr.io/komenci/komenci:latest
         docker push celotestnet.azurecr.io/komenci/komenci:latest
 
