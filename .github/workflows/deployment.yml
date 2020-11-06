@@ -18,21 +18,20 @@ jobs:
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
-    - uses: satackey/action-docker-layer-caching@v0.0.8
-      # Ignore the failure of a step and avoid terminating the job.
-      continue-on-error: true
-
     - run: |
         (while true; do
           df -h
           sleep 15
         done) &
 
-        docker build \
-            -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
-            -t celotestnet.azurecr.io/komenci/komenci:latest \
-            .
+        docker pull celotestnet.azurecr.io/komenci/komenci:latest
+        docker build .\
+            -t komenci \
+            --cache-from celotestnet.azurecr.io/komenci/komenci:latest \
 
-        docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
+        docker tag komenci celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
+        docker tag komenci celotestnet.azurecr.io/komenci/komenci:latest
+
+        docker push komenci celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
         docker push celotestnet.azurecr.io/komenci/komenci:latest
 
