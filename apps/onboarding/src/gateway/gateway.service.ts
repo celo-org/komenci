@@ -1,10 +1,10 @@
+import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { SignatureRule } from '@app/onboarding/gateway/rules/signature.rule'
 import { RootError } from '@celo/base/lib/result'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
 import { FastifyRequest } from 'fastify'
-import { InjectPinoLogger, Logger, PinoLogger } from 'nestjs-pino'
 import { rulesConfig } from '../config/rules.config'
 import { StartSessionDto } from '../dto/StartSessionDto'
 import { CaptchaRule } from './rules/captcha.rule'
@@ -23,8 +23,7 @@ export class GatewayService implements OnModuleInit {
     @Inject(rulesConfig.KEY)
     private config: ConfigType<typeof rulesConfig>,
     private moduleRef: ModuleRef,
-    @InjectPinoLogger()
-    private logger: PinoLogger
+    private logger: KomenciLoggerService
   ) {}
 
   async onModuleInit() {
@@ -39,7 +38,9 @@ export class GatewayService implements OnModuleInit {
     this.ruleConfigs = this.rules.reduce((acc, rule) => {
       return {
         ...acc,
-        [rule.getID()]: rule.validateConfig(this.config.configs[rule.getID()]) || rule.defaultConfig()
+        [rule.getID()]:
+          rule.validateConfig(this.config.configs[rule.getID()]) ||
+          rule.defaultConfig()
       }
     }, {})
   }
@@ -64,12 +65,16 @@ export class GatewayService implements OnModuleInit {
     )
 
     let hasFailingResult = false
-    results.forEach(result => {
+    results.forEach((result, idx) => {
+      this.logger.event(EventType.RuleVerified, {
+        externalAccount: startSessionDto.externalAccount,
+        ruleId: enabledRules[idx].getID(),
+        result
+      })
+
       if (result.ok === false) {
         hasFailingResult = true
-        this.logger.error({
-          errorType: result.error.errorType
-        }, result.error.message)
+        this.logger.error(result.error)
       }
     })
 

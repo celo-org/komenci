@@ -1,9 +1,12 @@
 import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
+import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
 import {
-  InputDecodeError, InvalidChildMethod, InvalidDestination,
+  InputDecodeError,
+  InvalidChildMethod,
+  InvalidDestination,
   InvalidImplementation,
   InvalidRootMethod,
   InvalidWallet,
@@ -13,9 +16,15 @@ import {
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { Address, normalizeAddress } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
-import { ABI as MetaTxWalletABI, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
+import {
+  ABI as MetaTxWalletABI,
+  newMetaTransactionWallet
+} from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
-import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import {
+  RawTransaction,
+  toRawTransaction
+} from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
 import { Inject, Injectable } from '@nestjs/common'
@@ -26,7 +35,12 @@ const InputDataDecoder = require('ethereum-input-data-decoder')
 const MetaTxWalletDecoder = new InputDataDecoder(MetaTxWalletABI)
 
 export interface TxFilter {
-  destination: Address,
+  destination: Address
+  methodId: string
+}
+
+export interface MetaTxMetadata {
+  destination: Address
   methodId: string
 }
 
@@ -41,42 +55,47 @@ export class WalletService {
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
     @Inject(appConfig.KEY)
-    private readonly appCfg: AppConfig
-) {}
+    private readonly appCfg: AppConfig,
+    private readonly logger: KomenciLoggerService
+  ) {}
 
   async isAllowedMetaTransaction(
-    transaction: RawTransaction,
+    txMetadata: MetaTxMetadata,
     allowedTransactions: TxFilter[]
   ): Promise<Result<true, MetaTxValidationError>> {
-    const metaTxDecode = this.decodeMetaTransaction(transaction)
-    if (metaTxDecode.ok === false) {
-      return metaTxDecode
-    }
-
-    const metaTx = metaTxDecode.result
-    const normDestination = normalizeAddress(metaTx.destination)
+    const normDestination = normalizeAddress(txMetadata.destination)
 
     const txWithMatchingDestination = allowedTransactions.filter(
-      (allowed) =>
-        normalizeAddress(allowed.destination) === normDestination
+      allowed => normalizeAddress(allowed.destination) === normDestination
     )
 
     if (txWithMatchingDestination.length === 0) {
-      return Err(new InvalidDestination(metaTx.destination))
+      return Err(new InvalidDestination(txMetadata.destination))
     }
 
-    const metaTxMethodId = extractMethodId(metaTx.data)
-    const matchingTx = txWithMatchingDestination.find(
-      (allowed) => {
-        return metaTxMethodId === normalizeMethodId(allowed.methodId)
-      }
-    )
-
+    const metaTxMethodId = txMetadata.methodId
+    const matchingTx = txWithMatchingDestination.find(allowed => {
+      return metaTxMethodId === normalizeMethodId(allowed.methodId)
+    })
     if (matchingTx === undefined) {
       return Err(new InvalidChildMethod(metaTxMethodId))
     }
 
     return Ok(true)
+  }
+
+  async extractMetaTxData(
+    transaction: RawTransaction
+  ): Promise<Result<MetaTxMetadata, MetaTxValidationError>> {
+    const metaTxDecode = this.decodeMetaTransaction(transaction)
+    if (metaTxDecode.ok === false) {
+      return metaTxDecode
+    }
+    const metaTx = metaTxDecode.result
+    return Ok({
+      destination: metaTx.destination,
+      methodId: extractMethodId(metaTx.data)
+    })
   }
 
   async isValidWallet(
@@ -99,18 +118,22 @@ export class WalletService {
 
   async getWallet(session: Session, implementationAddress?: string): Promise<Result<string, WalletNotDeployed>> {
     if (this.hasDeployInProgress(session, implementationAddress)) {
-      const tx = await this.web3.eth.getTransaction(session.meta.walletDeploy.txHash)
+      const tx = await this.web3.eth.getTransaction(
+        session.meta.walletDeploy.txHash
+      )
       if (tx.blockNumber !== null) {
         const events = await this.walletDeployer.getPastEvents(
           this.walletDeployer.eventTypes.WalletDeployed,
           {
             fromBlock: tx.blockNumber,
-            toBlock: tx.blockNumber,
+            toBlock: tx.blockNumber
           }
         )
 
-        const deployWalletLog = events.find((event) =>
-          normalizeAddress(event.returnValues.owner) === normalizeAddress(session.externalAccount)
+        const deployWalletLog = events.find(
+          event =>
+            normalizeAddress(event.returnValues.owner) ===
+            normalizeAddress(session.externalAccount)
         )
 
         if (deployWalletLog) {
@@ -132,14 +155,21 @@ export class WalletService {
     }
 
     const impl = newMetaTransactionWallet(this.web3, implementationAddress)
+    const txn = toRawTransaction(
+      this.walletDeployer.deploy(
+        session.externalAccount,
+        implementationAddress,
+        impl.methods.initialize(session.externalAccount).encodeABI()
+      ).txo
+    )
     const resp = await this.relayerProxyService.submitTransaction({
-      transaction: toRawTransaction(
-        this.walletDeployer.deploy(
-          session.externalAccount,
-          implementationAddress,
-          impl.methods.initialize(session.externalAccount).encodeABI()
-        ).txo
-      )
+      transaction: txn
+    })
+
+    this.logger.event(EventType.DeployWalletTxSent, {
+      txHash: resp.payload,
+      sessionId: session.id,
+      externalAccount: session.externalAccount
     })
 
     await this.sessionService.update(session.id, {
@@ -148,7 +178,7 @@ export class WalletService {
         walletDeploy: {
           startedAt: Date.now(),
           txHash: resp.payload,
-          implementationAddress,
+          implementationAddress
         }
       }
     })
@@ -165,8 +195,8 @@ export class WalletService {
       )
     ) {
       const deployDeadline = new Date(
-        session.meta.walletDeploy.startedAt +
-        this.appCfg.transactionTimeoutMs
+          session.meta.walletDeploy.startedAt +
+          this.appCfg.transactionTimeoutMs
       )
 
       if (new Date() < deployDeadline) {
@@ -180,7 +210,9 @@ export class WalletService {
     return implementationAddress in this.networkCfg.contracts.MetaTransactionWalletVersions
   }
 
-  private decodeMetaTransaction(tx: RawTransaction): Result<RawTransaction, MetaTxValidationError> {
+  private decodeMetaTransaction(
+    tx: RawTransaction
+  ): Result<RawTransaction, MetaTxValidationError> {
     let decodedData: any
     try {
       decodedData = MetaTxWalletDecoder.decodeData(tx.data)
@@ -197,7 +229,7 @@ export class WalletService {
     }
 
     if (decodedData.inputs.length !== 6) {
-      return Err(new InputDecodeError(new Error("Invalid inputs length")))
+      return Err(new InputDecodeError(new Error('Invalid inputs length')))
     }
 
     // destination, value, calldata

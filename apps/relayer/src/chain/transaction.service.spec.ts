@@ -1,34 +1,38 @@
 import { BlockchainService, NodeRPCError, TxPool } from '@app/blockchain/blockchain.service'
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
-import { Test } from '@nestjs/testing'
-import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config' 
-import { LoggerModule } from 'nestjs-pino'
+import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { Test, TestingModule } from '@nestjs/testing'
+import { BalanceService } from 'apps/relayer/src/chain/balance.service'
+import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
+import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
 import { TransactionService } from './transaction.service'
 
 jest.mock('@app/blockchain/blockchain.service')
 jest.mock('@celo/contractkit')
+jest.mock('@app/komenci-logger/komenci-logger.service')
+jest.mock('@celo/contractkit/lib/wrappers/MetaTransactionWallet')
 
 describe('TransactionService', () => {
   const relayerAddress = Web3.utils.randomHex(20)
-  // @ts-ignore
-  const blockchainService = new BlockchainService()
   // @ts-ignore
   const contractKit = new ContractKit()
   // @ts-ignore
   contractKit.web3 = {
     eth: {
-      getTransaction: jest.fn()
+      getTransaction: jest.fn(),
+      getTransactionReceipt: jest.fn()
     }
   }
 
-  const setupService = async (
+  const buildModule = async (
     testAppConfig: Partial<AppConfig>,
     testWalletConfig: Partial<WalletConfig>
-  ): Promise<TransactionService>  => {
+  ): Promise<TestingModule>  => {
     const appConfigValue: Partial<AppConfig> = {
       ...testAppConfig
     }
@@ -38,20 +42,20 @@ describe('TransactionService', () => {
       ...testWalletConfig
     }
 
-    const module = await Test.createTestingModule({
+    return Test.createTestingModule({
       imports: [
-        LoggerModule.forRoot(),
+        KomenciLoggerModule.forRoot(),
       ],
       providers: [
         TransactionService,
-        { provide: BlockchainService, useValue: blockchainService},
+        BlockchainService,
+        BalanceService,
         { provide: ContractKit, useValue: contractKit },
         { provide: walletConfig.KEY, useValue: walletConfigValue },
-        { provide: appConfig.KEY, useValue: appConfigValue }
+        { provide: appConfig.KEY, useValue: appConfigValue },
+        MetaTransactionWalletWrapper
       ]
     }).compile()
-
-    return module.get<TransactionService>(TransactionService)
   }
 
   const txFixture = (params?: Partial<Transaction>): Transaction => {
@@ -68,6 +72,31 @@ describe('TransactionService', () => {
       gas: 100000,
       value: "1000",
       ...(params || {}),
+    }
+  }
+
+  const txReceiptFixture = (): TransactionReceipt => {
+    return {
+      gasUsed: 10,
+      cumulativeGasUsed: 10,
+      blockNumber: null,
+      from: Web3.utils.randomHex(20),
+      to: Web3.utils.randomHex(20),
+      logs: [],
+      logsBloom: '',
+      status: true,
+      transactionHash: null,
+      transactionIndex: null,
+      blockHash: null,
+    }
+  }
+
+  const relayerBalanceFixture = () => {
+    return {
+      CELO: new BigNumber(10),
+      cUSD: new BigNumber(100),
+      lockedCELO: new BigNumber(0),
+      pending: new BigNumber(0),
     }
   }
 
@@ -94,17 +123,22 @@ describe('TransactionService', () => {
 
 
   it('should be defined', async () => {
-    const service = await setupService({}, {})
+    const module = await buildModule({}, {})
+    const service = module.get(TransactionService)
     expect(service).toBeDefined()
   })
 
   describe('#onModuleInit', () => {
     describe('when looking up transactions fails', () => {
       it('initializes with an empty set', async () => {
+        const module = await buildModule({}, {})
+        const blockchainService = module.get(BlockchainService)
+        const service = module.get(TransactionService)
+
         const getTxPool = jest.spyOn(blockchainService, 'getPendingTxPool').mockResolvedValue(
           Err(new NodeRPCError(new Error("node-rpc-error")))
         )
-        const service = await setupService({}, {})
+
         await service.onModuleInit()
 
         expect(getTxPool).toHaveBeenCalled()
@@ -115,6 +149,10 @@ describe('TransactionService', () => {
 
     describe('when looking up transactions works', () => {
       it('extracts pending transactions from response', async () => {
+        const module = await buildModule({}, {})
+        const blockchainService = module.get(BlockchainService)
+        const service = module.get(TransactionService)
+
         const tx = txFixture({
           from: relayerAddress
         })
@@ -129,7 +167,6 @@ describe('TransactionService', () => {
         const getTxPool = jest.spyOn(blockchainService, 'getPendingTxPool').mockResolvedValue(
           Ok(txPoolResponse)
         )
-        const service = await setupService({}, {})
         await service.onModuleInit()
 
         expect(getTxPool).toHaveBeenCalled()
@@ -143,13 +180,19 @@ describe('TransactionService', () => {
 
   describe('#submitTransaction', () => {
     let service: TransactionService
+
     beforeEach(async () => {
-      service = await setupService({
+      const module = await buildModule({
         transactionTimeoutMs: 2000,
         transactionCheckIntervalMs: 500
       }, {})
+
+      service = module.get(TransactionService)
+      const balanceService = module.get(BalanceService)
+
       // @ts-ignore
       jest.spyOn(service, 'getPendingTransactionHashes').mockResolvedValue([])
+      jest.spyOn(balanceService, 'logBalance').mockResolvedValue(null)
       await service.onModuleInit()
     })
 
@@ -206,11 +249,21 @@ describe('TransactionService', () => {
         completedTx.blockHash = "notNull"
         const completedTxPromise = Promise.resolve(completedTx)
         getTransaction.mockReturnValue(completedTxPromise)
+
+        const getTransactionReceipt = jest.spyOn(contractKit.web3.eth, 'getTransactionReceipt')
+        const txReceiptPromise = Promise.resolve(txReceiptFixture())
+        getTransactionReceipt.mockReturnValue(txReceiptPromise)
+
+        const getTotalBalance = jest.spyOn(contractKit, 'getTotalBalance')
+        const relayerBalancePromise = Promise.resolve(relayerBalanceFixture())
+        getTotalBalance.mockReturnValue(relayerBalancePromise)
+
         jest.advanceTimersToNextTimer(2)
         await completedTxPromise
-        await setTimeout(() => {
-          expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
-        })
+        await txReceiptPromise
+        await relayerBalancePromise
+
+        expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         jest.advanceTimersToNextTimer(1)
       })
     })
@@ -220,7 +273,8 @@ describe('TransactionService', () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
         const result: any = {
-          getHash: () => Promise.resolve(tx.hash)
+          getHash: () => Promise.resolve(tx.hash),
+          waitReceipt: () => Promise.resolve(receipt)
         }
         const resultPromise = Promise.resolve(result)
         const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockReturnValue(resultPromise)
@@ -234,6 +288,8 @@ describe('TransactionService', () => {
         const deadLetter = jest.spyOn(service, 'deadLetter')
         // @ts-ignore
         const checkTransactions = jest.spyOn(service, 'checkTransactions')
+        // @ts-ignore
+        const finalizeTransaction = jest.spyOn(service, 'finalizeTransaction')
         // @ts-ignore
         const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(true)
 
@@ -258,6 +314,7 @@ describe('TransactionService', () => {
         jest.advanceTimersToNextTimer(1)
 
         expect(checkTransactions).toHaveBeenCalled()
+        expect(finalizeTransaction).not.toHaveBeenCalled()
         await txPromise
         await resultPromise
         await result.getHash()
