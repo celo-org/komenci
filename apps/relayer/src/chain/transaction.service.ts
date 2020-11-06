@@ -73,8 +73,16 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           gas: 10000000,
           gasPrice: 10000000000
         })
+
+        // If we don't do this explicitly it results in
+        // an unhandled exception being logged if the
+        // tx reverts.
+        // tslint:disable-next-line:no-empty
+        result.waitReceipt().then().catch(() => {})
+
         const txHash = await result.getHash()
         this.watchTransaction(txHash)
+
 
         this.logger.event(EventType.TxSubmitted, {
           txHash: txHash,
@@ -109,7 +117,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
     const completed = txs.filter(tx => tx.blockHash !== null)
     if (completed.length > 0) {
-      this.balanceService.logBalance()
+      await this.balanceService.logBalance()
     }
 
     const expired = txs.filter(
