@@ -1,3 +1,4 @@
+import { MetadataError } from '@app/komenci-logger/errors'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import {
   HttpService,
@@ -9,12 +10,12 @@ import { HttpRequestError } from '../../errors/http'
 import { ErrorCode, ReCAPTCHAResponseDto } from './ReCAPTCHAResponseDto'
 
 export enum ReCAPTCHAErrorTypes {
-  VerificationFailed = 'VerificationFailed'
+  VerificationFailed = 'RecaptchaVerificationFailed'
 }
 
-export class CaptchaVerificationFailed extends RootError<ReCAPTCHAErrorTypes> {
+export class CaptchaVerificationFailed extends MetadataError<ReCAPTCHAErrorTypes, {errorCodes: ErrorCode[]}> {
   constructor(public errorCodes: ErrorCode[]) {
-    super(ReCAPTCHAErrorTypes.VerificationFailed)
+    super(ReCAPTCHAErrorTypes.VerificationFailed, {errorCodes})
   }
 }
 
