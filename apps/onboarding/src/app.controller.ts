@@ -9,7 +9,7 @@ import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
-import { normalizeAddress } from '@celo/base'
+import { normalizeAddress, throwIfError } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Body, Controller, Get, Inject, Post, Req, Session, UnauthorizedException, UseGuards } from '@nestjs/common'
@@ -134,19 +134,15 @@ export class AppController {
       throw getResp.error
     }
 
-    const deployResp = await this.walletService.deployWallet(
+    const txHash = throwIfError(await this.walletService.deployWallet(
       session,
       deployWalletDto.implementationAddress
-    )
+    ))
 
-    if (deployResp.ok === true) {
-      return {
-        status: 'in-progress',
-        txHash: deployResp.result,
-        deployerAddress: this.networkCfg.contracts.MetaTransactionWalletDeployer
-      }
-    } else {
-      throw deployResp.error
+    return {
+      status: 'in-progress',
+      txHash: txHash,
+      deployerAddress: this.networkCfg.contracts.MetaTransactionWalletDeployer
     }
   }
 
@@ -160,9 +156,9 @@ export class AppController {
     @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto,
     @Session() session: SessionEntity,
   ): Promise<GetPhoneNumberIdResponse> {
-    const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
+    const resp = throwIfError(await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
-    )
+    ))
     this.logger.event(EventType.PepperRequested, {
       sessionId: session.id,
       externalAccount: session.externalAccount,
@@ -191,20 +187,19 @@ export class AppController {
     @Body() requestAttestationsDto: RequestAttestationsDto,
     @Session() session: SessionEntity
   ) {
-    const res = await this.subsidyService.isValid(
+    throwIfError(await this.subsidyService.isValid(
       requestAttestationsDto,
       session
-    )
+    ))
 
-    if (res.ok === false) {
-      throw(res.error)
-    }
     const transactions = await this.subsidyService.buildTransactionBatch(
       requestAttestationsDto
     )
-    const txSubmit = await this.relayerProxyService.submitTransactionBatch({
+
+    const txSubmit = throwIfError(await this.relayerProxyService.submitTransactionBatch({
       transactions
-    })
+    }))
+
     this.logger.event(EventType.AttestationsRequested, {
       sessionId: session.id,
       externalAccount: session.externalAccount,
@@ -239,24 +234,16 @@ export class AppController {
       ...body,
       value: '0x0'
     }
-    const metaTaxMetadata = await this.walletService.extractMetaTxData(metaTx)
+    const metaTaxMetadata = throwIfError(await this.walletService.extractMetaTxData(metaTx))
 
-    if (metaTaxMetadata.ok === false) {
-      throw metaTaxMetadata.error
-    }
-
-    const validTx = await this.walletService.isAllowedMetaTransaction(
-      metaTaxMetadata.result,
+    throwIfError(await this.walletService.isAllowedMetaTransaction(
+      metaTaxMetadata,
       await this.allowedMetaTransactions()
-    )
+    ))
 
-    if (validTx.ok === false) {
-      throw validTx.error
-    }
-
-    const resp = await this.relayerProxyService.submitTransaction({
+    const resp = throwIfError(await this.relayerProxyService.submitTransaction({
       transaction: metaTx
-    })
+    }))
 
     this.logger.event(EventType.MetaTransactionSubmitted, {
       sessionId: session.id,
@@ -264,8 +251,8 @@ export class AppController {
       externalAccount: session.externalAccount,
       txHash: resp.payload,
       destination: normalizeAddress(metaTx.destination),
-      metaTxMethodID: metaTaxMetadata.result.methodId,
-      metaTxDestination: metaTaxMetadata.result.destination
+      metaTxMethodID: metaTaxMetadata.methodId,
+      metaTxDestination: metaTaxMetadata.destination
     })
 
     await this.sessionService.incrementUsage(

@@ -12,7 +12,6 @@ export enum EventType {
   // Relayer service events:
   RelayerMTWInit = 'RelayerMTWInit',
   TxSubmitted = 'TxSubmitted',
-  TxSubmitFailure = 'TxSubmitFailure',
   TxConfirmed = 'TxConfirmed',
   TxTimeout = 'TxTimeout',
   RuleVerified = 'RuleVerified',
@@ -52,9 +51,6 @@ export type EventPayload = {
     mtwAddress: string
   }
   [EventType.TxSubmitted]: TxEvent
-  [EventType.TxSubmitFailure]: {
-    destination: string
-  }
   [EventType.TxConfirmed]: TxEvent & {
     isRevert: boolean
     gasPrice: number

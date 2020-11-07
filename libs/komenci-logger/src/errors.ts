@@ -36,14 +36,15 @@ export abstract class ApiError<TError, TMetadata extends object = {}> extends Me
   }
 }
 
-export const isRootError = (error: any) => {
+export const isRootError = (error: any): error is RootError<any> => {
   return error.errorType !== undefined
 }
 
-export const isMetadataError = (error: any) => {
+export const isMetadataError = (error: any): error is MetadataError<any, any> => {
   return error[errorTypeSymbol] === metadataErrorSymbol
 }
 
-export const isApiError = (error: any) => {
+export const isApiError = (error: any): error is ApiError<any, any> => {
   return error[errorTypeSymbol] === apiErrorSymbol
 }
+

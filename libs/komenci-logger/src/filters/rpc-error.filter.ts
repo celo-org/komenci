@@ -1,19 +1,40 @@
 import { KomenciLoggerService } from '@app/komenci-logger'
+import { isMetadataError, isRootError } from '@app/komenci-logger/errors'
+
 import {
   ArgumentsHost,
   Catch,
   Inject,
 } from '@nestjs/common'
 import { BaseRpcExceptionFilter } from '@nestjs/microservices'
-import { Observable } from 'rxjs'
+import { Observable, throwError as _throw } from 'rxjs';
 
 @Catch()
 export class RpcErrorFilter extends BaseRpcExceptionFilter {
   @Inject()
   protected readonly logger: KomenciLoggerService
 
-  catch(exception: any, host: ArgumentsHost): Observable<any> {
-    this.logger.error(exception)
-    return super.catch(exception, host)
+  catch(err: any, host: ArgumentsHost): Observable<any> {
+    this.logger.error(err)
+
+    if (isMetadataError(err)) {
+      return _throw({
+        errorType: err.errorType,
+        message: err.message,
+        metadata: err.metadata
+      })
+    } else if (isRootError(err)) {
+      return _throw({
+        errorType: err.errorType,
+        message: err.message
+      })
+    } else if (this.isError(err)) {
+      return _throw({
+        errorType: 'Exception',
+        message: err.message
+      })
+    } else {
+      return _throw(err)
+    }
   }
 }

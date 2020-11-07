@@ -14,7 +14,7 @@ import {
   WalletNotDeployed
 } from '@app/onboarding/wallet/errors'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
-import { Address, normalizeAddress } from '@celo/base'
+import { Address, normalizeAddress, throwIfError } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import {
   ABI as MetaTxWalletABI,
@@ -162,9 +162,9 @@ export class WalletService {
         impl.methods.initialize(session.externalAccount).encodeABI()
       ).txo
     )
-    const resp = await this.relayerProxyService.submitTransaction({
+    const resp = throwIfError(await this.relayerProxyService.submitTransaction({
       transaction: txn
-    })
+    }))
 
     this.logger.event(EventType.DeployWalletTxSent, {
       txHash: resp.payload,
