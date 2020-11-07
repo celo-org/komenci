@@ -7,7 +7,7 @@ import {
   Inject,
 } from '@nestjs/common'
 import { BaseRpcExceptionFilter } from '@nestjs/microservices'
-import { Observable, throwError as _throw } from 'rxjs';
+import { Observable, throwError as _throw } from 'rxjs'
 
 @Catch()
 export class RpcErrorFilter extends BaseRpcExceptionFilter {
