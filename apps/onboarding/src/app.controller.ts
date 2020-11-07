@@ -20,6 +20,7 @@ import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
 
 import { AuthService } from './auth/auth.service'
+import { appConfig, AppConfig } from './config/app.config'
 import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 import { StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
@@ -46,6 +47,11 @@ interface CheckSessionResponse {
   metaTxWalletAddress?: string
 }
 
+interface StartSessionResponse {
+  token: string
+  callbackUrl: string
+}
+
 @Controller("v1")
 export class AppController {
   // Cache for the allowed metaTx filter
@@ -61,6 +67,8 @@ export class AppController {
     private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
+    @Inject(appConfig.KEY)
+    private readonly appCfg: AppConfig,
     private readonly logger: KomenciLoggerService
 ) {}
 
@@ -78,7 +86,7 @@ export class AppController {
   async startSession(
     @Body() startSessionDto: StartSessionDto,
     @Req() req
-  ): Promise<{ token: string }> {
+  ): Promise<StartSessionResponse> {
     if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
       const response = await this.authService.startSession(
         startSessionDto.externalAccount
@@ -89,7 +97,7 @@ export class AppController {
         sessionId: response.sessionId
       })
 
-      return { token: response.token }
+      return { token: response.token, callbackUrl: this.appCfg.callbackUrl }
     } else {
       throw new UnauthorizedException()
     }
