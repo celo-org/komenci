@@ -9,7 +9,8 @@ export const appConfig = registerAs('app', () => ({
   // This feature should be enabled at a later date after we deploy a
   // new version of Attestations.sol
   useAttestationGuards: process.env.USE_ATTESTATION_GUARDS === 'true',
-  relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000
+  relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000,
+  callbackUrl: process.env.PUBLIC_URL || 'http://localhost'
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>
