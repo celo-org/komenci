@@ -20,20 +20,29 @@ export enum RelayerErrorTypes {
 }
 
 class RelayerTimeout extends MetadataError<RelayerErrorTypes.RelayerTimeout> {
-  constructor(meta: {cmd: RelayerCmd}) {
-    super(RelayerErrorTypes.RelayerTimeout, meta)
+  constructor(
+    public readonly metadata: {cmd: RelayerCmd}
+  ) {
+    super(RelayerErrorTypes.RelayerTimeout)
   }
 }
 
 class RelayerCommunicationError extends MetadataError<RelayerErrorTypes.RelayerCommunicationError> {
-  constructor(meta: {message, cmd}) {
-    super(RelayerErrorTypes.RelayerCommunicationError, meta)
+  constructor(
+    public readonly metadata: {message, cmd}
+  ) {
+    super(RelayerErrorTypes.RelayerCommunicationError)
   }
 }
 
 class RelayerInternalError extends MetadataError<RelayerErrorTypes.RelayerInternalError> {
-  constructor(meta: {errorType: string, message: string, metadata: any}) {
-    super(RelayerErrorTypes.RelayerInternalError, meta)
+  constructor(
+    public readonly metadata: {
+      errorType: string,
+      message: string,
+      metadata: any
+  }) {
+    super(RelayerErrorTypes.RelayerInternalError)
   }
 }
 

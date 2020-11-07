@@ -4,26 +4,29 @@ export const errorTypeSymbol = Symbol('errorType')
 export const apiErrorSymbol = Symbol('ApiError')
 export const metadataErrorSymbol = Symbol('MetadataError')
 
-export abstract class MetadataError<TError, TMetadata extends object = {}> extends RootError<TError> {
+export abstract class MetadataError<TError, TMetadata = object> extends RootError<TError> {
   [errorTypeSymbol] = metadataErrorSymbol
+
+  public abstract readonly metadata: TMetadata
 
   protected constructor(
     errorType: TError,
-    public readonly metadata: TMetadata
   ) {
     super(errorType)
   }
 }
 
-export abstract class ApiError<TError, TMetadata extends object = {}> extends MetadataError<TError, TMetadata> {
+export abstract class ApiError<TError, TMetadata extends object = any> extends MetadataError<TError, TMetadata> {
   [errorTypeSymbol] = apiErrorSymbol
   abstract statusCode: number
+  public readonly metadata: TMetadata
 
   protected constructor(
     errorType: TError,
     metadata?: TMetadata
   ) {
-    super(errorType, metadata)
+    super(errorType)
+    this.metadata = metadata
   }
 
   toJSON = () => {
@@ -40,7 +43,7 @@ export const isRootError = (error: any): error is RootError<any> => {
   return error.errorType !== undefined
 }
 
-export const isMetadataError = (error: any): error is MetadataError<any, any> => {
+export const isMetadataError = (error: any): error is MetadataError<any> => {
   return error[errorTypeSymbol] === metadataErrorSymbol
 }
 

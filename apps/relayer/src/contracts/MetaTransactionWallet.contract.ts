@@ -21,8 +21,10 @@ class RelayerNotRegisteredError extends RootError<RelayerMTWErrorTypes.NotRegist
 }
 
 class NoMTWError extends MetadataError<RelayerMTWErrorTypes.NoMTW> {
-  constructor(meta: {configAddress: string}) {
-    super(RelayerMTWErrorTypes.NoMTW, meta)
+  constructor(
+    public readonly metadata: {configAddress: string}
+  ) {
+    super(RelayerMTWErrorTypes.NoMTW)
     this.message = `Relayer doesn't have a valid associated MTW in config`
   }
 }

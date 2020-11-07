@@ -14,8 +14,10 @@ export enum ReCAPTCHAErrorTypes {
 }
 
 export class CaptchaVerificationFailed extends MetadataError<ReCAPTCHAErrorTypes> {
-  constructor(meta: {errorCodes: ErrorCode[], token: string}) {
-    super(ReCAPTCHAErrorTypes.VerificationFailed, meta)
+  constructor(
+    public readonly metadata: {errorCodes: ErrorCode[], token: string}
+  ) {
+    super(ReCAPTCHAErrorTypes.VerificationFailed)
   }
 }
 

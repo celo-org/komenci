@@ -107,7 +107,7 @@ describe('CaptchaService', () => {
       )
       if (result.error.errorType === ReCAPTCHAErrorTypes.VerificationFailed) {
         // type inference for error
-        expect(result.error.errorCodes).toEqual(errorCodes)
+        expect(result.error.metadata.errorCodes).toEqual(errorCodes)
       }
     }
   })
