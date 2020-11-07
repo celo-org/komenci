@@ -13,9 +13,9 @@ export enum ReCAPTCHAErrorTypes {
   VerificationFailed = 'RecaptchaVerificationFailed'
 }
 
-export class CaptchaVerificationFailed extends MetadataError<ReCAPTCHAErrorTypes, {errorCodes: ErrorCode[]}> {
-  constructor(public errorCodes: ErrorCode[]) {
-    super(ReCAPTCHAErrorTypes.VerificationFailed, {errorCodes})
+export class CaptchaVerificationFailed extends MetadataError<ReCAPTCHAErrorTypes> {
+  constructor(meta: {errorCodes: ErrorCode[], token: string}) {
+    super(ReCAPTCHAErrorTypes.VerificationFailed, meta)
   }
 }
 
@@ -44,7 +44,10 @@ export class CaptchaService {
         if (data.success === true) {
           return Ok(true)
         } else {
-          return Err(new CaptchaVerificationFailed(data['error-codes']))
+          return Err(new CaptchaVerificationFailed({
+            errorCodes: data['error-codes'],
+            token: token
+          }))
         }
       })
       .catch(error => {

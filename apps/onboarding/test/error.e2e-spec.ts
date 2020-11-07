@@ -18,16 +18,12 @@ class ExampleApiError extends ApiError<'ExampleApiError'> {
   }
 }
 
-interface ExampleMetadata {
-  address: string
-  count: number
-}
-
-class ExampleApiErrorWithMetadata extends ApiError<'ExampleApiError', ExampleMetadata> {
+class ExampleApiErrorWithMetadata extends ApiError<'ExampleApiError'> {
   statusCode = 400
 
-  constructor(address: string, count: number) {
-    super('ExampleApiError', {address, count})
+
+  constructor(meta: {address: string, count: number}) {
+    super('ExampleApiError', meta)
     this.message = 'This is an example error'
   }
 }
@@ -48,7 +44,10 @@ export class ErrorController {
 
   @Get('throwApiErrorWithMetadata')
   async throwApiErrorWithMetadata() {
-    throw new ExampleApiErrorWithMetadata("0x0", 100)
+    throw new ExampleApiErrorWithMetadata({
+      address: "0x0",
+      count: 100
+    })
   }
 
   @Get('throwRootError')

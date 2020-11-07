@@ -14,18 +14,18 @@ export class WalletNotDeployed extends RootError<WalletErrorType> {
   }
 }
 
-export class InvalidImplementation extends ApiError<WalletErrorType, {implementation: string}> {
+export class InvalidImplementation extends ApiError<WalletErrorType> {
   statusCode = 400
-  constructor(implementation: string) {
-    super(WalletErrorType.InvalidImplementation, { implementation })
+  constructor(meta: {implementation: string}) {
+    super(WalletErrorType.InvalidImplementation, meta)
     this.message = "Unexpected MetaTransactionWallet implementation address"
   }
 }
 
-export class InvalidWallet extends ApiError<WalletErrorType, {error: string}> {
+export class InvalidWallet extends ApiError<WalletErrorType> {
   statusCode = 400
-  constructor(private readonly walletError: WalletValidationError) {
-    super(WalletErrorType.InvalidImplementation, { error: walletError.errorType })
+  constructor(meta: {walletError: WalletValidationError}) {
+    super(WalletErrorType.InvalidImplementation, meta)
     this.message = "Invalid wallet"
   }
 }
@@ -39,24 +39,24 @@ export enum MetaTxValidationErrorTypes {
   InputDecodeError = "InputDecodeError"
 }
 
-export class InvalidRootMethod extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+export class InvalidRootMethod extends ApiError<MetaTxValidationErrorTypes> {
   statusCode = 400
-  constructor(public readonly received: string) {
-    super(MetaTxValidationErrorTypes.InvalidRootMethod, { received })
+  constructor(meta: {received: string}) {
+    super(MetaTxValidationErrorTypes.InvalidRootMethod, meta)
   }
 }
 
-export class InvalidChildMethod extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+export class InvalidChildMethod extends ApiError<MetaTxValidationErrorTypes> {
   statusCode = 400
-  constructor(public readonly received: string) {
-    super(MetaTxValidationErrorTypes.InvalidChildMethod, { received })
+  constructor(meta: {received: string}) {
+    super(MetaTxValidationErrorTypes.InvalidChildMethod, meta)
   }
 }
 
-export class InvalidDestination extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+export class InvalidDestination extends ApiError<MetaTxValidationErrorTypes> {
   statusCode = 400
-  constructor(public readonly received: string) {
-    super(MetaTxValidationErrorTypes.InvalidDestination, { received })
+  constructor(meta: {received: string}) {
+    super(MetaTxValidationErrorTypes.InvalidDestination, meta)
   }
 }
 

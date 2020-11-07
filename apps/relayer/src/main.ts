@@ -8,7 +8,7 @@ import { AppConfig } from './config/app.config'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: process.env.NODE_ENV !== "production"
+    logger: process.env.NODE_ENV === "production" ? false : undefined
   })
 
   const appConfig = app.get(ConfigService).get<AppConfig>('app')

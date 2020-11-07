@@ -4,7 +4,7 @@ export const errorTypeSymbol = Symbol('errorType')
 export const apiErrorSymbol = Symbol('ApiError')
 export const metadataErrorSymbol = Symbol('MetadataError')
 
-export abstract class MetadataError<TError, TMetadata> extends RootError<TError> {
+export abstract class MetadataError<TError, TMetadata extends object = {}> extends RootError<TError> {
   [errorTypeSymbol] = metadataErrorSymbol
 
   protected constructor(
@@ -15,7 +15,7 @@ export abstract class MetadataError<TError, TMetadata> extends RootError<TError>
   }
 }
 
-export abstract class ApiError<TError, TMetadata = never> extends MetadataError<TError, TMetadata> {
+export abstract class ApiError<TError, TMetadata extends object = {}> extends MetadataError<TError, TMetadata> {
   [errorTypeSymbol] = apiErrorSymbol
   abstract statusCode: number
 

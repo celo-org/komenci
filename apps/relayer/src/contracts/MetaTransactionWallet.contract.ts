@@ -20,11 +20,9 @@ class RelayerNotRegisteredError extends RootError<RelayerMTWErrorTypes.NotRegist
   }
 }
 
-class NoMTWError extends MetadataError<RelayerMTWErrorTypes.NoMTW, {configAddress: string}> {
-  constructor(private mtwAddress: string) {
-    super(RelayerMTWErrorTypes.NoMTW, {
-      configAddress: mtwAddress
-    })
+class NoMTWError extends MetadataError<RelayerMTWErrorTypes.NoMTW> {
+  constructor(meta: {configAddress: string}) {
+    super(RelayerMTWErrorTypes.NoMTW, meta)
     this.message = `Relayer doesn't have a valid associated MTW in config`
   }
 }
@@ -55,7 +53,7 @@ export const metaTransactionWalletProvider = {
         relayer.metaTransactionWallet
       )
     } else {
-      logger.logAndThrow(new NoMTWError(relayer.metaTransactionWallet))
+      logger.logAndThrow(new NoMTWError({configAddress: relayer.metaTransactionWallet}))
     }
   },
   inject: [

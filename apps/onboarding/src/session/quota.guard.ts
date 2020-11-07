@@ -5,12 +5,12 @@ import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/commo
 import { ConfigType } from '@nestjs/config'
 import { Reflector } from '@nestjs/core'
 
-class QuotaExceededError extends ApiError<'QuotaExceededError', {action: TrackedAction}> {
+class QuotaExceededError extends ApiError<'QuotaExceededError'> {
   statusCode = 429
 
-  constructor(action: TrackedAction) {
-    super('QuotaExceededError', { action })
-    this.message = `Quota exceeded on ${action}`
+  constructor(meta: {action: TrackedAction}) {
+    super('QuotaExceededError', meta)
+    this.message = `Quota exceeded on ${meta.action}`
   }
 }
 
@@ -31,7 +31,7 @@ export class QuotaGuard implements CanActivate {
     const session = request.session as Session
     const usage = session.getActionCount(action)
     if (usage >= this.config[action]) {
-      throw new QuotaExceededError(action)
+      throw new QuotaExceededError({action})
     }
     return true
   }

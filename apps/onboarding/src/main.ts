@@ -7,7 +7,7 @@ import { appConfig } from './config/app.config'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule, {
-    logger: process.env.NODE_ENV !== "production"
+    logger: process.env.NODE_ENV === "production" ? false : undefined
   })
   const logger = app.get(Logger)
   app.useLogger(logger)

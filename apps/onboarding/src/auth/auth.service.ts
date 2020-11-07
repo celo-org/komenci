@@ -17,7 +17,7 @@ export enum AuthErrorTypes {
   SessionUnavailable = "SessionUnavailable"
 }
 
-export class InvalidToken extends ApiError<AuthErrorTypes.InvalidToken> {
+export class InvalidToken extends ApiError<AuthErrorTypes.InvalidToken, undefined> {
   statusCode = 401
   constructor() {
     super(AuthErrorTypes.InvalidToken)
@@ -25,10 +25,10 @@ export class InvalidToken extends ApiError<AuthErrorTypes.InvalidToken> {
   }
 }
 
-export class SessionUnavailable extends ApiError<AuthErrorTypes.SessionUnavailable, { sessionId: string }> {
+export class SessionUnavailable extends ApiError<AuthErrorTypes.SessionUnavailable> {
   statusCode = 401
-  constructor(private readonly sessionId: string) {
-    super(AuthErrorTypes.SessionUnavailable, { sessionId })
+  constructor(meta: {sessionId: string}) {
+    super(AuthErrorTypes.SessionUnavailable, meta)
     this.message = 'Session no longer available'
   }
 }
@@ -61,7 +61,7 @@ export class AuthService {
     if (session) {
       return session
     } else {
-      throw new SessionUnavailable(payload.sessionId)
+      throw new SessionUnavailable({sessionId: payload.sessionId})
     }
   }
 }
