@@ -308,6 +308,10 @@ export class AppController {
         {
           destination: cUSD.address,
           methodId: cUSD.methodIds.approve
+        },
+        {
+          destination: cUSD.address,
+          methodId: cUSD.methodIds.transfer
         }
       ]
     }
