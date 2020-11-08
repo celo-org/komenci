@@ -1,5 +1,8 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
-import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
+import {
+  ActionCounts,
+  TrackedAction
+} from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { QuotaAction } from '@app/onboarding/session/quota.decorator'
@@ -19,15 +22,13 @@ import {
   Req,
   Session,
   UnauthorizedException,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
+import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
-
 import { AuthService } from './auth/auth.service'
-
-import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
 import { StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
@@ -38,13 +39,13 @@ interface GetPhoneNumberIdResponse {
 }
 
 interface DeployWalletInProgress {
-  status: 'in-progress',
-  txHash: string,
-  deployerAddress: string,
+  status: 'in-progress'
+  txHash: string
+  deployerAddress: string
 }
 
 interface DeployWalletDeployed {
-  status: 'deployed',
+  status: 'deployed'
   walletAddress: string
 }
 
@@ -55,7 +56,7 @@ interface CheckSessionResponse {
   metaTxWalletAddress?: string
 }
 
-@Controller("v1")
+@Controller('v1')
 export class AppController {
   // Cache for the allowed metaTx filter
   _allowedMetaTransaction?: TxFilter[]
@@ -73,9 +74,7 @@ export class AppController {
   ) {}
 
   @Get('health')
-  health(
-    @Req() req
-  ): {status: string} {
+  health(@Req() req): { status: string } {
     // TODO: Think about how to have a more clear understanding of
     // service health here. Think about the relayer load balancer health
     // or maybe just a toggle that we can do from ENV vars?
@@ -88,10 +87,12 @@ export class AppController {
   async startSession(
     @Body() startSessionDto: StartSessionDto,
     @Req() req
-  ): Promise<{token: string}> {
+  ): Promise<{ token: string }> {
     if ((await this.gatewayService.verify(startSessionDto, req)) === true) {
-      const token = await this.authService.startSession(startSessionDto.externalAccount)
-      return {token}
+      const token = await this.authService.startSession(
+        startSessionDto.externalAccount
+      )
+      return { token }
     } else {
       throw new UnauthorizedException()
     }
@@ -100,7 +101,7 @@ export class AppController {
   @UseGuards(AuthGuard('jwt'))
   @Get('checkSession')
   async checkSession(
-    @Session() session: SessionEntity,
+    @Session() session: SessionEntity
   ): Promise<CheckSessionResponse> {
     const getResp = await this.walletService.getWallet(session)
     let walletAddress: string | undefined
@@ -118,7 +119,7 @@ export class AppController {
   @Post('deployWallet')
   async deployWallet(
     @Body() deployWalletDto: DeployWalletDto,
-    @Session() session: SessionEntity,
+    @Session() session: SessionEntity
   ): Promise<DeployWalletResp> {
     const getResp = await this.walletService.getWallet(
       session,
@@ -133,7 +134,7 @@ export class AppController {
     }
 
     if (getResp.error.errorType !== WalletErrorType.NotDeployed) {
-      throw(getResp.error)
+      throw getResp.error
     }
 
     const deployResp = await this.walletService.deployWallet(
@@ -148,19 +149,16 @@ export class AppController {
         deployerAddress: this.cfg.mtwDeployerAddress
       }
     } else {
-      throw(deployResp.error)
+      throw deployResp.error
     }
   }
 
   @QuotaAction(TrackedAction.DistributedBlindedPepper)
-  @UseGuards(
-    AuthGuard('jwt'),
-    QuotaGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), QuotaGuard)
   @Post('distributedBlindedPepper')
   async distributedBlindedPepper(
     @Body() distributedBlindedPepperDto: DistributedBlindedPepperDto,
-    @Session() session: SessionEntity,
+    @Session() session: SessionEntity
   ): Promise<GetPhoneNumberIdResponse> {
     const resp = await this.relayerProxyService.getPhoneNumberIdentifier(
       distributedBlindedPepperDto
@@ -178,23 +176,25 @@ export class AppController {
   }
 
   @QuotaAction(TrackedAction.RequestSubsidisedAttestation)
-  @UseGuards(
-    AuthGuard('jwt'),
-    QuotaGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), QuotaGuard)
   @Post('requestSubsidisedAttestations')
   async requestSubsidisedAttestations(
     @Body() requestAttestationsDto: RequestAttestationsDto,
-    @Session() session: SessionEntity,
+    @Session() session: SessionEntity
   ) {
-    const res = await this.subsidyService.isValid(requestAttestationsDto, session)
+    const res = await this.subsidyService.isValid(
+      requestAttestationsDto,
+      session
+    )
 
     if (res.ok === false) {
-      throw(res.error)
+      throw res.error
     }
 
     const txSubmit = await this.relayerProxyService.submitTransactionBatch({
-      transactions: await this.subsidyService.buildTransactionBatch(requestAttestationsDto)
+      transactions: await this.subsidyService.buildTransactionBatch(
+        requestAttestationsDto
+      )
     })
 
     await this.sessionService.incrementUsage(
@@ -209,10 +209,7 @@ export class AppController {
   }
 
   @QuotaAction(TrackedAction.SubmitMetaTransaction)
-  @UseGuards(
-    AuthGuard('jwt'),
-    QuotaGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), QuotaGuard)
   @Post('submitMetaTransaction')
   async submitMetaTransaction(
     @Body() body: SubmitMetaTransactionDto,
@@ -220,7 +217,7 @@ export class AppController {
   ) {
     const metaTx: RawTransaction = {
       ...body,
-      value: "0x0"
+      value: '0x0'
     }
 
     const validTx = await this.walletService.isAllowedMetaTransaction(
@@ -229,7 +226,7 @@ export class AppController {
     )
 
     if (validTx.ok === false) {
-      throw(validTx.error)
+      throw validTx.error
     }
 
     const resp = await this.relayerProxyService.submitTransaction({
@@ -268,6 +265,10 @@ export class AppController {
         {
           destination: cUSD.address,
           methodId: cUSD.methodIds.approve
+        },
+        {
+          destination: cUSD.address,
+          methodId: cUSD.methodIds.transfer
         }
       ]
     }
