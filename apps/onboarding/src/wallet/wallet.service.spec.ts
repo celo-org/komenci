@@ -116,7 +116,7 @@ describe("WalletService", () => {
 
           expect(res.ok).toBe(true)
           if (res.ok === true) {
-            expect(res.result).toStrictEqual({
+            expect(res.result).toMatchObject({
               methodId: normalizeMethodId(attestations.methodIds.selectIssuers),
               destination: normalizeAddress(attestations.address)
             })
@@ -134,10 +134,11 @@ describe("WalletService", () => {
           const module = await buildModule({}, {})
           const walletService = module.get(WalletService)
           const contractKit = module.get(ContractKit)
+          const walletAddress = Web3.utils.randomHex(20)
 
           const attestations = await contractKit.contracts.getAttestations()
           const stableToken = await contractKit.contracts.getStableToken()
-          const wallet = await contractKit.contracts.getMetaTransactionWallet(Web3.utils.randomHex(20))
+          const wallet = await contractKit.contracts.getMetaTransactionWallet(walletAddress)
           const testTx = toRawTransaction(
             wallet.executeMetaTransaction(
               stableToken.transfer(Web3.utils.randomHex(20), "10000").txo,
@@ -151,6 +152,7 @@ describe("WalletService", () => {
           if (txMetadata.ok === true) {
             const res = await walletService.isAllowedMetaTransaction(
                 txMetadata.result,
+                walletAddress,
                 [
                   {
                     destination: attestations.address,
@@ -172,9 +174,10 @@ describe("WalletService", () => {
           const module = await buildModule({}, {})
           const walletService = module.get(WalletService)
           const contractKit = module.get(ContractKit)
+          const walletAddress = Web3.utils.randomHex(20)
 
           const attestations = await contractKit.contracts.getAttestations()
-          const wallet = await contractKit.contracts.getMetaTransactionWallet(Web3.utils.randomHex(20))
+          const wallet = await contractKit.contracts.getMetaTransactionWallet(walletAddress)
           const testTx = toRawTransaction(
               wallet.executeMetaTransaction(
                   attestations.selectIssuers("0x0").txo,
@@ -188,6 +191,7 @@ describe("WalletService", () => {
           if (txMetadata.ok === true) {
             const res = await walletService.isAllowedMetaTransaction(
                 txMetadata.result,
+              walletAddress,
               [
                   {
                     destination: attestations.address,
@@ -204,14 +208,15 @@ describe("WalletService", () => {
           })
       })
 
-      describe('which is allowed', () => {
+      describe('pointing to an allowed method', () => {
         it('returns ok!', async () => {
           const module = await buildModule({}, {})
           const walletService = module.get(WalletService)
           const contractKit = module.get(ContractKit)
+          const walletAddress = Web3.utils.randomHex(20)
 
           const attestations = await contractKit.contracts.getAttestations()
-          const wallet = await contractKit.contracts.getMetaTransactionWallet(Web3.utils.randomHex(20))
+          const wallet = await contractKit.contracts.getMetaTransactionWallet(walletAddress)
           const testTx = toRawTransaction(
             wallet.executeMetaTransaction(
               attestations.selectIssuers("0x0").txo,
@@ -225,6 +230,7 @@ describe("WalletService", () => {
           if (txMetadata.ok === true) {
             const res = await walletService.isAllowedMetaTransaction(
                 txMetadata.result,
+                walletAddress,
                 [
                   {
                     destination: attestations.address,
@@ -238,6 +244,85 @@ describe("WalletService", () => {
               expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidChildMethod)
             }
           }
+        })
+
+        describe('pointing to an executeTransactions with not allowed sub-txs', () => {
+          it('rejects', async () => {
+            const module = await buildModule({}, {})
+            const walletService = module.get(WalletService)
+            const contractKit = module.get(ContractKit)
+            const walletAddress = normalizeAddress(Web3.utils.randomHex(20))
+
+            const attestations = await contractKit.contracts.getAttestations()
+            const wallet = await contractKit.contracts.getMetaTransactionWallet(walletAddress)
+            const testTx = toRawTransaction(
+              wallet.executeMetaTransaction(
+                wallet.executeTransactions([
+                  attestations.selectIssuers("0x0").txo
+                ]).txo,
+                {v: 0, r: "0x0", s: "0x0"}
+              ).txo
+            )
+
+            const txMetadata = await walletService.extractMetaTxData(testTx)
+            expect(txMetadata.ok).toBe(true)
+
+            if (txMetadata.ok === true) {
+              const res = await walletService.isAllowedMetaTransaction(
+                txMetadata.result,
+                walletAddress,
+                [
+                  {
+                    destination: attestations.address,
+                    methodId: attestations.methodIds.request
+                  }
+                ]
+              )
+
+              expect(res.ok).toBe(false)
+              if (res.ok === false) {
+                expect(res.error.errorType).toBe(MetaTxValidationErrorTypes.InvalidChildMethod)
+              }
+            }
+          })
+        })
+
+        describe('pointing to an executeTransactions with allowed sub-txs', () => {
+          it('returns ok!', async () => {
+            const module = await buildModule({}, {})
+            const walletService = module.get(WalletService)
+            const contractKit = module.get(ContractKit)
+            const walletAddress = normalizeAddress(Web3.utils.randomHex(20))
+
+            const attestations = await contractKit.contracts.getAttestations()
+            const wallet = await contractKit.contracts.getMetaTransactionWallet(walletAddress)
+            const testTx = toRawTransaction(
+              wallet.executeMetaTransaction(
+                wallet.executeTransactions([
+                  attestations.selectIssuers("0x0").txo
+                ]).txo,
+                { v: 0, r: "0x0", s: "0x0" }
+              ).txo
+            )
+
+            const txMetadata = await walletService.extractMetaTxData(testTx)
+            expect(txMetadata.ok).toBe(true)
+
+            if (txMetadata.ok === true) {
+              const res = await walletService.isAllowedMetaTransaction(
+                txMetadata.result,
+                walletAddress,
+                [
+                  {
+                    destination: attestations.address,
+                    methodId: attestations.methodIds.selectIssuers
+                  }
+                ]
+              )
+
+              expect(res.ok).toBe(true)
+            }
+          })
         })
       })
     })

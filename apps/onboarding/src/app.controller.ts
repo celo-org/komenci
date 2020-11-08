@@ -9,7 +9,7 @@ import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
-import { normalizeAddress } from '@celo/base'
+import { normalizeAddress, throwIfError } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Body, Controller, Get, Inject, Post, Req, Session, UnauthorizedException, UseGuards } from '@nestjs/common'
@@ -243,18 +243,21 @@ export class AppController {
     @Body() body: SubmitMetaTransactionDto,
     @Session() session: SessionEntity
   ) {
+    throwIfError(await this.walletService.isValidWallet(
+      body.destination,
+      session.externalAccount
+    ))
+
     const metaTx: RawTransaction = {
       ...body,
       value: '0x0'
     }
-    const metaTaxMetadata = await this.walletService.extractMetaTxData(metaTx)
 
-    if (metaTaxMetadata.ok === false) {
-      throw metaTaxMetadata.error
-    }
+    const metaTxMetadata = throwIfError(await this.walletService.extractMetaTxData(metaTx))
 
     const validTx = await this.walletService.isAllowedMetaTransaction(
-      metaTaxMetadata.result,
+      metaTxMetadata,
+      normalizeAddress(body.destination),
       await this.allowedMetaTransactions()
     )
 
@@ -272,8 +275,8 @@ export class AppController {
       externalAccount: session.externalAccount,
       txHash: resp.payload,
       destination: normalizeAddress(metaTx.destination),
-      metaTxMethodID: metaTaxMetadata.result.methodId,
-      metaTxDestination: metaTaxMetadata.result.destination
+      metaTxMethodID: metaTxMetadata.methodId,
+      metaTxDestination: metaTxMetadata.destination
     })
 
     await this.sessionService.incrementUsage(

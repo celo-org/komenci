@@ -40,6 +40,7 @@ export class SubsidyService {
     }
     const requestValid = await this.walletService.isAllowedMetaTransaction(
       txMetadata.result,
+      input.walletAddress,
       [
         {
           destination: attestations.address,

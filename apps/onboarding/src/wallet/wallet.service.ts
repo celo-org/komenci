@@ -14,7 +14,7 @@ import {
   WalletNotDeployed
 } from '@app/onboarding/wallet/errors'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
-import { Address, normalizeAddress } from '@celo/base'
+import { Address, eqAddress, normalizeAddress, normalizeAddressWith0x } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import {
   ABI as MetaTxWalletABI,
@@ -42,6 +42,7 @@ export interface TxFilter {
 export interface MetaTxMetadata {
   destination: Address
   methodId: string
+  data: string
 }
 
 @Injectable()
@@ -61,9 +62,48 @@ export class WalletService {
 
   async isAllowedMetaTransaction(
     txMetadata: MetaTxMetadata,
+    walletAddress: Address,
     allowedTransactions: TxFilter[]
   ): Promise<Result<true, MetaTxValidationError>> {
     const normDestination = normalizeAddress(txMetadata.destination)
+    const normWalletAddress = normalizeAddress(walletAddress)
+
+    // If it's a recursive call
+    if (normDestination === normWalletAddress) {
+      const wallet = await this.contractKit.contracts.getMetaTransactionWallet(walletAddress)
+      let txs: RawTransaction[] = []
+      if (txMetadata.methodId !== normalizeMethodId(wallet.methodIds.executeTransactions)) {
+        return Err(new InvalidRootMethod(txMetadata.methodId))
+      }
+
+      const nestedTxs = this.decodeExecuteTransactions(txMetadata.data)
+      if (nestedTxs.ok === false) {
+        return nestedTxs
+      }
+      txs = nestedTxs.result
+
+      const result = await Promise.all(
+        txs.map((tx) => {
+          const nestedTxMetadata = {
+            ...tx,
+            methodId: extractMethodId(tx.data)
+          }
+
+          return this.isAllowedMetaTransaction(
+            nestedTxMetadata,
+            walletAddress,
+            allowedTransactions
+          )
+        })
+      )
+
+      const error = result.find(r => r.ok === false)
+      if (error !== undefined) {
+        return error
+      }
+
+      return Ok(true)
+    }
 
     const txWithMatchingDestination = allowedTransactions.filter(
       allowed => normalizeAddress(allowed.destination) === normDestination
@@ -84,17 +124,18 @@ export class WalletService {
     return Ok(true)
   }
 
-  async extractMetaTxData(
+  extractMetaTxData(
     transaction: RawTransaction
-  ): Promise<Result<MetaTxMetadata, MetaTxValidationError>> {
-    const metaTxDecode = this.decodeMetaTransaction(transaction)
+  ): Result<MetaTxMetadata, MetaTxValidationError> {
+    const metaTxDecode = this.decodeExecuteMetaTransaction(transaction.data)
     if (metaTxDecode.ok === false) {
       return metaTxDecode
     }
     const metaTx = metaTxDecode.result
     return Ok({
       destination: metaTx.destination,
-      methodId: extractMethodId(metaTx.data)
+      methodId: extractMethodId(metaTx.data),
+      data: metaTx.data
     })
   }
 
@@ -210,12 +251,47 @@ export class WalletService {
     return implementationAddress in this.networkCfg.contracts.MetaTransactionWalletVersions
   }
 
-  private decodeMetaTransaction(
-    tx: RawTransaction
+  private decodeExecuteTransactions(data: string): Result<RawTransaction[], MetaTxValidationError> {
+    const decoded = this.decode<[string, any, Buffer, number[]]>(data, 'executeTransactions', 4)
+    if (decoded.ok === false) {
+      return decoded
+    }
+
+    let offset = 0
+    const txs = decoded.result[3].map<RawTransaction>((len, idx) => {
+      return {
+        destination: decoded.result[0][idx],
+        value: decoded.result[1][idx].toString(),
+        data: decoded.result[2].slice(offset, offset += len).toString('hex')
+      }
+    })
+
+    return Ok(txs)
+  }
+
+  private decodeExecuteMetaTransaction(
+    data: string,
   ): Result<RawTransaction, MetaTxValidationError> {
+    const decoded = this.decode<[string, any, Buffer]>(data, 'executeMetaTransaction', 6)
+    if (decoded.ok === false) {
+      return decoded
+    }
+
+    return Ok({
+      destination: decoded.result[0],
+      value: decoded.result[1].toString(),
+      data: decoded.result[2].toString('hex')
+    })
+  }
+
+  private decode<TInputs extends any[]>(
+    data: string,
+    method: string,
+    expectedInputLength: number
+): Result<TInputs, MetaTxValidationError> {
     let decodedData: any
     try {
-      decodedData = MetaTxWalletDecoder.decodeData(tx.data)
+      decodedData = MetaTxWalletDecoder.decodeData(data)
     } catch (e) {
       return Err(new InputDecodeError(e))
     }
@@ -224,20 +300,15 @@ export class WalletService {
       return Err(new InputDecodeError())
     }
 
-    if (decodedData.method !== 'executeMetaTransaction') {
+    if (decodedData.method !== method) {
       return Err(new InvalidRootMethod(decodedData.method))
     }
 
-    if (decodedData.inputs.length !== 6) {
+    if (decodedData.inputs.length !== expectedInputLength) {
       return Err(new InputDecodeError(new Error('Invalid inputs length')))
     }
 
     // destination, value, calldata
-    const inputs: [string, any, Buffer] = decodedData.inputs
-    return Ok({
-      destination: inputs[0],
-      value: inputs[1].toString(),
-      data: inputs[2].toString('hex')
-    })
+    return Ok(decodedData.inputs)
   }
 }
