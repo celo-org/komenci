@@ -10,7 +10,7 @@ import { isValidAddress } from '@celo/utils/lib/address'
 
 enum RelayerMTWErrorTypes {
   NotRegister = "RelayerNotRegistered",
-  NoMTW = "NoMTW"
+  InvalidMTW = "InvalidMTW"
 }
 
 class RelayerNotRegisteredError extends RootError<RelayerMTWErrorTypes.NotRegister> {
@@ -20,11 +20,11 @@ class RelayerNotRegisteredError extends RootError<RelayerMTWErrorTypes.NotRegist
   }
 }
 
-class NoMTWError extends MetadataError<RelayerMTWErrorTypes.NoMTW> {
-  constructor(
-    public readonly metadata: {configAddress: string}
-  ) {
-    super(RelayerMTWErrorTypes.NoMTW)
+class InvalidMTWError extends MetadataError<RelayerMTWErrorTypes.InvalidMTW> {
+  metadataProps = ['address']
+
+  constructor(readonly address: string) {
+    super(RelayerMTWErrorTypes.InvalidMTW)
     this.message = `Relayer doesn't have a valid associated MTW in config`
   }
 }
@@ -55,7 +55,7 @@ export const metaTransactionWalletProvider = {
         relayer.metaTransactionWallet
       )
     } else {
-      logger.logAndThrow(new NoMTWError({configAddress: relayer.metaTransactionWallet}))
+      logger.logAndThrow(new InvalidMTWError(relayer.metaTransactionWallet))
     }
   },
   inject: [

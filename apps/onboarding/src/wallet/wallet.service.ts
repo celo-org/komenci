@@ -70,7 +70,7 @@ export class WalletService {
     )
 
     if (txWithMatchingDestination.length === 0) {
-      return Err(new InvalidDestination({received: txMetadata.destination}))
+      return Err(new InvalidDestination(txMetadata.destination))
     }
 
     const metaTxMethodId = txMetadata.methodId
@@ -78,7 +78,7 @@ export class WalletService {
       return metaTxMethodId === normalizeMethodId(allowed.methodId)
     })
     if (matchingTx === undefined) {
-      return Err(new InvalidChildMethod({received: metaTxMethodId}))
+      return Err(new InvalidChildMethod(metaTxMethodId))
     }
 
     return Ok(true)
@@ -110,7 +110,7 @@ export class WalletService {
     )
 
     if (valid.ok !== true) {
-      return Err(new InvalidWallet({walletError: valid.error}))
+      return Err(new InvalidWallet(valid.error))
     }
 
     return valid
@@ -147,7 +147,7 @@ export class WalletService {
 
   async deployWallet(session: Session, implementationAddress: string): Promise<Result<string, InvalidImplementation>> {
     if (!this.isValidImplementation(implementationAddress)) {
-      return Err(new InvalidImplementation({implementation: implementationAddress}))
+      return Err(new InvalidImplementation(implementationAddress))
     }
 
     if (this.hasDeployInProgress(session, implementationAddress)) {

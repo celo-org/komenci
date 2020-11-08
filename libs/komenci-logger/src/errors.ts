@@ -3,30 +3,36 @@ import { RootError } from '@celo/base/lib/result'
 export const errorTypeSymbol = Symbol('errorType')
 export const apiErrorSymbol = Symbol('ApiError')
 export const metadataErrorSymbol = Symbol('MetadataError')
+const errMetadataPropsKey = Symbol('MetadataError:props')
 
-export abstract class MetadataError<TError, TMetadata = object> extends RootError<TError> {
+export abstract class MetadataError<TError> extends RootError<TError> {
   [errorTypeSymbol] = metadataErrorSymbol
-
-  public abstract readonly metadata: TMetadata
+  abstract metadataProps: string[]
 
   protected constructor(
     errorType: TError,
   ) {
     super(errorType)
   }
+
+  getMetadata = (): object => {
+    return this.metadataProps.reduce((metadata, key) => {
+      if (key in this) {
+        metadata[key] = this[key]
+      }
+      return metadata
+    }, {})
+  }
 }
 
-export abstract class ApiError<TError, TMetadata extends object = any> extends MetadataError<TError, TMetadata> {
+export abstract class ApiError<TError, TMetadata extends object = any> extends MetadataError<TError> {
   [errorTypeSymbol] = apiErrorSymbol
   abstract statusCode: number
-  public readonly metadata: TMetadata
 
   protected constructor(
     errorType: TError,
-    metadata?: TMetadata
   ) {
     super(errorType)
-    this.metadata = metadata
   }
 
   toJSON = () => {
@@ -34,7 +40,7 @@ export abstract class ApiError<TError, TMetadata extends object = any> extends M
       statusCode: this.statusCode,
       errorType: this.errorType,
       message: this.message,
-      ...(this.metadata ? {metadata: this.metadata} : {})
+      metadata: this.getMetadata()
     }
   }
 }

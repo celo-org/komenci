@@ -7,25 +7,19 @@ export enum ChainErrorTypes {
 }
 
 export class TxSubmitError extends MetadataError<ChainErrorTypes.TxSubmitError> {
-  constructor(
-    public readonly err: Error,
-    public readonly metadata: {
-      message: string,
-      tx: RawTransaction
-    }
-  ) {
+  metadataProps = ['tx']
+
+  constructor(public readonly err: Error, readonly tx: RawTransaction) {
     super(ChainErrorTypes.TxSubmitError)
+    this.message = `TxSubmitError: ${err.message}`
   }
 }
 
 export class TxDeadletterError extends MetadataError<ChainErrorTypes.TxDeadletterError> {
-  constructor(
-    public readonly err: Error,
-    public readonly metadata: {
-      message: string,
-      txHash: string
-    }
-  ) {
+  metadataProps = ['txHash']
+
+  constructor(readonly err: Error, readonly txHash: string) {
     super(ChainErrorTypes.TxDeadletterError)
+    this.message = `TxSubmitError: ${err.message}`
   }
 }

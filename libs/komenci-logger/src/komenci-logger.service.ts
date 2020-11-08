@@ -33,6 +33,7 @@ export class KomenciLoggerService implements KomenciLogger {
     if (isApiError(message)) {
       this.logApiError(message)
     } else if (isMetadataError(message)) {
+      console.log(message)
       this.logMetadataError(message)
     } else if (isRootError(message)) {
       this.logRootError(message)
@@ -57,7 +58,7 @@ export class KomenciLoggerService implements KomenciLogger {
   private logApiError(error: ApiError<any, any>): void {
     this.logger.error({
         error: error.errorType,
-        payload: error.metadata
+        payload: error.getMetadata()
       },
       error.message,
       error.stack,
@@ -75,10 +76,10 @@ export class KomenciLoggerService implements KomenciLogger {
     )
   }
 
-  private logMetadataError(error: MetadataError<any, any>): void {
+  private logMetadataError(error: MetadataError<any>): void {
     this.logger.error({
         error: error.errorType,
-        payload: error.metadata
+        payload: error.getMetadata()
       },
       error.message,
       error.stack,

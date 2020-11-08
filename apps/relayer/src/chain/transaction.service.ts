@@ -94,11 +94,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         return Ok(txHash)
       } catch (e) {
         if (tries === 3) {
-          const err = new TxSubmitError(e, {
-            message: e.message,
-            tx: tx
-          })
-
+          const err = new TxSubmitError(e, tx)
           // this.logger.error(err)
           return Err(err)
         }
@@ -178,10 +174,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         nonce: tx.nonce
       })
     } catch (e) {
-      const err = new TxDeadletterError(e, {
-        message: e.message,
-        txHash: tx.hash
-      })
+      const err = new TxDeadletterError(e, tx.hash)
       this.logger.error(err)
     }
   }

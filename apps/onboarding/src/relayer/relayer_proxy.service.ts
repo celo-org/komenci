@@ -19,30 +19,37 @@ export enum RelayerErrorTypes {
   RelayerInternalError = "RelayerInternalError"
 }
 
+const InternalErrorPayload = t.type({
+  errorType: t.string,
+  message: t.string,
+  metadata: t.unknown
+})
+
+type InternalErrorPayload = t.TypeOf<typeof InternalErrorPayload>
+
+
 class RelayerTimeout extends MetadataError<RelayerErrorTypes.RelayerTimeout> {
-  constructor(
-    public readonly metadata: {cmd: RelayerCmd}
-  ) {
+  metadataProps = ['cmd']
+
+  constructor(readonly cmd: string) {
     super(RelayerErrorTypes.RelayerTimeout)
   }
 }
 
 class RelayerCommunicationError extends MetadataError<RelayerErrorTypes.RelayerCommunicationError> {
-  constructor(
-    public readonly metadata: {message, cmd}
-  ) {
+  metadataProps = ['cmd']
+
+  constructor(readonly message: string, readonly cmd: string) {
     super(RelayerErrorTypes.RelayerCommunicationError)
   }
 }
 
 class RelayerInternalError extends MetadataError<RelayerErrorTypes.RelayerInternalError> {
-  constructor(
-    public readonly metadata: {
-      errorType: string,
-      message: string,
-      metadata: any
-  }) {
+  metadataProps = ['internalError']
+
+  constructor(readonly internalError: InternalErrorPayload) {
     super(RelayerErrorTypes.RelayerInternalError)
+    this.message = `Relayer encountered an error`
   }
 }
 
@@ -88,19 +95,19 @@ export class RelayerProxyService {
     return race<RelayerResult<TResp>>(
       of('timeout').pipe(
         delay(this.cfg.relayerRpcTimeoutMs),
-        map(_ => Err(new RelayerTimeout({cmd})))
+        map(_ => Err(new RelayerTimeout(cmd)))
       ),
       this.client.send<RelayerResponse<TResp>>({cmd}, input).pipe(
         map((resp) => Ok(resp)),
         catchError(err => {
-          const res = RelayerErrorPayload.decode(err)
+          const res = InternalErrorPayload.decode(err)
           if (isRight(res)) {
             return of(Err(new RelayerInternalError(res.right)))
           } else {
-            return of(Err(new RelayerCommunicationError({
-              message: err.message,
+            return of(Err(new RelayerCommunicationError(
+              err.message,
               cmd
-            })))
+            )))
 
           }
         })
@@ -108,12 +115,4 @@ export class RelayerProxyService {
     ).toPromise()
   }
 }
-
-const RelayerErrorPayload = t.type({
-  errorType: t.string,
-  message: t.string,
-  metadata: t.unknown
-})
-
-type RelayerErrorPayload = t.TypeOf<typeof RelayerErrorPayload>
 

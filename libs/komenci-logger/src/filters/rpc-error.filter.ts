@@ -21,7 +21,7 @@ export class RpcErrorFilter extends BaseRpcExceptionFilter {
       return _throw({
         errorType: err.errorType,
         message: err.message,
-        metadata: err.metadata
+        metadata: err.getMetadata()
       })
     } else if (isRootError(err)) {
       return _throw({
