@@ -17,7 +17,7 @@ export enum AuthErrorTypes {
   SessionUnavailable = "SessionUnavailable"
 }
 
-export class InvalidToken extends ApiError<AuthErrorTypes.InvalidToken, undefined> {
+export class InvalidToken extends ApiError<AuthErrorTypes.InvalidToken> {
   statusCode = 401
   metadataProps = []
 

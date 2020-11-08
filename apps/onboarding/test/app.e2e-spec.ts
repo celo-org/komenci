@@ -199,10 +199,7 @@ describe('AppController (e2e)', () => {
           signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
           verifyCaptchaSpy = jest.spyOn(
             captchaService, 'verifyCaptcha'
-          ).mockResolvedValue(Err(new CaptchaVerificationFailed({
-            errorCodes: [],
-            token: ""
-          })))
+          ).mockResolvedValue(Err(new CaptchaVerificationFailed([], "")))
         })
 
         it('returns a 401', async () => {

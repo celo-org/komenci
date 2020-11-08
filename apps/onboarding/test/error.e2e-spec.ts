@@ -1,5 +1,5 @@
 import { KomenciLoggerModule } from '@app/komenci-logger'
-import { ApiError, ErrorMeta } from '@app/komenci-logger/errors'
+import { ApiError } from '@app/komenci-logger/errors'
 import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
 import { RootError } from '@celo/base/lib/result'
 import { Controller, Get } from '@nestjs/common'
@@ -11,6 +11,7 @@ const request = require('supertest')
 
 class ExampleApiError extends ApiError<'ExampleApiError'> {
   statusCode = 400
+  metadataProps = []
 
   constructor() {
     super('ExampleApiError')
@@ -20,12 +21,10 @@ class ExampleApiError extends ApiError<'ExampleApiError'> {
 
 class ExampleApiErrorWithMetadata extends ApiError<'ExampleApiError'> {
   statusCode = 400
+  metadataProps = ['address', 'count']
 
 
-  constructor(
-    @ErrorMeta('address') readonly address: string,
-    @ErrorMeta('count') readonly count: number
-  ) {
+  constructor(readonly address: string, readonly count: number) {
     super('ExampleApiError')
     this.message = 'This is an example error'
   }

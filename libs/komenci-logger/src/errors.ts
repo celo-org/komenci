@@ -25,7 +25,14 @@ export abstract class MetadataError<TError> extends RootError<TError> {
   }
 }
 
-export abstract class ApiError<TError, TMetadata extends object = any> extends MetadataError<TError> {
+interface ApiErrorPayload<TError> {
+  statusCode: number
+  errorType: TError
+  message: string,
+  metadata?: any
+}
+
+export abstract class ApiError<TError> extends MetadataError<TError> {
   [errorTypeSymbol] = apiErrorSymbol
   abstract statusCode: number
 
@@ -36,12 +43,17 @@ export abstract class ApiError<TError, TMetadata extends object = any> extends M
   }
 
   toJSON = () => {
-    return {
+    const payload: ApiErrorPayload<TError> = {
       statusCode: this.statusCode,
       errorType: this.errorType,
       message: this.message,
-      metadata: this.getMetadata()
     }
+
+    if (this.metadataProps.length > 0) {
+      payload.metadata = this.getMetadata()
+    }
+
+    return payload
   }
 }
 
@@ -53,7 +65,7 @@ export const isMetadataError = (error: any): error is MetadataError<any> => {
   return error[errorTypeSymbol] === metadataErrorSymbol
 }
 
-export const isApiError = (error: any): error is ApiError<any, any> => {
+export const isApiError = (error: any): error is ApiError<any> => {
   return error[errorTypeSymbol] === apiErrorSymbol
 }
 

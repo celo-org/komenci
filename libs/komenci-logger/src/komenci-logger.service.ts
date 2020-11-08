@@ -55,7 +55,7 @@ export class KomenciLoggerService implements KomenciLogger {
   }
 
 
-  private logApiError(error: ApiError<any, any>): void {
+  private logApiError(error: ApiError<any>): void {
     this.logger.error({
         error: error.errorType,
         payload: error.getMetadata()
