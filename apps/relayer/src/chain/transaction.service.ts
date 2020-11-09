@@ -72,6 +72,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           value: tx.value,
           data: tx.data,
           from: this.walletCfg.address,
+          gas: this.appCfg.transactionMaxGas
         })
 
         // If we don't do this explicitly it results in
