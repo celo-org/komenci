@@ -115,8 +115,24 @@ const configs: Record<Network, NetworkConfig> = {
   [Network.rc1]: {
     relayers: [
       {
-        externalAccount: "0xa7d74cb4fca9458757cfc8b90d9b38a126f68b47",
-        metaTransactionWallet: "2b239845e2b5ae12846e723717e84ebf33af4f88",
+        externalAccount: "0x21888ae301658cdff7ce8c33cdf83a330a5e6273",
+        metaTransactionWallet: "0xD787384d91a7fFaC85d51C63EF71580df6C677B7",
+      },
+      {
+        externalAccount: "0x1438128a2dcc645f0b9706350c1f5dad04845fe6",
+        metaTransactionWallet: "0xC90CC3A0D10aA1F827fAD4eC39DfE2Aa78cF07bB",
+      },
+      {
+        externalAccount: "0x1e36bf42272a0693eba69332a6f623ce37694a27",
+        metaTransactionWallet: "0x582C91AD7bdAE0c48739d0eb5A753Ed715e649C8",
+      },
+      {
+        externalAccount: "0xd5afaaa7256c9eb86376c4214635dd56dffbd3a8",
+        metaTransactionWallet: "0x7885c25834aAA32B86be10BF3C6ed766a1f3D79A",
+      },
+      {
+        externalAccount: "0xb09eba8bc1c8bedadd634a8219c0b09042170903",
+        metaTransactionWallet: "0x63e1fcB88713aAEA8bD88Fc968c12403AB3F796F",
       }
     ],
     contracts: {
