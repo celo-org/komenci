@@ -43,6 +43,14 @@ const configs: Record<Network, NetworkConfig> = {
       {
         externalAccount: "0xc6f0f9bfb1aed83620ece3eac0add98a65a8574e",
         metaTransactionWallet: "0xdd648cae0302acd1da9114518b8f52732a10e47c"
+      },
+      {
+        externalAccount: "0x0f812be74511b90ea6b2f80e77bea047e69a0b2a",
+        metaTransactionWallet: "0x41f7cDa0367A6C3739dA2958681FF90f7E499b06"
+      },
+      {
+        externalAccount: "0xb354d3d2908ba6a2b791683b0f454a38f69cb282",
+        metaTransactionWallet: "0xE329d3103EF8D8f3D376Ab9A86De3e51b5439f40"
       }
     ],
     contracts: {
@@ -107,8 +115,24 @@ const configs: Record<Network, NetworkConfig> = {
   [Network.rc1]: {
     relayers: [
       {
-        externalAccount: "0xa7d74cb4fca9458757cfc8b90d9b38a126f68b47",
-        metaTransactionWallet: "2b239845e2b5ae12846e723717e84ebf33af4f88",
+        externalAccount: "0x21888ae301658cdff7ce8c33cdf83a330a5e6273",
+        metaTransactionWallet: "0xD787384d91a7fFaC85d51C63EF71580df6C677B7",
+      },
+      {
+        externalAccount: "0x1438128a2dcc645f0b9706350c1f5dad04845fe6",
+        metaTransactionWallet: "0xC90CC3A0D10aA1F827fAD4eC39DfE2Aa78cF07bB",
+      },
+      {
+        externalAccount: "0x1e36bf42272a0693eba69332a6f623ce37694a27",
+        metaTransactionWallet: "0x582C91AD7bdAE0c48739d0eb5A753Ed715e649C8",
+      },
+      {
+        externalAccount: "0xd5afaaa7256c9eb86376c4214635dd56dffbd3a8",
+        metaTransactionWallet: "0x7885c25834aAA32B86be10BF3C6ed766a1f3D79A",
+      },
+      {
+        externalAccount: "0xb09eba8bc1c8bedadd634a8219c0b09042170903",
+        metaTransactionWallet: "0x63e1fcB88713aAEA8bD88Fc968c12403AB3F796F",
       }
     ],
     contracts: {
