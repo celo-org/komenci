@@ -294,6 +294,7 @@ export class AppController {
       const attestations = await this.contractKit.contracts.getAttestations()
       const accounts = await this.contractKit.contracts.getAccounts()
       const cUSD = await this.contractKit.contracts.getStableToken()
+      const escrow = await this.contractKit.contracts.getEscrow()
 
       this._allowedMetaTransaction = [
         {
@@ -311,6 +312,14 @@ export class AppController {
         {
           destination: cUSD.address,
           methodId: cUSD.methodIds.approve
+        },
+        {
+          destination: cUSD.address,
+          methodId: cUSD.methodIds.transfer
+        },
+        {
+          destination: escrow.address,
+          methodId: escrow.methodIds.withdraw
         }
       ]
     }
