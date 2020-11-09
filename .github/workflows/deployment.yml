@@ -18,13 +18,34 @@ jobs:
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
-    - run: |
+    - name: Get celo-monorepo commit
+      id: celo-monorepo-commit
+      run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
+
+    - name: Ensure build image exists
+      id: build-image
+      run: |
+        if docker pull celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }} ; then
+          echo "Image found"
+        else
+          docker build -f Dockerfile.monorepo .\
+            -t celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }}
+            -t celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }}
+          docker push celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }}
+        fi
+
+    - name: Build image
+      id: build-image
+      run: |
         docker pull celotestnet.azurecr.io/komenci/komenci:latest
         docker build .\
-            -t komenci \
-            --cache-from celotestnet.azurecr.io/komenci/komenci:latest \
+            -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
+            -t celotestnet.azurecr.io/komenci/komenci:latest \
+            --build-arg MONORERPO_BUILD_VERSION=${{ steps.celo-monorepo-commit.outputs.commit }}
 
-        docker tag komenci celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
+
+
+        docker tag komenci
         docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
 
         docker tag komenci celotestnet.azurecr.io/komenci/komenci:latest
