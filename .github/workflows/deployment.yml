@@ -37,17 +37,8 @@ jobs:
     - name: Build image
       id: build-app-image
       run: |
-        docker pull celotestnet.azurecr.io/komenci/komenci:latest
         docker build .\
             -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
-            -t celotestnet.azurecr.io/komenci/komenci:latest \
             --build-arg MONORERPO_BUILD_VERSION=${{ steps.celo-monorepo-commit.outputs.commit }}
 
-
-
-        docker tag komenci
         docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
-
-        docker tag komenci celotestnet.azurecr.io/komenci/komenci:latest
-        docker push celotestnet.azurecr.io/komenci/komenci:latest
-
