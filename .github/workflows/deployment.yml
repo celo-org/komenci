@@ -22,14 +22,14 @@ jobs:
       id: celo-monorepo-commit
       run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
 
-    - name: Ensure build image exists
+    - name: Build or pull base image
       id: build-celo-monorepo-base-image
       run: |
         if docker pull celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }} ; then
           echo "Image found"
         else
           docker build -f Dockerfile.monorepo .\
-            -t celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }}
+            -t celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }} \
             -t celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }}
           docker push celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }}
         fi
