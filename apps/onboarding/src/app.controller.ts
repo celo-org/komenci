@@ -298,6 +298,10 @@ export class AppController {
           methodId: cUSD.methodIds.approve
         },
         {
+          destination: cUSD.address,
+          methodId: cUSD.methodIds.transfer
+        },
+        {
           destination: escrow.address,
           methodId: escrow.methodIds.withdraw
         }
