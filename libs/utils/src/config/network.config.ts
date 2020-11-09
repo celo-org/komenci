@@ -59,7 +59,7 @@ const configs: Record<Network, NetworkConfig> = {
         "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.1.0.0-p2",
         "0x5C9a6E3c3E862eD306E2E3348EBC8b8310A99e5A": "1.1.0.0-p3"
       },
-      MetaTransactionWalletDeployer: "0x64Ab4DD46511cAFC7238A701b0b21C4F1cd4Ac4b"
+      MetaTransactionWalletDeployer: "0x4cda887Bce324109535814D49b74c6a560fAe1D9"
     },
     fornoURL: fornoURLForEnv('alfajores'),
     odis: {
