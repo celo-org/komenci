@@ -49,6 +49,7 @@ export class ContractsModule {
           inject: options.inject || []
         },
         metaTransactionWalletDeployer,
+        KomenciLoggerService
       ],
       exports: [
         MetaTransactionWalletDeployerWrapper
