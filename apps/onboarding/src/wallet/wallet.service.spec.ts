@@ -10,7 +10,7 @@ import { buildMockWeb3Provider } from '@app/onboarding/utils/testing/mock-web3-p
 import { MetaTxValidationErrorTypes, WalletErrorType } from '@app/onboarding/wallet/errors'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
-import { normalizeAddress } from '@celo/base'
+import { normalizeAddress, Ok } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
@@ -292,7 +292,7 @@ describe("WalletService", () => {
           const submitTxSpy = jest.spyOn(
             relayerSvc,
             'submitTransaction'
-          ).mockResolvedValue({ payload: txHash, relayerAddress: '0x22' })
+          ).mockResolvedValue(Ok({ payload: txHash, relayerAddress: '0x22' }))
 
           const updateSessionSpy = jest.spyOn(
             sessionSvc,
@@ -379,7 +379,7 @@ describe("WalletService", () => {
           const submitTxSpy = jest.spyOn(
             relayerSvc,
             'submitTransaction'
-          ).mockResolvedValue({ payload: txHash, relayerAddress: '0x22' })
+          ).mockResolvedValue(Ok({ payload: txHash, relayerAddress: '0x22' }))
 
           const updateSessionSpy = jest.spyOn(
             sessionSvc,

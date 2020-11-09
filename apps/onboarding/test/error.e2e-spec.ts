@@ -11,6 +11,7 @@ const request = require('supertest')
 
 class ExampleApiError extends ApiError<'ExampleApiError'> {
   statusCode = 400
+  metadataProps = []
 
   constructor() {
     super('ExampleApiError')
@@ -18,16 +19,13 @@ class ExampleApiError extends ApiError<'ExampleApiError'> {
   }
 }
 
-interface ExampleMetadata {
-  address: string
-  count: number
-}
-
-class ExampleApiErrorWithMetadata extends ApiError<'ExampleApiError', ExampleMetadata> {
+class ExampleApiErrorWithMetadata extends ApiError<'ExampleApiError'> {
   statusCode = 400
+  metadataProps = ['address', 'count']
 
-  constructor(address: string, count: number) {
-    super('ExampleApiError', {address, count})
+
+  constructor(readonly address: string, readonly count: number) {
+    super('ExampleApiError')
     this.message = 'This is an example error'
   }
 }
