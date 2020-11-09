@@ -57,7 +57,8 @@ export class DeployerCommand {
       }
     }
 
-
+    const account = this.contractKit.getWallet().getAccounts()[0]
+    console.log('Deploying from: ', account)
     const metaTxWallet = newMetaTransactionWallet(this.contractKit.web3, implementationAddress)
     const spin = createSpinner()
     spin.start("Ensuring all relayers have wallets")
