@@ -1,5 +1,4 @@
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
-import { KomenciLoggerService } from '@app/komenci-logger'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
@@ -31,7 +30,6 @@ export type OdisQueryError = OdisOutOfQuotaError | OdisUnknownError
 export class OdisService {
   constructor(
     private contractKit: ContractKit,
-    private logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     @Inject(networkConfig.KEY) private networkCfg: NetworkConfig,
   ) {}
@@ -68,7 +66,7 @@ export class OdisService {
       } catch (e) {
         // Increase the quota if it's hit
         if (e.message.includes('odisQuotaError')) {
-          this.logger.error(e)
+          console.log(e)
           await replenishQuota(this.walletCfg.address, this.contractKit)
         } else {
           return Err(new OdisUnknownError(e))
