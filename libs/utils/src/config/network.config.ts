@@ -48,9 +48,10 @@ const configs: Record<Network, NetworkConfig> = {
     contracts: {
       MetaTransactionWalletVersions: {
         "0x88a2b9B8387A1823D821E406b4e951337fa1D46D": "1.1.0.0-p1",
-        "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.1.0.0-p2"
+        "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.1.0.0-p2",
+        "0x5C9a6E3c3E862eD306E2E3348EBC8b8310A99e5A": "1.1.0.0-p3"
       },
-      MetaTransactionWalletDeployer: "0xb1Feb55F2BF2eCfb32CF8E09ce397Acf54414A45"
+      MetaTransactionWalletDeployer: "0x64Ab4DD46511cAFC7238A701b0b21C4F1cd4Ac4b"
     },
     fornoURL: fornoURLForEnv('alfajores'),
     odis: {
@@ -113,9 +114,10 @@ const configs: Record<Network, NetworkConfig> = {
     ],
     contracts: {
       MetaTransactionWalletVersions: {
-        "0x63004Acf0Ace666651E191ad17BC8D85077A09e6": "1.1.0.0"
+        "0x63004Acf0Ace666651E191ad17BC8D85077A09e6": "1.1.0.0-p1",
+        "0x6511FB5DBfe95859d8759AdAd5503D656E2555d7": "1.1.0.0-p2"
       },
-      MetaTransactionWalletDeployer: "0x82908811f5fa74cfdA29E325af02fF046B8947aF"
+      MetaTransactionWalletDeployer: "0xbDb92Ca42559adc5adC20a1E4985dC7c476483be"
     },
     fornoURL: fornoURLForEnv('rc1'),
     odis: {
