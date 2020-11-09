@@ -26,6 +26,7 @@ jobs:
       id: build-celo-monorepo-base-image
       run: |
         if docker pull celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }} ; then
+          docker tag celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }} celo-monorerpo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }}
           echo "Image found"
         else
           docker build -f Dockerfile.monorepo .\
