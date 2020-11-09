@@ -14,18 +14,22 @@ export class WalletNotDeployed extends RootError<WalletErrorType> {
   }
 }
 
-export class InvalidImplementation extends ApiError<WalletErrorType, {implementation: string}> {
+export class InvalidImplementation extends ApiError<WalletErrorType> {
   statusCode = 400
-  constructor(implementation: string) {
-    super(WalletErrorType.InvalidImplementation, { implementation })
+  metadataProps = ['address']
+
+  constructor(readonly address: string) {
+    super(WalletErrorType.InvalidImplementation)
     this.message = "Unexpected MetaTransactionWallet implementation address"
   }
 }
 
-export class InvalidWallet extends ApiError<WalletErrorType, {error: string}> {
+export class InvalidWallet extends ApiError<WalletErrorType> {
   statusCode = 400
-  constructor(private readonly walletError: WalletValidationError) {
-    super(WalletErrorType.InvalidImplementation, { error: walletError.errorType })
+  metadataProps = ['reason']
+
+  constructor(readonly reason: WalletValidationError) {
+    super(WalletErrorType.InvalidImplementation)
     this.message = "Invalid wallet"
   }
 }
@@ -39,30 +43,38 @@ export enum MetaTxValidationErrorTypes {
   InputDecodeError = "InputDecodeError"
 }
 
-export class InvalidRootMethod extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+export class InvalidRootMethod extends ApiError<MetaTxValidationErrorTypes> {
   statusCode = 400
-  constructor(public readonly received: string) {
-    super(MetaTxValidationErrorTypes.InvalidRootMethod, { received })
+  metadataProps = ['method']
+
+  constructor(readonly method: string) {
+    super(MetaTxValidationErrorTypes.InvalidRootMethod)
   }
 }
 
-export class InvalidChildMethod extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+export class InvalidChildMethod extends ApiError<MetaTxValidationErrorTypes> {
   statusCode = 400
-  constructor(public readonly received: string) {
-    super(MetaTxValidationErrorTypes.InvalidChildMethod, { received })
+  metadataProps = ['method']
+
+  constructor(readonly method: string) {
+    super(MetaTxValidationErrorTypes.InvalidChildMethod)
   }
 }
 
-export class InvalidDestination extends ApiError<MetaTxValidationErrorTypes, {received: string}> {
+export class InvalidDestination extends ApiError<MetaTxValidationErrorTypes> {
   statusCode = 400
-  constructor(public readonly received: string) {
-    super(MetaTxValidationErrorTypes.InvalidDestination, { received })
+  metadataProps = ['destination']
+
+  constructor(readonly destination: string) {
+    super(MetaTxValidationErrorTypes.InvalidDestination)
   }
 }
 
 export class InputDecodeError extends ApiError<MetaTxValidationErrorTypes> {
   statusCode = 400
-  constructor(public readonly error?: Error) {
+  metadataProps = []
+
+  constructor(readonly error?: Error) {
     super(MetaTxValidationErrorTypes.InputDecodeError)
     this.message = this.error?.message
   }

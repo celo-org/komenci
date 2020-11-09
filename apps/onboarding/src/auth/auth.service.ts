@@ -19,16 +19,20 @@ export enum AuthErrorTypes {
 
 export class InvalidToken extends ApiError<AuthErrorTypes.InvalidToken> {
   statusCode = 401
+  metadataProps = []
+
   constructor() {
     super(AuthErrorTypes.InvalidToken)
     this.message = 'Invalid or outdated token'
   }
 }
 
-export class SessionUnavailable extends ApiError<AuthErrorTypes.SessionUnavailable, { sessionId: string }> {
+export class SessionUnavailable extends ApiError<AuthErrorTypes.SessionUnavailable> {
   statusCode = 401
-  constructor(private readonly sessionId: string) {
-    super(AuthErrorTypes.SessionUnavailable, { sessionId })
+  metadataProps = ['sessionId']
+
+  constructor(readonly sessionId: string) {
+    super(AuthErrorTypes.SessionUnavailable)
     this.message = 'Session no longer available'
   }
 }

@@ -7,6 +7,7 @@ import {
   walletConfig
 } from '@app/blockchain/config/wallet.config'
 import { EventType, KomenciLoggerService } from '@app/komenci-logger'
+import { sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
@@ -17,8 +18,8 @@ import {
   OnModuleInit
 } from '@nestjs/common'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
+import { TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
-import exp from 'constants'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
 import { TransactionObject } from 'web3-eth'
@@ -62,9 +63,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   submitTransaction = async (
     tx: RawTransactionDto
-  ): Promise<Result<string, any>> => {
+  ): Promise<Result<string, TxSubmitError>> => {
     let tries = 0
-    while (++tries < 3) {
+    while (++tries <= 3) {
       try {
         const result = await this.kit.sendTransaction({
           to: tx.destination,
@@ -93,11 +94,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         return Ok(txHash)
       } catch (e) {
         if (tries === 3) {
-          this.logger.event(EventType.TxSubmitFailure, {
-            destination: tx.destination
-          })
-
-          return Err(e)
+          const err = new TxSubmitError(e, tx)
+          // this.logger.error(err)
+          return Err(err)
         }
       }
     }
@@ -175,13 +174,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         nonce: tx.nonce
       })
     } catch (e) {
-      this.logger.error(
-        'Could not dead-letter transaction',
-        '',
-        {
-          txHash: tx.hash,
-          nonce: tx.nonce
-      })
+      const err = new TxDeadletterError(e, tx.hash)
+      this.logger.error(err)
     }
   }
 

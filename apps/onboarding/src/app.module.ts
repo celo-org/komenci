@@ -60,7 +60,6 @@ import { SessionModule } from './session/session.module'
                   url: req.url,
                   hostname: req.hostname,
                   remoteAddress: req.ip,
-                  body: req.raw.body
                 }
               }
             },
