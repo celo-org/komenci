@@ -23,7 +23,7 @@ jobs:
       run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
 
     - name: Ensure build image exists
-      id: build-image
+      id: build-celo-monorepo-base-image
       run: |
         if docker pull celotestnet.azurecr.io/komenci/celo-monorepo-build-base:${{ steps.celo-monorepo-commit.outputs.commit }} ; then
           echo "Image found"
@@ -35,7 +35,7 @@ jobs:
         fi
 
     - name: Build image
-      id: build-image
+      id: build-app-image
       run: |
         docker pull celotestnet.azurecr.io/komenci/komenci:latest
         docker build .\
