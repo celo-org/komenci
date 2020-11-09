@@ -4,8 +4,7 @@ import { ContractKit } from '@celo/contractkit'
 import { GoldTokenWrapper } from '@celo/contractkit/lib/wrappers/GoldTokenWrapper'
 import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { StableTokenWrapper } from '@celo/contractkit/lib/wrappers/StableTokenWrapper'
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import BigNumber from 'bignumber.js'
 
 @Injectable()
@@ -38,8 +37,8 @@ export class BalanceService implements OnModuleInit {
     const exp = new BigNumber(10).pow(18)
 
     this.logger.event(EventType.RelayerBalance, {
-      cUSD: cUSDBalance.div(exp).toFixed(),
-      celo: celoBalance.div(exp).toFixed(),
+      cUSD: parseFloat(cUSDBalance.div(exp).toFixed()),
+      celo: parseFloat(celoBalance.div(exp).toFixed()),
     })
   }
 }

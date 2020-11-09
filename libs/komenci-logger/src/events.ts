@@ -12,7 +12,6 @@ export enum EventType {
   // Relayer service events:
   RelayerMTWInit = 'RelayerMTWInit',
   TxSubmitted = 'TxSubmitted',
-  TxSubmitFailure = 'TxSubmitFailure',
   TxConfirmed = 'TxConfirmed',
   TxTimeout = 'TxTimeout',
   RuleVerified = 'RuleVerified',
@@ -29,8 +28,7 @@ export type EventPayload = {
   [EventType.SessionStartFailure]: SessionEvent
   [EventType.RuleVerified]: AccountEvent & {
     ruleId: string
-    metaData?: Record<string, unknown>
-    result: Result<boolean, any>
+    result: boolean
   }
   [EventType.DeployWalletTxSent]: SessionEvent & {
     txHash: string
@@ -53,9 +51,6 @@ export type EventPayload = {
     mtwAddress: string
   }
   [EventType.TxSubmitted]: TxEvent
-  [EventType.TxSubmitFailure]: {
-    destination: string
-  }
   [EventType.TxConfirmed]: TxEvent & {
     isRevert: boolean
     gasPrice: number
@@ -63,8 +58,8 @@ export type EventPayload = {
     gasCost: number
   }
   [EventType.RelayerBalance]: {
-    cUSD: string
-    celo: string
+    cUSD: number
+    celo: number
   }
   [EventType.TxTimeout]: TxEvent & {
     deadLetterHash: string,
