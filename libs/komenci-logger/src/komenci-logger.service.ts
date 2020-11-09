@@ -33,7 +33,6 @@ export class KomenciLoggerService implements KomenciLogger {
     if (isApiError(message)) {
       this.logApiError(message)
     } else if (isMetadataError(message)) {
-      console.log(message)
       this.logMetadataError(message)
     } else if (isRootError(message)) {
       this.logRootError(message)
