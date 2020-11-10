@@ -41,16 +41,6 @@ export class AppController {
     private transactionService: TransactionService,
   ) {}
 
-  @Get('health')
-  health(@Req() req): { status: string } {
-    // TODO: Think about how to have a more clear understanding of
-    // service health here. Think about the relayer load balancer health
-    // or maybe just a toggle that we can do from ENV vars?
-    return {
-      status: 'OK'
-    }
-  }
-
   @MessagePattern({ cmd: RelayerCmd.SignPersonalMessage})
   async signPersonalMessage(
     @Body() input: SignPersonalMessageDto
