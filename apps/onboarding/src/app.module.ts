@@ -42,6 +42,9 @@ import { SessionModule } from './session/session.module'
       useFactory: (config: ConfigService) => {
         const appCfg = config.get<AppConfig>('app')
         return {
+          exclude: [
+            "v1/health"
+          ],
           pinoHttp: {
             genReqId: () => {
               return uuidv4()
