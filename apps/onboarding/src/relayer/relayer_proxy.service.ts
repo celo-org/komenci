@@ -57,6 +57,7 @@ type RelayerError = RelayerTimeout | RelayerCommunicationError | RelayerInternal
 type RelayerResult<TResp> = Result<RelayerResponse<TResp>, RelayerError>
 
 @Injectable({
+  // RELAYER_SERVICE is request scoped
   scope: Scope.REQUEST
 })
 export class RelayerProxyService {

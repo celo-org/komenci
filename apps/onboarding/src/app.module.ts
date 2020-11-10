@@ -109,6 +109,10 @@ import { SessionModule } from './session/session.module'
     SessionService,
     RelayerProxyService,
     {
+      // Request scoped so that a new TCP connection is created
+      // for each request in order to leverage ClusterIP load balancing
+      // See: https://github.com/celo-org/komenci/pull/127
+      // And: https://docs.nestjs.com/fundamentals/injection-scopes
       scope: Scope.REQUEST,
       provide: 'RELAYER_SERVICE',
       inject: [ConfigService, KomenciLoggerService],

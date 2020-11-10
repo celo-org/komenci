@@ -39,6 +39,7 @@ export interface MetaTxMetadata {
 }
 
 @Injectable({
+  // RelayerProxyService is Request scoped
   scope: Scope.REQUEST
 })
 export class WalletService {

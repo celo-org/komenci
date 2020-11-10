@@ -65,6 +65,7 @@ interface StartSessionResponse {
 
 @Controller({
   path: "v1",
+  // RelayerProxyService & WalletService are Request scoped
   scope: Scope.REQUEST
 })
 export class AppController {
