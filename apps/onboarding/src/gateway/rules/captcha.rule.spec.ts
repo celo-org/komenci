@@ -22,6 +22,10 @@ describe('CaptchaRule', () => {
     rule = module.get<CaptchaRule>(CaptchaRule)
   })
 
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
   it('should be defined', () => {
     expect(rule).toBeDefined()
   })
@@ -37,10 +41,47 @@ describe('CaptchaRule', () => {
         {
           captchaResponseToken: 'token-test'
         },
-        undefined,
+        {
+          bypassEnabled: false,
+          bypassToken: ""
+        },
         undefined
       )
     ).toStrictEqual(Ok(true))
     expect(captchaServiceMock.verifyCaptcha).toHaveBeenCalledWith('token-test')
+  })
+
+  it('should bypass if bypass is enabled and the token matches', async () => {
+    captchaServiceMock.verifyCaptcha.mockReturnValue(Ok(true))
+    expect(
+      await rule.verify(
+        {
+          captchaResponseToken: 'token-test'
+        },
+        {
+          bypassEnabled: true,
+          bypassToken: "token-test"
+        },
+        undefined
+      )
+    ).toStrictEqual(Ok(true))
+    expect(captchaServiceMock.verifyCaptcha).not.toHaveBeenCalled()
+  })
+
+  it('should not bypass if bypass is enabled and the token does not match', async () => {
+    captchaServiceMock.verifyCaptcha.mockReturnValue(Ok(true))
+    expect(
+      await rule.verify(
+        {
+          captchaResponseToken: 'token-test-22'
+        },
+        {
+          bypassEnabled: true,
+          bypassToken: "token-test"
+        },
+        undefined
+      )
+    ).toStrictEqual(Ok(true))
+    expect(captchaServiceMock.verifyCaptcha).toHaveBeenCalledWith('token-test-22')
   })
 })

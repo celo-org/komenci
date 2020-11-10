@@ -7,7 +7,7 @@ import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Body, Controller, Inject, UseFilters } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Req, UseFilters } from '@nestjs/common'
 import { MessagePattern, RpcException } from '@nestjs/microservices'
 import { TransactionService } from 'apps/relayer/src/chain/transaction.service'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
@@ -22,8 +22,15 @@ export interface RelayerResponse<T> {
   relayerAddress: string
 }
 
+export enum RelayerCmd {
+  SignPersonalMessage = "signPersonalMessage",
+  GetPhoneNumberIdentifier = "getPhoneNumberIdentifier",
+  SubmitTransaction = "submitTransaction",
+  SubmitTransactionBatch = "submitTransactionBatch",
+}
+
 @Controller()
-@UseFilters(new RpcErrorFilter())
+@UseFilters(RpcErrorFilter)
 export class AppController {
   constructor(
     private readonly odisService: OdisService,
@@ -34,7 +41,7 @@ export class AppController {
     private transactionService: TransactionService,
   ) {}
 
-  @MessagePattern({ cmd: 'signPersonalMessage' })
+  @MessagePattern({ cmd: RelayerCmd.SignPersonalMessage})
   async signPersonalMessage(
     @Body() input: SignPersonalMessageDto
   ): Promise<RelayerResponse<string>> {
@@ -46,38 +53,35 @@ export class AppController {
     )
   }
 
-  @MessagePattern({ cmd: 'getPhoneNumberIdentifier' })
+  @MessagePattern({ cmd: RelayerCmd.GetPhoneNumberIdentifier})
   async getPhoneNumberIdentifier(
     @Body() input: DistributedBlindedPepperDto,
   ): Promise<RelayerResponse<string>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
         this.odisService.getPhoneNumberIdentifier,
-        (error: Error) => new RpcException(error.message)
       )(input)
     )
   }
 
-  @MessagePattern({ cmd: 'submitTransaction' })
+  @MessagePattern({ cmd: RelayerCmd.SubmitTransaction})
   async submitTransaction(
     @Body() input: SubmitTransactionDto
   ): Promise<RelayerResponse<string>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
-        this.transactionService.submitTransaction,
-        (error: Error) => new RpcException(error.message)
+        this.transactionService.submitTransaction
       )(input.transaction)
     )
   }
 
-  @MessagePattern({ cmd: 'submitTransactionBatch' })
+  @MessagePattern({ cmd: RelayerCmd.SubmitTransactionBatch })
   async submitTransactionBatch(
     @Body() input: SubmitTransactionBatchDto
   ): Promise<RelayerResponse<string>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
          this.transactionService.submitTransaction,
-        (error: Error) => new RpcException(error.message)
       )(
         toRawTransaction(
           this.metaTxWallet.executeTransactions(

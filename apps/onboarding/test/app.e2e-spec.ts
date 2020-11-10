@@ -4,7 +4,6 @@ import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
 import { CaptchaService, CaptchaVerificationFailed } from '@app/onboarding/gateway/captcha/captcha.service'
 import { DeviceCheckService } from '@app/onboarding/gateway/device-check/device-check.service'
-import { GatewayService } from '@app/onboarding/gateway/gateway.service'
 import { RuleID } from '@app/onboarding/gateway/rules/rule'
 import { SafetyNetService } from '@app/onboarding/gateway/safety-net/safety-net.service'
 import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
@@ -93,10 +92,10 @@ describe('AppController (e2e)', () => {
   beforeEach(async () => {
     await manager.queryRunner.startTransaction()
     jest.spyOn(relayerProxyService, 'getPhoneNumberIdentifier').mockResolvedValue(
-      {
+      Ok({
         payload: "abcd1234",
         relayerAddress: "0x0"
-      }
+      })
     )
   })
 
@@ -108,10 +107,13 @@ describe('AppController (e2e)', () => {
       [RuleID.Signature]: true,
     },
     configs: {
-      [RuleID.DailyCap]: "{}",
-      [RuleID.Captcha]: "{}",
-      [RuleID.DeviceAttestation]: "{}",
-      [RuleID.Signature]: "{}",
+      [RuleID.DailyCap]: null,
+      [RuleID.Captcha]: {
+        bypassEnabled: false,
+        bypassToken: ""
+      },
+      [RuleID.DeviceAttestation]: null,
+      [RuleID.Signature]: null
     },
   }
 
@@ -200,7 +202,7 @@ describe('AppController (e2e)', () => {
           signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
           verifyCaptchaSpy = jest.spyOn(
             captchaService, 'verifyCaptcha'
-          ).mockResolvedValue(Err(new CaptchaVerificationFailed([])))
+          ).mockResolvedValue(Err(new CaptchaVerificationFailed([], "")))
         })
 
         it('returns a 401', async () => {

@@ -1,17 +1,17 @@
+import { RulesConfig } from '@app/onboarding/config/rules.config'
 import { Err, Ok } from '@celo/base/lib/result'
 import { Injectable } from '@nestjs/common'
-import { ErrorCode } from 'apps/onboarding/src/gateway/captcha/ReCAPTCHAResponseDto'
 import { StartSessionDto } from '../../dto/StartSessionDto'
-import { HttpErrorTypes } from '../../errors/http'
 import {
   CaptchaService,
-  CaptchaServiceErrors,
-  ReCAPTCHAErrorTypes
+  CaptchaServiceErrors
 } from '../captcha/captcha.service'
-import { Rule, RuleID } from './rule'
+import { GatewayContext, Rule, RuleID } from './rule'
+
+export type CaptchaRuleConfig = RulesConfig["configs"][RuleID.Captcha]
 
 @Injectable()
-export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
+export class CaptchaRule implements Rule<CaptchaRuleConfig, CaptchaServiceErrors> {
   constructor(private captchaService: CaptchaService) {}
 
   getID() {
@@ -20,9 +20,12 @@ export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
 
   async verify(
     payload: Pick<StartSessionDto, 'captchaResponseToken'>,
-    config,
-    context
+    config: CaptchaRuleConfig,
+    context: GatewayContext
   ) {
+    if (config.bypassEnabled && payload.captchaResponseToken === config.bypassToken) {
+      return Ok(true)
+    }
     const result = await this.captchaService.verifyCaptcha(
       payload.captchaResponseToken
     )
@@ -31,13 +34,5 @@ export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
     } else if (result.ok === false) {
       return Err(result.error)
     }
-  }
-
-  validateConfig(config: unknown): unknown {
-    return null
-  }
-
-  defaultConfig(): unknown {
-    return null
   }
 }

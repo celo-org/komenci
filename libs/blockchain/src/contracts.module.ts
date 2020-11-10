@@ -24,7 +24,7 @@ const metaTransactionWalletDeployer = {
     )
 
     logger.log({
-      message: 'Initialized MetaTransactionWalletDeployer',
+      msg: 'Initialized MetaTransactionWalletDeployer',
       address: options.deployerAddress,
     })
 
@@ -49,6 +49,7 @@ export class ContractsModule {
           inject: options.inject || []
         },
         metaTransactionWalletDeployer,
+        KomenciLoggerService
       ],
       exports: [
         MetaTransactionWalletDeployerWrapper
