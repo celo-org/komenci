@@ -41,12 +41,4 @@ export class SignatureRule implements Rule<{}, InvalidSignature> {
 
     return Ok(true)
   }
-
-  validateConfig(config?: string): {} {
-    return {}
-  }
-
-  defaultConfig(): {} {
-    return {}
-  }
 }
