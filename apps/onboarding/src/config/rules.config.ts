@@ -1,7 +1,21 @@
+import { CaptchaRuleConfig } from '@app/onboarding/gateway/rules/captcha.rule'
 import { registerAs } from '@nestjs/config'
 import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 
 const isTrue = (content: string) => String(content).toLowerCase() === 'true'
+
+export interface RulesConfig {
+  enabled: Partial<Record<RuleID, boolean>>,
+  configs: Partial<{
+    [RuleID.Captcha]: {
+      bypassEnabled: boolean,
+      bypassToken: string
+    }
+    [RuleID.DailyCap]: null,
+    [RuleID.DeviceAttestation]: null,
+    [RuleID.Signature]: null,
+  }>
+}
 
 export const rulesConfig = registerAs('rules', (): RulesConfig => ({
   enabled: {
@@ -11,14 +25,13 @@ export const rulesConfig = registerAs('rules', (): RulesConfig => ({
     [RuleID.Signature]: isTrue(process.env.RULE_SIGNATURE_ENABLED),
   },
   configs: {
-    [RuleID.DailyCap]: process.env.RULE_DAILY_CAP_CONFIG,
-    [RuleID.Captcha]: process.env.RULE_CAPTCHA_CONFIG,
-    [RuleID.DeviceAttestation]: process.env.RULE_DEVICE_ATTESTATION_CONFIG,
-    [RuleID.Signature]: "",
+    [RuleID.DailyCap]: null,
+    [RuleID.Captcha]: {
+      bypassEnabled: isTrue(process.env.RULE_CAPTCHA_CONFIG_BYPASS_ENABLED),
+      bypassToken: process.env.RULE_CAPTCHA_CONFIG_BYPASS_TOKEN || ""
+    },
+    [RuleID.DeviceAttestation]: null,
+    [RuleID.Signature]: null,
   },
 }))
 
-export interface RulesConfig {
-  enabled: Partial<Record<RuleID, boolean>>,
-  configs: Partial<Record<RuleID, any>>
-}

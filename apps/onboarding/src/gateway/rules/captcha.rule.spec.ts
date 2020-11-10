@@ -41,7 +41,10 @@ describe('CaptchaRule', () => {
         {
           captchaResponseToken: 'token-test'
         },
-        rule.defaultConfig(),
+        {
+          bypassEnabled: false,
+          bypassToken: ""
+        },
         undefined
       )
     ).toStrictEqual(Ok(true))

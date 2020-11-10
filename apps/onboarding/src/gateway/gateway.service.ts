@@ -15,9 +15,6 @@ import { Rule } from './rules/rule'
 @Injectable()
 export class GatewayService implements OnModuleInit {
   private rules: Array<Rule<any, RootError<any>>>
-  private ruleEnabled: Record<string, boolean>
-  // TODO: Better types here
-  private ruleConfigs: Record<string, unknown>
 
   constructor(
     @Inject(rulesConfig.KEY)
@@ -34,15 +31,6 @@ export class GatewayService implements OnModuleInit {
       this.moduleRef.create(SignatureRule)
     ])
 
-    this.ruleEnabled = this.config.enabled
-    this.ruleConfigs = this.rules.reduce((acc, rule) => {
-      return {
-        ...acc,
-        [rule.getID()]:
-          rule.validateConfig(this.config.configs[rule.getID()]) ||
-          rule.defaultConfig()
-      }
-    }, {})
   }
 
   async verify(
@@ -50,7 +38,7 @@ export class GatewayService implements OnModuleInit {
     req: FastifyRequest
   ): Promise<boolean> {
     const enabledRules = this.rules.filter(
-      rule => this.ruleEnabled[rule.getID()]
+      rule => this.config.enabled[rule.getID()]
     )
 
     const context = { req } // must build context
@@ -58,7 +46,7 @@ export class GatewayService implements OnModuleInit {
       enabledRules.map(rule => {
         return rule.verify(
           startSessionDto,
-          this.ruleConfigs[rule.getID()],
+          this.config.configs[rule.getID()],
           context
         )
       })
