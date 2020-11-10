@@ -7,7 +7,7 @@ import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Body, Controller, Inject, UseFilters } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Req, UseFilters } from '@nestjs/common'
 import { MessagePattern, RpcException } from '@nestjs/microservices'
 import { TransactionService } from 'apps/relayer/src/chain/transaction.service'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
@@ -40,6 +40,16 @@ export class AppController {
     private metaTxWallet: MetaTransactionWalletWrapper,
     private transactionService: TransactionService,
   ) {}
+
+  @Get('health')
+  health(@Req() req): { status: string } {
+    // TODO: Think about how to have a more clear understanding of
+    // service health here. Think about the relayer load balancer health
+    // or maybe just a toggle that we can do from ENV vars?
+    return {
+      status: 'OK'
+    }
+  }
 
   @MessagePattern({ cmd: RelayerCmd.SignPersonalMessage})
   async signPersonalMessage(
