@@ -1,4 +1,5 @@
 import { KomenciLoggerModule } from '@app/komenci-logger'
+import { CaptchaRule } from '@app/onboarding/gateway/rules/captcha.rule'
 import { HttpModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -59,7 +60,9 @@ describe('GatewayService', () => {
       const module = await buildTestingModule()
       const service = module.get<GatewayService>(GatewayService)
       await service.onModuleInit()
-      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({ CAPTCHA: null }))
+      // @ts-ignore
+      const rule = service.rules.find(r => r.getID() === RuleID.Captcha)
+      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({ CAPTCHA: rule.defaultConfig() }))
     })
 
     it('should set the rules config depending on env variables when valid', async () => {
@@ -129,7 +132,9 @@ describe('GatewayService', () => {
       })
       const service = module.get<GatewayService>(GatewayService)
       await service.onModuleInit()
-      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({CAPTCHA: null}))
+      // @ts-ignore
+      const rule = service.rules.find(r => r.getID() === RuleID.Captcha)
+      expect((service as any).ruleConfigs).toEqual(expect.objectContaining({ CAPTCHA: rule.defaultConfig() }))
     })
 
     it('should set the rules config depending on env variables when valid', async () => {
