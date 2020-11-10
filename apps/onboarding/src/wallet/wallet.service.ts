@@ -11,23 +11,17 @@ import {
   InvalidRootMethod,
   InvalidWallet,
   MetaTxValidationError,
-  WalletNotDeployed
+  WalletNotDeployed,
 } from '@app/onboarding/wallet/errors'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { Address, normalizeAddress, throwIfError } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
-import {
-  ABI as MetaTxWalletABI,
-  newMetaTransactionWallet
-} from '@celo/contractkit/lib/generated/MetaTransactionWallet'
+import { ABI as MetaTxWalletABI, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
-import {
-  RawTransaction,
-  toRawTransaction
-} from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Scope } from '@nestjs/common'
 import Web3 from 'web3'
 import { AppConfig, appConfig } from '../config/app.config'
 
@@ -44,7 +38,9 @@ export interface MetaTxMetadata {
   methodId: string
 }
 
-@Injectable()
+@Injectable({
+  scope: Scope.REQUEST
+})
 export class WalletService {
   constructor(
     private readonly relayerProxyService: RelayerProxyService,

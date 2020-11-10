@@ -2,7 +2,7 @@ import { MetadataError } from '@app/komenci-logger/errors'
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { Err, Ok, Result } from '@celo/base/lib/result'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Scope } from '@nestjs/common'
 import { ClientProxy } from '@nestjs/microservices'
 import { RelayerCmd, RelayerResponse } from 'apps/relayer/src/app.controller'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
@@ -56,7 +56,9 @@ class RelayerInternalError extends MetadataError<RelayerErrorTypes.RelayerIntern
 type RelayerError = RelayerTimeout | RelayerCommunicationError | RelayerInternalError
 type RelayerResult<TResp> = Result<RelayerResponse<TResp>, RelayerError>
 
-@Injectable()
+@Injectable({
+  scope: Scope.REQUEST
+})
 export class RelayerProxyService {
   constructor(
     @Inject('RELAYER_SERVICE') private client: ClientProxy,

@@ -12,7 +12,18 @@ import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { normalizeAddress, throwIfError } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Body, Controller, Get, Inject, Post, Req, Session, UnauthorizedException, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  Req,
+  Scope,
+  Session,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
@@ -52,7 +63,10 @@ interface StartSessionResponse {
   callbackUrl: string
 }
 
-@Controller("v1")
+@Controller({
+  path: "v1",
+  scope: Scope.REQUEST
+})
 export class AppController {
   // Cache for the allowed metaTx filter
   _allowedMetaTransaction?: TxFilter[]
