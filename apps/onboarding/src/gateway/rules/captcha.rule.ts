@@ -1,17 +1,23 @@
 import { Err, Ok } from '@celo/base/lib/result'
 import { Injectable } from '@nestjs/common'
-import { ErrorCode } from 'apps/onboarding/src/gateway/captcha/ReCAPTCHAResponseDto'
+import { isRight } from 'fp-ts/Either'
+import * as t from 'io-ts'
 import { StartSessionDto } from '../../dto/StartSessionDto'
-import { HttpErrorTypes } from '../../errors/http'
 import {
   CaptchaService,
-  CaptchaServiceErrors,
-  ReCAPTCHAErrorTypes
+  CaptchaServiceErrors
 } from '../captcha/captcha.service'
-import { Rule, RuleID } from './rule'
+import { GatewayContext, Rule, RuleID } from './rule'
+
+const CaptchaRuleConfig = t.type({
+  bypassEnabled: t.boolean,
+  bypassToken: t.string
+})
+
+type CaptchaRuleConfig = t.TypeOf<typeof CaptchaRuleConfig>
 
 @Injectable()
-export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
+export class CaptchaRule implements Rule<CaptchaRuleConfig, CaptchaServiceErrors> {
   constructor(private captchaService: CaptchaService) {}
 
   getID() {
@@ -20,9 +26,12 @@ export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
 
   async verify(
     payload: Pick<StartSessionDto, 'captchaResponseToken'>,
-    config,
-    context
+    config: CaptchaRuleConfig,
+    context: GatewayContext
   ) {
+    if (config.bypassEnabled && payload.captchaResponseToken === config.bypassToken) {
+      return Ok(true)
+    }
     const result = await this.captchaService.verifyCaptcha(
       payload.captchaResponseToken
     )
@@ -33,11 +42,29 @@ export class CaptchaRule implements Rule<unknown, CaptchaServiceErrors> {
     }
   }
 
-  validateConfig(config: unknown): unknown {
-    return null
+  validateConfig(configString: string): CaptchaRuleConfig | undefined {
+    // XXX: I want to refactor some stuff here to make
+    // this better but I didn't wanna do a huge refactor
+    // just for this
+    let rawConfig
+    try {
+      rawConfig = JSON.parse(configString)
+    } catch (e) {
+      return undefined
+    }
+
+    const decoded = CaptchaRuleConfig.decode(rawConfig)
+    if (isRight(decoded)) {
+      return decoded.right
+    } else {
+      return undefined
+    }
   }
 
-  defaultConfig(): unknown {
-    return null
+  defaultConfig(): CaptchaRuleConfig {
+    return {
+      bypassEnabled: false,
+      bypassToken: ""
+    }
   }
 }
