@@ -111,10 +111,6 @@ import { SessionModule } from './session/session.module'
       inject: [ConfigService, KomenciLoggerService],
       useFactory: (configService: ConfigService, logger: KomenciLoggerService) => {
         const relayerSvcOptions = configService.get<TcpClientOptions>('relayer')
-        logger.event(EventType.RelayerProxyInit, {
-          host: relayerSvcOptions.options.host,
-          port: relayerSvcOptions.options.port
-        })
         return ClientProxyFactory.create(relayerSvcOptions)
       }
     },
