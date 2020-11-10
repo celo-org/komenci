@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common'
 import { ConfigService, ConfigType } from '@nestjs/config'
 import { NestApplication, NestFactory } from '@nestjs/core'
 import { Logger } from 'nestjs-pino'
+import { join } from 'path'
 import { AppModule } from './app.module'
 import { appConfig } from './config/app.config'
 
@@ -12,6 +13,7 @@ async function bootstrap() {
   const cfg = app.get(ConfigService).get<ConfigType<typeof appConfig>>('app')
   logger.log(`Starting HTTP server on  ${cfg.host}:${cfg.port}`)
   app.useGlobalPipes(new ValidationPipe())
+  app.useStaticAssets(join(__dirname, '../../../apps/onboarding', 'public'))
 
   await app.listen(cfg.port, cfg.host)
 }
