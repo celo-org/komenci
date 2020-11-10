@@ -20,6 +20,4 @@ export interface Rule<TRuleConfig, TErrorTypes extends Error> {
     config: TRuleConfig,
     context: GatewayContext
   ): Promise<Result<boolean, TErrorTypes>>
-  validateConfig(config: string | undefined): TRuleConfig
-  defaultConfig(): TRuleConfig
 }
