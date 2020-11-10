@@ -7,10 +7,7 @@ import { AppModule } from './app.module'
 import { AppConfig } from './config/app.config'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: process.env.NODE_ENV === "production" ? false : undefined
-  })
-
+  const app = await NestFactory.create(AppModule)
   const appConfig = app.get(ConfigService).get<AppConfig>('app')
   app.connectMicroservice<TcpOptions>({
     transport: Transport.TCP,
