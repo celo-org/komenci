@@ -107,10 +107,13 @@ describe('AppController (e2e)', () => {
       [RuleID.Signature]: true,
     },
     configs: {
-      [RuleID.DailyCap]: "{}",
-      [RuleID.Captcha]: "{}",
-      [RuleID.DeviceAttestation]: "{}",
-      [RuleID.Signature]: "{}",
+      [RuleID.DailyCap]: null,
+      [RuleID.Captcha]: {
+        bypassEnabled: false,
+        bypassToken: ""
+      },
+      [RuleID.DeviceAttestation]: null,
+      [RuleID.Signature]: null
     },
   }
 

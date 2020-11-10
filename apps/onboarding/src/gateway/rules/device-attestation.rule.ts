@@ -69,12 +69,4 @@ export class DeviceAttestationRule
     }
     return Err(new InvalidDeviceError())
   }
-
-  validateConfig(config: unknown): unknown {
-    return null
-  }
-
-  defaultConfig(): unknown {
-    return null
-  }
 }

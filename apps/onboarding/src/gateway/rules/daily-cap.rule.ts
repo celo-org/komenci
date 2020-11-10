@@ -25,14 +25,4 @@ export class DailyCapRule implements Rule<DailyCapConfig, CapReachedError> {
   async verify(startSessionDto, config, context) {
     return Ok(true)
   }
-
-  validateConfig(config?: string): DailyCapConfig {
-    return JSON.parse(config || 'null') || null as DailyCapConfig
-  }
-
-  defaultConfig(): DailyCapConfig {
-    return {
-      total: 100
-    }
-  }
 }

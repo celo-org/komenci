@@ -7,7 +7,7 @@ import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Body, Controller, Inject, UseFilters } from '@nestjs/common'
+import { Body, Controller, Get, Inject, Req, UseFilters } from '@nestjs/common'
 import { MessagePattern, RpcException } from '@nestjs/microservices'
 import { TransactionService } from 'apps/relayer/src/chain/transaction.service'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
