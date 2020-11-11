@@ -5,7 +5,7 @@ import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
-import { HttpModule, Logger, Module } from '@nestjs/common'
+import { HttpModule, Logger, Module, Scope } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER } from '@nestjs/core'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
@@ -109,14 +109,15 @@ import { SessionModule } from './session/session.module'
     SessionService,
     RelayerProxyService,
     {
+      // Request scoped so that a new TCP connection is created
+      // for each request in order to leverage ClusterIP load balancing
+      // See: https://github.com/celo-org/komenci/pull/127
+      // And: https://docs.nestjs.com/fundamentals/injection-scopes
+      scope: Scope.REQUEST,
       provide: 'RELAYER_SERVICE',
       inject: [ConfigService, KomenciLoggerService],
       useFactory: (configService: ConfigService, logger: KomenciLoggerService) => {
         const relayerSvcOptions = configService.get<TcpClientOptions>('relayer')
-        logger.event(EventType.RelayerProxyInit, {
-          host: relayerSvcOptions.options.host,
-          port: relayerSvcOptions.options.port
-        })
         return ClientProxyFactory.create(relayerSvcOptions)
       }
     },

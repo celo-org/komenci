@@ -63,7 +63,7 @@ describe('AppController', () => {
       ]
     }).compile()
 
-    appController = app.get(AppController)
+    appController = await app.resolve(AppController)
     jwtService = app.get(JwtService)
     gatewayService = app.get(GatewayService)
     sessionService = app.get(SessionService)
