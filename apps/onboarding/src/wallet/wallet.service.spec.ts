@@ -65,7 +65,7 @@ describe("WalletService", () => {
     describe('with a random transaction', () => {
       it('returns a DecodeError', async () => {
         const module = await buildModule({}, {})
-        const walletService = module.get(WalletService)
+        const walletService = await module.resolve(WalletService)
         const contractKit = module.get(ContractKit)
 
         const attestations = await contractKit.contracts.getAttestations()
@@ -82,7 +82,7 @@ describe("WalletService", () => {
 
       it('returns an InvalidRootMethod', async () => {
         const module = await buildModule({}, {})
-        const walletService = module.get(WalletService)
+        const walletService = await module.resolve(WalletService)
         const contractKit = module.get(ContractKit)
 
         const wallet = await contractKit.contracts.getMetaTransactionWallet(Web3.utils.randomHex(20))
@@ -101,7 +101,7 @@ describe("WalletService", () => {
       describe('which is correct', () => {
         it('returns the methodId and destination!', async () => {
           const module = await buildModule({}, {})
-          const walletService = module.get(WalletService)
+          const walletService = await module.resolve(WalletService)
           const contractKit = module.get(ContractKit)
 
           const attestations = await contractKit.contracts.getAttestations()
@@ -132,7 +132,7 @@ describe("WalletService", () => {
       describe('pointing to an invalid destination', () => {
         it('returns an InvalidDestination error', async () => {
           const module = await buildModule({}, {})
-          const walletService = module.get(WalletService)
+          const walletService = await module.resolve(WalletService)
           const contractKit = module.get(ContractKit)
 
           const attestations = await contractKit.contracts.getAttestations()
@@ -170,7 +170,7 @@ describe("WalletService", () => {
       describe('pointing to an invalid method', () => {
         it('returns an InvalidChildMethod error', async () => {
           const module = await buildModule({}, {})
-          const walletService = module.get(WalletService)
+          const walletService = await module.resolve(WalletService)
           const contractKit = module.get(ContractKit)
 
           const attestations = await contractKit.contracts.getAttestations()
@@ -207,7 +207,7 @@ describe("WalletService", () => {
       describe('which is allowed', () => {
         it('returns ok!', async () => {
           const module = await buildModule({}, {})
-          const walletService = module.get(WalletService)
+          const walletService = await module.resolve(WalletService)
           const contractKit = module.get(ContractKit)
 
           const attestations = await contractKit.contracts.getAttestations()
@@ -266,8 +266,8 @@ describe("WalletService", () => {
     describe('with an invalid implementation', () => {
       it('returns an InvalidImplementation', async () => {
         const session = Session.of({})
-        const walletSvc = module.get(WalletService)
-        const deployRes = await walletSvc.deployWallet(session, invalidImplementation)
+        const walletService = await module.resolve(WalletService)
+        const deployRes = await walletService.deployWallet(session, invalidImplementation)
 
         expect(deployRes.ok).toBe(false)
         if (deployRes.ok === false) {
@@ -284,7 +284,7 @@ describe("WalletService", () => {
             externalAccount
           })
 
-          const walletSvc = module.get(WalletService)
+          const walletSvc = await module.resolve(WalletService)
           const sessionSvc = module.get(SessionService)
           const relayerSvc = module.get(RelayerProxyService)
           const txHash = Web3.utils.randomHex(32)
@@ -337,7 +337,7 @@ describe("WalletService", () => {
               }
             })
 
-            const walletSvc = module.get(WalletService)
+            const walletSvc = await module.resolve(WalletService)
             const deployRes = await walletSvc.deployWallet(session, validImplementation)
             const sessionSvc = module.get(SessionService)
             const relayerSvc = module.get(RelayerProxyService)
@@ -371,7 +371,7 @@ describe("WalletService", () => {
             }
           })
 
-          const walletSvc = module.get(WalletService)
+          const walletSvc = await module.resolve(WalletService)
           const sessionSvc = module.get(SessionService)
           const relayerSvc = module.get(RelayerProxyService)
           const txHash = Web3.utils.randomHex(32)
@@ -435,7 +435,7 @@ describe("WalletService", () => {
           externalAccount
         })
 
-        const walletSvc = module.get(WalletService)
+        const walletSvc = await module.resolve(WalletService)
         const walletRes = await walletSvc.getWallet(session, validImplementation)
 
         expect(walletRes.ok).toBe(false)
@@ -476,7 +476,7 @@ describe("WalletService", () => {
             }
           })
 
-          const walletSvc = module.get(WalletService)
+          const walletSvc = await module.resolve(WalletService)
           const deployer = module.get(MetaTransactionWalletDeployerWrapper)
           const web3 = module.get(Web3)
 
@@ -508,7 +508,7 @@ describe("WalletService", () => {
             }
           })
 
-          const walletSvc = module.get(WalletService)
+          const walletSvc = await module.resolve(WalletService)
           const deployer = module.get(MetaTransactionWalletDeployerWrapper)
           const web3 = module.get(Web3)
 
