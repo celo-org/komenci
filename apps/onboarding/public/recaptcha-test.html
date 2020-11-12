@@ -10,7 +10,9 @@
         // Renders the HTML element with id 'example1' as a reCAPTCHA widget.
         // The id of the reCAPTCHA widget is assigned to 'widgetId1'.
         widgetId1 = grecaptcha.render('example1', {
-          'sitekey' : '6LePBuEZAAAAANcfYO0YRgeQ-_v3v73dxqCeM3A6',
+          // Alfajores: 6LfJiNoZAAAAAHO8pC2EOeRTEddxS3HjgVcoB_vB
+          // Mainnet: 6LePBuEZAAAAANcfYO0YRgeQ-_v3v73dxqCeM3A6
+          'sitekey' : '6LfJiNoZAAAAAHO8pC2EOeRTEddxS3HjgVcoB_vB',
           'theme' : 'light'
         })
         grecaptcha.render('example3', {
@@ -27,13 +29,6 @@
       <div id="example1"></div>
       <br>
       <input type="submit" value="getResponse">
-    </form>
-    <br>
-    <!-- POSTs back to the page's URL upon submit with a g-recaptcha-response POST parameter. -->
-    <form action="?" method="POST">
-      <div id="example3"></div>
-      <br>
-      <input type="submit" value="Submit">
     </form>
     <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
         async defer>

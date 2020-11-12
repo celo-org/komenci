@@ -149,4 +149,13 @@ For alfajores this can be a local wallet (private key), but in other envs this w
 - `fund getRelayerBalance` - will resolve all MTW associated with relayers and query for all balances
 - `fund disburse` - will send cUSD to each relayer MTW and celo to each relayer, the amounts can be configured as flags.
 
+## reCAPTCHA Testing
 
+You may bypass the reCAPTCHA check by setting the following env variables:
+```bash
+export RULE_CAPTCHA_CONFIG_BYPASS_ENABLED=true
+export RULE_CAPTCHA_CONFIG_BYPASS_TOKEN=special-captcha-bypass-token
+```
+This will allow you to pass in `special-captcha-bypass-token` as a successful reCAPTCHA solution.
+
+You may also want to test the reCAPTCHA end-to-end. You can easily do so by [running the onboarding service](#running) locally and navigating to `http://localhost:3000/recaptcha-test.html`. This will produce a token which you may use to manually test the service. Note that the expiry of a token is two minutes. Both client-side site keys can be found [in the html](./apps/onboarding/public/recaptcha-test.html) and can be swapped manually depending on which environment you'd like to get a token for.

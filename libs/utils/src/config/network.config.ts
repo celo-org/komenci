@@ -134,6 +134,26 @@ const configs: Record<Network, NetworkConfig> = {
       {
         externalAccount: "0xb09eba8bc1c8bedadd634a8219c0b09042170903",
         metaTransactionWallet: "0x63e1fcB88713aAEA8bD88Fc968c12403AB3F796F",
+      },
+      {
+        externalAccount: "0x85a1e716608a84f455d7e07befb76c9b540ac040",
+        metaTransactionWallet: "0xf4453DF9C6fa1b0C00462D901C68cFb5517CBD84",
+      },
+      {
+        externalAccount: "0x2a094e77acf3faebb63279eb60e26d144b9048a2",
+        metaTransactionWallet: "0xA555a7561B9440AE118B0a3153B4d4bDFA1cF5C7",
+      },
+      {
+        externalAccount: "0x2f23f9a8f68294a9d6b479c3dbe3dff4de510ced",
+        metaTransactionWallet: "0x3d8730341E2eD43B4b5A10252E3A90f1DCDe555f",
+      },
+      {
+        externalAccount: "0x3db3150c1267d3adeb7f960f3eef11c1dd47a38b",
+        metaTransactionWallet: "0x7941A0096e98303072E4D39E54517a348D89A00a",
+      },
+      {
+        externalAccount: "0xe170915ce32bb8e2ce2a4fcd9113e5298a2e10d2",
+        metaTransactionWallet: "0x51FA7e8FE48a2968aC08Ef72374137Fd3a9Fda76",
       }
     ],
     contracts: {

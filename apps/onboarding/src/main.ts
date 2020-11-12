@@ -13,7 +13,9 @@ async function bootstrap() {
   const cfg = app.get(ConfigService).get<ConfigType<typeof appConfig>>('app')
   logger.log(`Starting HTTP server on  ${cfg.host}:${cfg.port}`)
   app.useGlobalPipes(new ValidationPipe())
-  app.useStaticAssets(join(__dirname, '../../../apps/onboarding', 'public'))
+  if (process.env.NODE_ENV !== 'production') {
+    app.useStaticAssets(join(__dirname, '../../../apps/onboarding', 'public'))
+  }
 
   await app.listen(cfg.port, cfg.host)
 }
