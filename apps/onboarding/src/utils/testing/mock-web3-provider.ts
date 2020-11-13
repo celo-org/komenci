@@ -2,7 +2,10 @@ import Web3 from 'web3'
 import { JsonRpcPayload, JsonRpcResponse } from 'web3-core-helpers'
 
 export type ResultForPayload = (payload: JsonRpcPayload) => [Error | null, JsonRpcResponse?]
-export const buildMockWeb3Provider = (resultForPayload: ResultForPayload) => {
+export const buildMockWeb3Provider = (
+  resultForPayload: ResultForPayload,
+  overrides: any = {}
+) => {
   const sendMock = jest.fn().mockImplementation((
     payload: JsonRpcPayload,
     callback: (error: Error | null, result?: JsonRpcResponse) => void
@@ -18,13 +21,13 @@ export const buildMockWeb3Provider = (resultForPayload: ResultForPayload) => {
     })
   })
 
-  return jest.fn((_host, _options) => ({
-    host: _host,
+  return {
+    host: 'mock-web3-host',
     connected: true,
     send: sendMock,
     supportsSubscriptions: () => true,
     disconnect: () => true,
-  }))
-
+    ...overrides
+  }
 }
 
