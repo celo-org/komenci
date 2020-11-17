@@ -159,3 +159,15 @@ export RULE_CAPTCHA_CONFIG_BYPASS_TOKEN=special-captcha-bypass-token
 This will allow you to pass in `special-captcha-bypass-token` as a successful reCAPTCHA solution.
 
 You may also want to test the reCAPTCHA end-to-end. You can easily do so by [running the onboarding service](#running) locally and navigating to `http://localhost:3000/recaptcha-test.html`. This will produce a token which you may use to manually test the service. Note that the expiry of a token is two minutes. Both client-side site keys can be found [in the html](./apps/onboarding/public/recaptcha-test.html) and can be swapped manually depending on which environment you'd like to get a token for.
+
+## Database migration
+
+In order to create the tables in the database that has the structure of our Session we should run the following command: 
+
+```yarn run typeorm:cli scheam:sync```
+
+The entities that we are going to update is in the file migration.confi.json. If for any reason is need it a migration because some field in the database change we should run the following command:
+
+``` yarn run typeorm:cli migration:run ```
+
+More detailed documentation about the proccess can be found in the following [link](https://typeorm.io/#/migrations/creating-a-new-migration).
