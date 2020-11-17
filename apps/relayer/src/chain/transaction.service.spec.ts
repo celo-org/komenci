@@ -121,7 +121,6 @@ describe('TransactionService', () => {
     jest.clearAllTimers()
   })
 
-
   it('should be defined', async () => {
     const module = await buildModule({}, {})
     const service = module.get(TransactionService)
@@ -196,6 +195,10 @@ describe('TransactionService', () => {
       await service.onModuleInit()
     })
 
+    afterEach(() => {
+      service.onModuleDestroy()
+    })
+
     describe('when the transaction result resolves', () => {
       it('submits the transaction to the chain, watched then unwatches', async () => {
         const tx = txFixture()
@@ -234,14 +237,12 @@ describe('TransactionService', () => {
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash)
 
         // Ensure the checkTransactions method is called
-        jest.advanceTimersToNextTimer(1)
+        jest.runOnlyPendingTimers()
         await txPromise
         expect(checkTransactions).toHaveBeenCalled()
 
         // Shouldn't remove it from the unwatch list until it's finalized
-        await setTimeout(() => {
-          expect(unwatchTransaction).not.toHaveBeenCalledWith(tx.hash)
-        })
+        expect(unwatchTransaction).not.toHaveBeenCalledWith(tx.hash)
 
         // Simulate being included in a block and ensure it's unwatched
         const completedTx = txFixture()
@@ -258,13 +259,11 @@ describe('TransactionService', () => {
         const relayerBalancePromise = Promise.resolve(relayerBalanceFixture())
         getTotalBalance.mockReturnValue(relayerBalancePromise)
 
-        jest.advanceTimersToNextTimer(2)
+        jest.runOnlyPendingTimers()
         await completedTxPromise
         await txReceiptPromise
         await relayerBalancePromise
-
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
-        jest.advanceTimersToNextTimer(1)
       })
     })
 
@@ -311,19 +310,16 @@ describe('TransactionService', () => {
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
-        jest.advanceTimersToNextTimer(1)
-
+        jest.runOnlyPendingTimers()
         expect(checkTransactions).toHaveBeenCalled()
         expect(finalizeTransaction).not.toHaveBeenCalled()
         await txPromise
         await resultPromise
         await result.getHash()
-        await setTimeout(() => {
-          expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
-          expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
-          expect(watchTransaction.mock.calls.length).toBe(2)
-        })
-        jest.advanceTimersToNextTimer(1)
+        jest.runOnlyPendingTimers()
+        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
+        expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(watchTransaction.mock.calls.length).toBe(2)
       })
     })
   })

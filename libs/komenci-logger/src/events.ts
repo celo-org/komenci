@@ -16,6 +16,7 @@ export enum EventType {
   TxTimeout = 'TxTimeout',
   RuleVerified = 'RuleVerified',
   RelayerBalance = 'RelayerBalance',
+  GasPriceUpdate = 'GasPriceUpdate',
 }
 
 export type EventPayload = {
@@ -64,6 +65,9 @@ export type EventPayload = {
   [EventType.TxTimeout]: TxEvent & {
     deadLetterHash: string,
     nonce: number
+  },
+  [EventType.GasPriceUpdate]: {
+    gasPriceGwei: number
   }
 }
 
