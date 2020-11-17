@@ -9,7 +9,6 @@ export const databaseConfig = registerAs('database', () => (
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'docker',
   database: process.env.DB_DATABASE || 'postgres',
-  autoLoadEntities: true,
   entities: [Session],
   keepConnectionAlive: true,
   ssl: process.env.DB_SSL === 'true', 
