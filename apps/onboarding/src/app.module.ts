@@ -58,7 +58,7 @@ import { SessionModule } from './session/session.module'
           ],
           pinoHttp: {
             base: {
-              serviceContext: {
+              ['logging.googleapis.com/labels']: {
                 service: 'onboarding',
                 version: appCfg.version
               }
@@ -79,7 +79,6 @@ import { SessionModule } from './session/session.module'
                 return { severity, ...typeProp }
               },
               log(object) {
-                console.log("Here be dragons", Object.keys(object))
                 const logObject = object as { err?: Error }
                 const stackProp = logObject?.err?.stack
                   ? { stack_trace: logObject.err.stack }
@@ -100,7 +99,7 @@ import { SessionModule } from './session/session.module'
             },
             messageKey: 'message',
             customAttributeKeys: {
-              req: 'operation'
+              req: 'logging.googleapis.com/operation'
             },
             genReqId: () => {
               return uuidv4()

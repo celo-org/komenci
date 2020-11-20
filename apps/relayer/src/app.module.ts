@@ -55,9 +55,35 @@ import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet
         const appCfg = config.get<AppConfig>('app')
         const walletCfg = config.get<WalletConfig>('wallet')
 
+        const levelToSeverity = {
+          trace: 'DEBUG',
+          debug: 'DEBUG',
+          info: 'INFO',
+          warn: 'WARNING',
+          error: 'ERROR',
+          fatal: 'CRITICAL',
+        }
+
         return {
+          formatters: {
+            level(label: string) {
+              const pinoLevel = label
+              const severity = levelToSeverity[pinoLevel]
+              // `@type` property tells Error Reporting to track even if there is no `stack_trace`
+              // you might want to make this an option the plugin, in our case we do want error reporting for all errors, with or without a stack
+              const typeProp =
+                pinoLevel === 'error' || pinoLevel === 'fatal'
+                  ? {
+                    '@type':
+                      'type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent',
+                  }
+                  : {}
+              return { severity, ...typeProp }
+
+            },
+          },
           base: {
-            serviceContext: {
+            ['logging.googleapis.com/labels']: {
               service: 'relayer',
               version: appCfg.version
             }
