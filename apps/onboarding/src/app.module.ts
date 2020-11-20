@@ -1,6 +1,6 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
-import { EventType, KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
+import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
 import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
@@ -12,6 +12,7 @@ import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
+import { IncomingMessage, ServerResponse } from 'http'
 import { v4 as uuidv4 } from "uuid"
 import { AppController } from './app.controller'
 import { AuthModule } from './auth/auth.module'
@@ -41,32 +42,91 @@ import { SessionModule } from './session/session.module'
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const appCfg = config.get<AppConfig>('app')
+
+        const levelToSeverity = {
+          trace: 'DEBUG',
+          debug: 'DEBUG',
+          info: 'INFO',
+          warn: 'WARNING',
+          error: 'ERROR',
+          fatal: 'CRITICAL',
+        }
+
         return {
           exclude: [
             "v1/health"
           ],
           pinoHttp: {
+            base: { serviceContext: { service: 'onboarding' } },
+            formatters: {
+              level(label: string) {
+                const pinoLevel = label
+                const severity = levelToSeverity[pinoLevel]
+                // `@type` property tells Error Reporting to track even if there is no `stack_trace`
+                // you might want to make this an option the plugin, in our case we do want error reporting for all errors, with or without a stack
+                const typeProp =
+                  pinoLevel === 'error' || pinoLevel === 'fatal'
+                    ? {
+                      '@type':
+                        'type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent',
+                    }
+                    : {}
+                return { severity, ...typeProp }
+              },
+              log(object) {
+                console.log("Here be dragons", Object.keys(object))
+                const logObject = object as { err?: Error }
+                const stackProp = logObject?.err?.stack
+                  ? { stack_trace: logObject.err.stack }
+                  : {}
+
+                const httpRequest = 'res' in object ? {
+                  httpRequest: {...object},
+                  res: undefined,
+                  responseTime: undefined
+                } : {}
+
+                return {
+                  ...object,
+                  ...stackProp,
+                  ...httpRequest
+                }
+              },
+            },
+            messageKey: 'message',
+            customAttributeKeys: {
+              req: 'operation'
+            },
             genReqId: () => {
               return uuidv4()
             },
             customSuccessMessage: (res) => {
-              return "RequestCompleted"
+              return `Success`
             },
-            customErrorMessage: (res) => {
-              return "RequestFailed"
+            customErrorMessage: (err, res) => {
+              return `Failure: ${err.message}`
             },
             serializers: {
-              req: req => {
+              httpRequest: ({res, error, responseTime}: {res: ServerResponse, error: Error, responseTime: number}) => {
+                const req = (res as any).req as IncomingMessage
+                return {
+                  requestMethod: req.method,
+                  requestUrl: req.url,
+                  requestSize: `${req.readableLength}`,
+                  status: res.statusCode,
+                  responseSize: res.getHeader('content-length'),
+                  userAgent: req.headers['user-agent'],
+                  remoteIp: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+                  referer: req.headers.referer,
+                  latency: responseTime,
+                }
+              },
+              req: (req) => {
                 return {
                   id: req.id,
-                  method: req.method,
-                  url: req.url,
-                  hostname: req.hostname,
-                  remoteAddress: req.ip,
                 }
               }
             },
-            level: appCfg.log_level,
             prettyPrint: process.env.NODE_ENV !== 'production'
           }
         }

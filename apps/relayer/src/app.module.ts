@@ -61,6 +61,7 @@ import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet
             mixin: () => ({
               relayer: walletCfg.address
             }),
+            messageKey: 'message',
             level: appCfg.logLevel,
             prettyPrint: process.env.NODE_ENV !== 'production'
           }
