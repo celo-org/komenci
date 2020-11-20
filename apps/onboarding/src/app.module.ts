@@ -57,7 +57,12 @@ import { SessionModule } from './session/session.module'
             "v1/health"
           ],
           pinoHttp: {
-            base: { serviceContext: { service: 'onboarding' } },
+            base: {
+              serviceContext: {
+                service: 'onboarding',
+                version: appCfg.version
+              }
+            },
             formatters: {
               level(label: string) {
                 const pinoLevel = label

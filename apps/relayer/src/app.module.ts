@@ -56,8 +56,13 @@ import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet
         const walletCfg = config.get<WalletConfig>('wallet')
 
         return {
+          base: {
+            serviceContext: {
+              service: 'relayer',
+              version: appCfg.version
+            }
+          },
           pinoHttp: {
-            name: `relayer-service`,
             mixin: () => ({
               relayer: walletCfg.address
             }),
