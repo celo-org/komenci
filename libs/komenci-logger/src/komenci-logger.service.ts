@@ -49,7 +49,7 @@ export class KomenciLoggerService implements KomenciLogger {
   event<K extends keyof EventPayload>(eventType: K, payload: EventPayload[K]): void {
     this.log({
       event: eventType,
-      payload
+      ...payload
     }, eventType)
   }
 
@@ -57,9 +57,8 @@ export class KomenciLoggerService implements KomenciLogger {
   private logApiError(error: ApiError<any>): void {
     this.logger.error({
         error: error.errorType,
-        payload: error.getMetadata()
+        ...error.getMetadata()
       },
-      error.message,
       error.stack,
       "KomenciLoggerService",
     )
@@ -69,7 +68,6 @@ export class KomenciLoggerService implements KomenciLogger {
     this.error({
         error: error.errorType,
       },
-      error.message,
       error.stack,
       "KomenciLoggerService",
     )
@@ -78,9 +76,8 @@ export class KomenciLoggerService implements KomenciLogger {
   private logMetadataError(error: MetadataError<any>): void {
     this.logger.error({
         error: error.errorType,
-        payload: error.getMetadata()
+        ...error.getMetadata()
       },
-      error.message,
       error.stack,
       "KomenciLoggerService",
     )

@@ -9,7 +9,7 @@ import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
 import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
-import { normalizeAddress, throwIfError } from '@celo/base'
+import { normalizeAddress, throwIfError, trimLeading0x } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import {
@@ -26,9 +26,9 @@ import {
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 
+import { SubmitMetaTransactionDto } from '@app/onboarding/dto/SubmitMetaTransactionDto'
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
-import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
 
 import { AuthService } from './auth/auth.service'
 import { appConfig, AppConfig } from './config/app.config'
@@ -108,7 +108,7 @@ export class AppController {
       )
 
       this.logger.event(EventType.SessionStart, {
-        externalAccount: startSessionDto.externalAccount,
+        externalAccount: trimLeading0x(startSessionDto.externalAccount),
         sessionId: response.sessionId
       })
 
