@@ -1,6 +1,7 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { WalletConfig, WalletType } from '@app/blockchain/config/wallet.config'
+import { FundingService } from '@app/blockchain/funding.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
@@ -53,6 +54,7 @@ import { FundCommand } from './fund.command'
     }),
   ],
   providers: [
+    FundingService,
     FundCommand,
     DeployerCommand,
   ],
