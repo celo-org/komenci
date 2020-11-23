@@ -136,7 +136,7 @@ describe('TxParserService', () => {
     })
 
     describe('with a valid transaction', () => {
-      it('returns an TransactionNotAllowed error', async () => {
+      it('returns the child transaction', async () => {
         const childTx = cUSD.approve(addresses[2], "1000").txo
 
         const res = await subject(await wallet.executeMetaTransaction(childTx, mockSig))

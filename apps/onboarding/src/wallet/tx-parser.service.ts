@@ -1,19 +1,16 @@
 import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
+import { decodeExecuteMetaTransaction, decodeExecuteTransactions } from '@app/onboarding/wallet/decode-txs'
 import {
   InvalidRootTransaction, TransactionDecodeError, TransactionNotAllowed,
   TxParseErrors,
 } from '@app/onboarding/wallet/errors'
 import { Address, Err, normalizeAddress, Ok, Result } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
-import { ABI as MetaTxWalletABI } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { BaseWrapper } from '@celo/contractkit/lib/wrappers/BaseWrapper'
 import { MetaTransactionWalletWrapper, RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Injectable, OnModuleInit } from '@nestjs/common'
 
 export type AllowedTransactions = Record<Address, Record<string, boolean>>
-
-const InputDataDecoder = require('ethereum-input-data-decoder')
-const MetaTxWalletDecoder = new InputDataDecoder(MetaTxWalletABI)
 
 @Injectable()
 export class TxParserService implements OnModuleInit {
@@ -83,94 +80,18 @@ export class TxParserService implements OnModuleInit {
     tx: RawTransaction,
     wallet: MetaTransactionWalletWrapper
   ): Result<RawTransaction[], TransactionDecodeError> {
-    const childResp = this.decodeExecuteMetaTransaction(tx)
+    const childResp = decodeExecuteMetaTransaction(tx)
     if (childResp.ok === false) {
       return childResp
     }
     const child = childResp.result
 
     if (isCallTo(child, wallet, 'executeTransactions')) {
-      return this.decodeExecuteTransactions(child)
+      return decodeExecuteTransactions(child)
     } else {
       return Ok([child])
     }
   }
-
-  private decodeExecuteMetaTransaction(tx: RawTransaction): Result<RawTransaction, TransactionDecodeError> {
-    const result = this.decode<[string, any, Buffer]>(
-      tx,
-      'executeMetaTransaction',
-      6
-    )
-
-    if (result.ok === false) {
-      return result
-    }
-    const inputs = result.result
-
-    return Ok({
-      destination: inputs[0],
-      value: inputs[1].toString(),
-      data: inputs[2].toString('hex')
-    })
-  }
-
-  private decodeExecuteTransactions(tx: RawTransaction): Result<RawTransaction[], TransactionDecodeError> {
-    const result = this.decode<[string[], any[], Buffer, number[]]>(
-      tx,
-      'executeTransactions',
-      4
-    )
-
-    if (result.ok === false) {
-      return result
-    }
-
-    const inputs = result.result
-    let offset = 0
-    return Ok(inputs[3].map((dataLength, idx) => {
-      let data: string
-      if (dataLength === 0) {
-        data = ""
-      } else {
-        data = inputs[2].slice(offset, offset+dataLength).toString('hex')
-        offset += dataLength
-      }
-      return  {
-        destination: inputs[0][idx],
-        value: inputs[1][idx].toString(),
-        data
-      }
-    }))
-  }
-
-  private decode<TxInput extends any[]>(
-    tx: RawTransaction,
-    method: string,
-    expectedInputsLength: number
-  ): Result<TxInput, TransactionDecodeError> {
-    let decodedData: any
-    try {
-      decodedData = MetaTxWalletDecoder.decodeData(tx.data)
-    } catch (e) {
-      return Err(new TransactionDecodeError(tx, e))
-    }
-
-    if (decodedData.method === null) {
-      return Err(new TransactionDecodeError(tx, new Error("Could not find method")))
-    }
-
-    if (decodedData.method !== method) {
-      return Err(new TransactionDecodeError(tx, new Error("Method does not match")))
-    }
-
-    if (decodedData.inputs.length !== expectedInputsLength) {
-      return Err(new TransactionDecodeError(tx, new Error('Invalid inputs length')))
-    }
-
-    return Ok(decodedData.inputs)
-  }
-
 }
 
 const normalizeAllowed = (allowedMap: AllowedTransactions): AllowedTransactions => {
