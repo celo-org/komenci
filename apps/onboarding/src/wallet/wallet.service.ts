@@ -43,37 +43,6 @@ export interface MetaTxMetadata {
   scope: Scope.REQUEST
 })
 export class WalletService {
-  static decodeMetaTransaction(
-    tx: RawTransaction
-  ): Result<RawTransaction, MetaTxValidationError> {
-    let decodedData: any
-    try {
-      decodedData = MetaTxWalletDecoder.decodeData(tx.data)
-    } catch (e) {
-      return Err(new InputDecodeError(e))
-    }
-
-    if (decodedData.method === null) {
-      return Err(new InputDecodeError())
-    }
-
-    if (decodedData.method !== 'executeMetaTransaction') {
-      return Err(new InvalidRootMethod(decodedData.method))
-    }
-
-    if (decodedData.inputs.length !== 6) {
-      return Err(new InputDecodeError(new Error('Invalid inputs length')))
-    }
-
-    // destination, value, calldata
-    const inputs: [string, any, Buffer] = decodedData.inputs
-    return Ok({
-      destination: inputs[0],
-      value: inputs[1].toString(),
-      data: inputs[2].toString('hex')
-    })
-  }
-
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
     private readonly sessionService: SessionService,
@@ -115,7 +84,7 @@ export class WalletService {
   async extractMetaTxData(
     transaction: RawTransaction
   ): Promise<Result<MetaTxMetadata, MetaTxValidationError>> {
-    const metaTxDecode = WalletService.decodeMetaTransaction(transaction)
+    const metaTxDecode = this.decodeMetaTransaction(transaction)
     if (metaTxDecode.ok === false) {
       return metaTxDecode
     }
@@ -236,5 +205,36 @@ export class WalletService {
 
   private isValidImplementation(implementationAddress: string): boolean {
     return implementationAddress in this.networkCfg.contracts.MetaTransactionWalletVersions
+  }
+
+  private decodeMetaTransaction(
+    tx: RawTransaction
+  ): Result<RawTransaction, MetaTxValidationError> {
+    let decodedData: any
+    try {
+      decodedData = MetaTxWalletDecoder.decodeData(tx.data)
+    } catch (e) {
+      return Err(new InputDecodeError(e))
+    }
+
+    if (decodedData.method === null) {
+      return Err(new InputDecodeError())
+    }
+
+    if (decodedData.method !== 'executeMetaTransaction') {
+      return Err(new InvalidRootMethod(decodedData.method))
+    }
+
+    if (decodedData.inputs.length !== 6) {
+      return Err(new InputDecodeError(new Error('Invalid inputs length')))
+    }
+
+    // destination, value, calldata
+    const inputs: [string, any, Buffer] = decodedData.inputs
+    return Ok({
+      destination: inputs[0],
+      value: inputs[1].toString(),
+      data: inputs[2].toString('hex')
+    })
   }
 }
