@@ -3,6 +3,7 @@ import { appConfig } from '@app/onboarding/config/app.config'
 import { quotaConfig } from '@app/onboarding/config/quota.config'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
+import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { networkConfig } from '@app/utils/config/network.config'
 import { ContractKit } from '@celo/contractkit'
@@ -47,6 +48,7 @@ describe('AppController', () => {
         WalletService,
         SubsidyService,
         ContractKit,
+        TxParserService,
         KomenciLoggerService,
         {
           provide: appConfig.KEY,

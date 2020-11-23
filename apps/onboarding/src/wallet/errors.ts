@@ -1,5 +1,6 @@
 import { ApiError } from '@app/komenci-logger/errors'
 import { RootError } from '@celo/base/lib/result'
+import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { WalletValidationError } from '@celo/komencikit/lib/errors'
 
 export enum WalletErrorType {
@@ -36,54 +37,42 @@ export class InvalidWallet extends ApiError<WalletErrorType> {
 
 export type WalletError = WalletNotDeployed | InvalidImplementation | InvalidWallet
 
-export enum MetaTxValidationErrorTypes {
-  InvalidRootMethod = "InvalidRootMethod",
-  InvalidChildMethod = "InvalidChildMethod",
-  InvalidDestination = "InvalidDestination",
-  InputDecodeError = "InputDecodeError"
+export enum TxParseErrorTypes {
+  InvalidRootTransaction = "MetaTx.InvalidRootTransaction",
+  TransactionNotAllowed = "MetaTx.TransactionNotAllowed",
+  TransactionDecodeError = "MetaTx.TransactionDecodeError"
 }
 
-export class InvalidRootMethod extends ApiError<MetaTxValidationErrorTypes> {
+export class InvalidRootTransaction extends ApiError<TxParseErrorTypes> {
   statusCode = 400
-  metadataProps = ['method']
+  metadataProps = ['tx']
 
-  constructor(readonly method: string) {
-    super(MetaTxValidationErrorTypes.InvalidRootMethod)
+  constructor(readonly tx: RawTransaction) {
+    super(TxParseErrorTypes.InvalidRootTransaction)
   }
 }
 
-export class InvalidChildMethod extends ApiError<MetaTxValidationErrorTypes> {
+export class TransactionNotAllowed extends ApiError<TxParseErrorTypes> {
   statusCode = 400
-  metadataProps = ['method']
+  metadataProps = ['tx']
 
-  constructor(readonly method: string) {
-    super(MetaTxValidationErrorTypes.InvalidChildMethod)
+  constructor(readonly tx: RawTransaction) {
+    super(TxParseErrorTypes.TransactionNotAllowed)
   }
 }
 
-export class InvalidDestination extends ApiError<MetaTxValidationErrorTypes> {
+export class TransactionDecodeError extends ApiError<TxParseErrorTypes> {
   statusCode = 400
-  metadataProps = ['destination']
+  metadataProps = ['tx']
 
-  constructor(readonly destination: string) {
-    super(MetaTxValidationErrorTypes.InvalidDestination)
+  constructor(readonly tx: RawTransaction, readonly error: Error) {
+    super(TxParseErrorTypes.TransactionDecodeError)
+    this.message = error.message
   }
 }
 
-export class InputDecodeError extends ApiError<MetaTxValidationErrorTypes> {
-  statusCode = 400
-  metadataProps = []
-
-  constructor(readonly error?: Error) {
-    super(MetaTxValidationErrorTypes.InputDecodeError)
-    this.message = this.error?.message
-  }
-}
-
-export type MetaTxValidationError =
-  InvalidRootMethod |
-  InvalidChildMethod |
-  InvalidDestination |
-  InputDecodeError
-
+export type TxParseErrors =
+  InvalidRootTransaction |
+  TransactionNotAllowed |
+  TransactionDecodeError
 
