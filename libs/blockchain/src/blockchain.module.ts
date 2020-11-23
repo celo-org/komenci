@@ -36,12 +36,10 @@ export class BlockchainModule {
           inject: options.inject || [],
         },
         BlockchainService,
-        FundingService,
         ...this.providers()
       ],
       exports: [
         BlockchainService,
-        FundingService,
         ...this.providers().map(p => p.provide)
       ]
     }

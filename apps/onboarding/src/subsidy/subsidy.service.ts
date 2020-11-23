@@ -1,8 +1,9 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
-import { InvalidWallet, MetaTxValidationError } from '@app/onboarding/wallet/errors'
+import { InvalidWallet, TxParseErrors } from '@app/onboarding/wallet/errors'
+import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
-import { Err, Ok, Result } from '@celo/base/lib/result'
+import { Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Inject, Injectable } from '@nestjs/common'
@@ -13,6 +14,7 @@ import { Session } from '../session/session.entity'
 export class SubsidyService {
   constructor(
     private readonly walletService: WalletService,
+    private readonly txParserService: TxParserService,
     private readonly contractKit: ContractKit,
     @Inject(appConfig.KEY)
     private readonly cfg: AppConfig
@@ -21,7 +23,7 @@ export class SubsidyService {
   public async isValid(
     input: RequestAttestationsDto,
     session: Session
-  ): Promise<Result<boolean, InvalidWallet | MetaTxValidationError>> {
+  ): Promise<Result<boolean, InvalidWallet | TxParseErrors>> {
     const walletValid = await this.walletService.isValidWallet(
       input.walletAddress,
       session.externalAccount
@@ -32,26 +34,17 @@ export class SubsidyService {
     }
 
     const attestations = await this.contractKit.contracts.getAttestations()
-    const txMetadata = await this.walletService.extractMetaTxData(
-      input.requestTx
-    )
-    if (txMetadata.ok === false) {
-      return txMetadata
-    }
-    const requestValid = await this.walletService.isAllowedMetaTransaction(
-      txMetadata.result,
-      [
-        {
-          destination: attestations.address,
-          methodId: attestations.methodIds.request
+    const res = await this.txParserService.parse(
+      input.requestTx,
+      input.walletAddress, {
+        [attestations.address]: {
+          [attestations.methodIds.request]: true
         }
-      ]
-    )
+    })
 
-    if (requestValid.ok === false) {
-      return requestValid
+    if (res.ok === false) {
+      return res
     }
-
     return Ok(true)
   }
 

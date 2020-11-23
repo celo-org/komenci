@@ -1,4 +1,5 @@
 import { Address, Result } from '@celo/base'
+import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 
 export enum EventType {
   // Onboarding service events:
@@ -43,8 +44,7 @@ export type EventPayload = {
   }
   [EventType.MetaTransactionSubmitted]: SessionTxEvent & {
     destination: Address
-    metaTxMethodID: string
-    metaTxDestination: Address
+    childTxs: RawTransaction[]
   }
   // Relayer service events payloads:
   [EventType.RelayerMTWInit]: {
