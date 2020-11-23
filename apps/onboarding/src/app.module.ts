@@ -3,6 +3,7 @@ import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { EventType, KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
 import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
+import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { HttpModule, Logger, Module, Scope } from '@nestjs/common'
@@ -106,6 +107,7 @@ import { SessionModule } from './session/session.module'
   providers: [
     SubsidyService,
     WalletService,
+    TxParserService,
     SessionService,
     RelayerProxyService,
     {

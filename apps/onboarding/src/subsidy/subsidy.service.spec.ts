@@ -1,6 +1,7 @@
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
+import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { ContractKit } from '@celo/contractkit'
 import { WrapperCache } from '@celo/contractkit/lib/contract-cache'
@@ -37,6 +38,7 @@ describe('SubsidyService', () => {
         SubsidyService,
         ContractKit,
         WalletService,
+        TxParserService,
         {
           provide: appConfig.KEY,
           useValue: cfg
