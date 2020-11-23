@@ -20,12 +20,14 @@ import {
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
 import { GasPriceFetchError, TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
+import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
 import { TransactionObject } from 'web3-eth'
 import { AppConfig, appConfig } from '../config/app.config'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
+const GWEI_PER_UNIT = 1e9
 
 @Injectable()
 export class TransactionService implements OnModuleInit, OnModuleDestroy {
@@ -248,14 +250,15 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       const gasPriceMinimum = await this.kit.contracts.getGasPriceMinimum()
       const rawGasPrice = await gasPriceMinimum.getGasPriceMinimum(ZERO_ADDRESS)
       const gasPrice = rawGasPrice.multipliedBy(this.appCfg.gasPriceMultiplier)
-      this.gasPrice = gasPrice.toFixed()
+      this.gasPrice = BigNumber.min(gasPrice, this.appCfg.maxGasPrice).toFixed()
       this.logger.event(EventType.GasPriceUpdate, {
-        gasPriceGwei: parseFloat(gasPrice.dividedBy(1000000000).toFixed())
+        gasPriceGwei: parseFloat(gasPrice.dividedBy(GWEI_PER_UNIT).toFixed()),
+        cappedAtMax: gasPrice.gte(this.appCfg.maxGasPrice)
       })
     } catch (e) {
       this.logger.error(new GasPriceFetchError(e))
       if (this.gasPrice === "") {
-        this.gasPrice = this.appCfg.gasPriceFallback
+        this.gasPrice = this.appCfg.gasPriceFallback.toString()
       }
     }
   }

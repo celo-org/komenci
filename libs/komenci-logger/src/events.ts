@@ -68,6 +68,7 @@ export type EventPayload = {
   },
   [EventType.GasPriceUpdate]: {
     gasPriceGwei: number
+    cappedAtMax: boolean
   }
 }
 
