@@ -7,6 +7,7 @@ import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
+import { loggerConfigFactory } from 'apps/relayer/src/logger-config.factory'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import { AppController } from './app.controller'
 import { TransactionService } from './chain/transaction.service'
@@ -51,21 +52,7 @@ import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet
     KomenciLoggerModule.forRootAsync({
       providers: [ConfigService],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const appCfg = config.get<AppConfig>('app')
-        const walletCfg = config.get<WalletConfig>('wallet')
-
-        return {
-          pinoHttp: {
-            name: `relayer-service`,
-            mixin: () => ({
-              relayer: walletCfg.address
-            }),
-            level: appCfg.logLevel,
-            prettyPrint: process.env.NODE_ENV !== 'production'
-          }
-        }
-      }
+      useFactory: loggerConfigFactory
     }),
     HttpModule
   ],

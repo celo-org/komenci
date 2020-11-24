@@ -3,7 +3,8 @@
     <title>reCAPTCHA demo: Explicit render for multiple widgets</title>
     <script type="text/javascript">
       var verifyCallback = function(response) {
-        alert(response);
+        var textarea = document.getElementById("resp")
+        textarea.value = response
       };
       var widgetId1;
       var onloadCallback = function() {
@@ -22,14 +23,27 @@
         });
       };
     </script>
+    <style>
+      textarea {
+        width: 500px;
+        height: 250px;
+        padding: 8px;
+        border-radius: 12px;
+        background: #eee;
+        border: none;
+        word-break: break-all;
+        white-space: break-spaces;
+      }
+    </style>
   </head>
   <body>
     <!-- The g-recaptcha-response string displays in an alert message upon submit. -->
-    <form action="javascript:alert(grecaptcha.getResponse(widgetId1));">
+    <form action="javascript:verifyCallback(grecaptcha.getResponse(widgetId1));">
       <div id="example1"></div>
       <br>
       <input type="submit" value="getResponse">
     </form>
+    <textarea id="resp" disabled="true"></textarea>
     <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
         async defer>
     </script>
