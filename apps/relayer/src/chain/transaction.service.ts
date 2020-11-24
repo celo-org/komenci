@@ -7,7 +7,7 @@ import {
   walletConfig
 } from '@app/blockchain/config/wallet.config'
 import { EventType, KomenciLoggerService } from '@app/komenci-logger'
-import { sleep } from '@celo/base'
+import { Address, sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
@@ -18,19 +18,25 @@ import {
   OnModuleInit
 } from '@nestjs/common'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
-import { TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
+import { GasPriceFetchError, TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
+import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
 import { TransactionObject } from 'web3-eth'
 import { AppConfig, appConfig } from '../config/app.config'
+
+const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
+const GWEI_PER_UNIT = 1e9
 
 @Injectable()
 export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private watchedTransactions: Set<string>
   private transactionSeenAt: Map<string, number>
   private checksumWalletAddress: string
-  private timer: NodeJS.Timeout
+  private txTimer: NodeJS.Timeout
+  private gasPriceTimer: NodeJS.Timeout
+  private gasPrice: string = ""
 
   constructor(
     private readonly kit: ContractKit,
@@ -46,19 +52,28 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    // Fetch the initial gas price
+    await this.updateGasPrice()
     // Find pending txs and add to the watch list
-    (await this.getPendingTransactionHashes()).forEach(txHash =>
+    const pendingTxs = await this.getPendingTransactionHashes()
+    pendingTxs.forEach(txHash =>
       this.watchTransaction(txHash)
     )
     // Monitor the watched transactions for finality
-    this.timer = setInterval(
+    this.txTimer = setInterval(
       () => this.checkTransactions(),
       this.appCfg.transactionCheckIntervalMs
+    )
+    // Periodically update gasPrice
+    this.gasPriceTimer = setInterval(
+      () => this.updateGasPrice(),
+      this.appCfg.gasPriceUpdateIntervalMs
     )
   }
 
   onModuleDestroy() {
-    clearInterval(this.timer)
+    clearInterval(this.txTimer)
+    clearInterval(this.gasPriceTimer)
   }
 
   submitTransaction = async (
@@ -72,7 +87,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           value: tx.value,
           data: tx.data,
           from: this.walletCfg.address,
-          gas: this.appCfg.transactionMaxGas
+          gas: this.appCfg.transactionMaxGas,
+          gasPrice: this.gasPrice
         })
 
         // If we don't do this explicitly it results in
@@ -225,6 +241,24 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       } else {
         this.logger.log('No pending transactions found for relayer')
         return []
+      }
+    }
+  }
+
+  private async updateGasPrice() {
+    try {
+      const gasPriceMinimum = await this.kit.contracts.getGasPriceMinimum()
+      const rawGasPrice = await gasPriceMinimum.getGasPriceMinimum(ZERO_ADDRESS)
+      const gasPrice = rawGasPrice.multipliedBy(this.appCfg.gasPriceMultiplier)
+      this.gasPrice = BigNumber.min(gasPrice, this.appCfg.maxGasPrice).toFixed()
+      this.logger.event(EventType.GasPriceUpdate, {
+        gasPriceGwei: parseFloat(gasPrice.dividedBy(GWEI_PER_UNIT).toFixed()),
+        cappedAtMax: gasPrice.gte(this.appCfg.maxGasPrice)
+      })
+    } catch (e) {
+      this.logger.error(new GasPriceFetchError(e))
+      if (this.gasPrice === "") {
+        this.gasPrice = this.appCfg.gasPriceFallback.toString()
       }
     }
   }

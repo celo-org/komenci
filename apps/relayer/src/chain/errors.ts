@@ -1,9 +1,11 @@
 import { MetadataError } from '@app/komenci-logger/errors'
+import { RootError } from '@celo/base'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 
 export enum ChainErrorTypes {
   TxSubmitError = "TxSubmitError",
-  TxDeadletterError = "TxDeadletterError"
+  TxDeadletterError = "TxDeadletterError",
+  GasPriceFetchError = "GasPriceFetchError"
 }
 
 export class TxSubmitError extends MetadataError<ChainErrorTypes.TxSubmitError> {
@@ -21,5 +23,12 @@ export class TxDeadletterError extends MetadataError<ChainErrorTypes.TxDeadlette
   constructor(readonly err: Error, readonly txHash: string) {
     super(ChainErrorTypes.TxDeadletterError)
     this.message = `TxSubmitError: ${err.message}`
+  }
+}
+
+export class GasPriceFetchError extends RootError<ChainErrorTypes.GasPriceFetchError> {
+  constructor(readonly err: Error) {
+    super(ChainErrorTypes.GasPriceFetchError)
+    this.message = `GasPriceFetchError: ${err.message}`
   }
 }
