@@ -10,6 +10,7 @@ export enum EventType {
   PepperRequested = 'PepperRequested',
   AttestationsRequested = 'AttestationsRequested',
   MetaTransactionSubmitted = 'MetaTransactionSubmitted',
+  ChildMetaTransactionSubmitted = 'ChildMetaTransactionSubmitted',
   // Relayer service events:
   RelayerMTWInit = 'RelayerMTWInit',
   TxSubmitted = 'TxSubmitted',
@@ -45,7 +46,12 @@ export type EventPayload = {
   }
   [EventType.MetaTransactionSubmitted]: SessionTxEvent & {
     destination: Address
-    childTxs: RawTransaction[]
+    childTxsCount: number
+  }
+  [EventType.ChildMetaTransactionSubmitted]: SessionTxEvent & {
+    destination: Address
+    value: string,
+    methodId: string,
   }
   // Relayer service events payloads:
   [EventType.RelayerMTWInit]: {
