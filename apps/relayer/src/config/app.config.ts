@@ -8,6 +8,8 @@ export const appConfig = registerAs('app', () => {
     transactionCheckIntervalMs: parseInt(process.env.TRANSACTION_CHECK_INTERVAL_MS, 10) || 1000,
     transactionTimeoutMs: parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 20000,
     transactionMaxGas: parseInt(process.env.TRANSACTION_MAX_GAS, 10) || 1000000,
+    version: process.env.KOMENCI_VERSION || 'version-missing',
+    service: process.env.KOMENCI_SERVICE || 'komenci-relayer',
     gasPriceUpdateIntervalMs: parseInt(process.env.GAS_PRICE_UPDATE_INTERVAL_MS, 10) || 30000, // 30s
     gasPriceMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 5,
     gasPriceFallback: process.env.GAS_PRICE_FALLBACK || "500000000", // 0.5 Gwei

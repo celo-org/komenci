@@ -10,7 +10,9 @@ export const appConfig = registerAs('app', () => ({
   // new version of Attestations.sol
   useAttestationGuards: process.env.USE_ATTESTATION_GUARDS === 'true',
   relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000,
-  callbackUrl: process.env.PUBLIC_URL || 'http://localhost:3000'
+  callbackUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
+  version: process.env.KOMENCI_VERSION || 'version-missing',
+  service: process.env.KOMENCI_SERVICE || 'komenci-api',
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>

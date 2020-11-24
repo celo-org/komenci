@@ -3,7 +3,6 @@ import { RootError } from '@celo/base/lib/result'
 export const errorTypeSymbol = Symbol('errorType')
 export const apiErrorSymbol = Symbol('ApiError')
 export const metadataErrorSymbol = Symbol('MetadataError')
-const errMetadataPropsKey = Symbol('MetadataError:props')
 
 export abstract class MetadataError<TError> extends RootError<TError> {
   [errorTypeSymbol] = metadataErrorSymbol
