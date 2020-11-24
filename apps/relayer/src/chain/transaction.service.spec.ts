@@ -34,6 +34,7 @@ describe('TransactionService', () => {
     testWalletConfig: Partial<WalletConfig>
   ): Promise<TestingModule>  => {
     const appConfigValue: Partial<AppConfig> = {
+      gasPriceFallback: "1000000000",
       ...testAppConfig
     }
 
