@@ -166,7 +166,7 @@ In order to create the tables in the database that has the structure of our Sess
 
 ```yarn run typeorm:cli scheam:sync```
 
-The entities that we are going to update is in the file migration.confi.json. If for any reason is need it a migration because some field in the database change we should run the following command:
+The entities that we are going to update are in the file migration.config.json. If for any reason a migration is needed (ex. some field in the database changed) we should run the following command:
 
 ``` yarn run typeorm:cli migration:run ```
 
