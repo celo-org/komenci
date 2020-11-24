@@ -64,7 +64,7 @@ export const loggerConfigFactory = (config: ConfigService): Params => {
             userAgent: req.headers['user-agent'],
             remoteIp: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
             referer: req.headers.referer,
-            latency: `${responseTime}`,
+            latency: `${responseTime/1000}s`,
           }
         },
         req: (req) => req.id
