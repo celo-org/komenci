@@ -1,7 +1,10 @@
+import { extractMethodId } from '@app/blockchain/utils'
 import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
+
+import { SubmitMetaTransactionDto } from '@app/onboarding/dto/SubmitMetaTransactionDto'
 import { QuotaAction } from '@app/onboarding/session/quota.decorator'
 import { QuotaGuard } from '@app/onboarding/session/quota.guard'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
@@ -26,10 +29,9 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-
-import { SubmitMetaTransactionDto } from '@app/onboarding/dto/SubmitMetaTransactionDto'
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
+import { RelayerResponse } from 'apps/relayer/src/app.controller'
 
 import { AuthService } from './auth/auth.service'
 import { appConfig, AppConfig } from './config/app.config'
@@ -263,15 +265,7 @@ export class AppController {
       transaction: metaTx
     }))
 
-    this.logger.event(EventType.MetaTransactionSubmitted, {
-      sessionId: session.id,
-      relayerAddress: resp.relayerAddress,
-      externalAccount: session.externalAccount,
-      txHash: resp.payload,
-      destination: normalizeAddress(metaTx.destination),
-      childTxs: childTxs,
-    })
-
+    this.logMetaTransaction(resp, metaTx, childTxs, session)
     await this.sessionService.incrementUsage(
       session,
       TrackedAction.SubmitMetaTransaction
@@ -280,5 +274,35 @@ export class AppController {
     return {
       txHash: resp.payload
     }
+  }
+
+  private logMetaTransaction(
+    relayerResp: RelayerResponse<string>,
+    metaTx: RawTransaction,
+    childTxs: RawTransaction[],
+    session: SessionEntity
+  ) {
+    this.logger.event(EventType.MetaTransactionSubmitted, {
+      sessionId: session.id,
+      relayerAddress: relayerResp.relayerAddress,
+      externalAccount: session.externalAccount,
+      txHash: relayerResp.payload,
+      destination: normalizeAddress(metaTx.destination),
+      childTxsCount: childTxs.length
+    })
+
+    childTxs.map(childTx => ({
+      value: childTx.value,
+      destination: childTx.destination,
+      methodId: extractMethodId(childTx.data)
+    })).forEach((childTx) => this.logger.event(
+      EventType.ChildMetaTransactionSubmitted, {
+        sessionId: session.id,
+        relayerAddress: relayerResp.relayerAddress,
+        externalAccount: session.externalAccount,
+        txHash: relayerResp.payload,
+        ...childTx
+      })
+    )
   }
 }
