@@ -1,4 +1,5 @@
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerModule } from '@app/komenci-logger'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
@@ -39,7 +40,9 @@ describe('OdisService', () => {
     }
 
     const module = await Test.createTestingModule({
-      imports: [],
+      imports: [
+        KomenciLoggerModule.forRoot()
+      ],
       providers: [
         OdisService,
         { provide: ContractKit, useValue: contractKit },

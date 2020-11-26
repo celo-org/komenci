@@ -53,8 +53,8 @@ export class KomenciLoggerService implements KomenciLogger {
     }
   }
 
-  errorWithContext(error: Error, ctx: EventContext) {
-    const context = this.expandContext(ctx)
+  errorWithContext(error: Error, ctx?: EventContext) {
+    const context = ctx ? this.expandContext(ctx) : {}
     if (isApiError(error) || isMetadataError(error)) {
       this.logger.error(
         {
