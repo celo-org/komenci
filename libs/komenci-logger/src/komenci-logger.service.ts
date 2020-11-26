@@ -10,6 +10,11 @@ export interface KomenciLogger extends LoggerService {
   event: <K extends keyof EventPayload>(eventType: K, payload: EventPayload[K]) => void
 }
 
+interface EventContext {
+  traceId: string,
+  labels: Array<{key: string, value: string}>
+}
+
 @Injectable()
 export class KomenciLoggerService implements KomenciLogger {
   constructor(private readonly logger: PinoLogger) {}
@@ -55,10 +60,25 @@ export class KomenciLoggerService implements KomenciLogger {
     throw(error)
   }
 
-  event<K extends keyof EventPayload>(eventType: K, payload: EventPayload[K]): void {
+  event<K extends keyof EventPayload>(
+    eventType: K,
+    payload: EventPayload[K],
+    context?: EventContext,
+  ): void {
     this.log({
       event: eventType,
-      ...payload
+      ...payload,
+      ...(context ? this.expandContext(context) : {})
     }, eventType)
+  }
+
+  private expandContext(context: EventContext): Record<string, string> {
+    return {
+      'logging.googleapis.com/trace': context.traceId,
+      ...(context.labels.reduce((acc, l) => {
+        acc[l.key] = l.value
+        return acc
+      }, {}))
+    }
   }
 }

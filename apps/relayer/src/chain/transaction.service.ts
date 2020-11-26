@@ -11,6 +11,7 @@ import { Address, sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { retry } from '@celo/komencikit/lib/retry'
 import {
   Inject,
   Injectable,
@@ -20,6 +21,7 @@ import {
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
 import { GasPriceFetchError, TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
+import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
 import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
@@ -32,6 +34,7 @@ const GWEI_PER_UNIT = 1e9
 @Injectable()
 export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private watchedTransactions: Set<string>
+  private transactionCtx: Map<string, RelayerTraceContext>
   private transactionSeenAt: Map<string, number>
   private checksumWalletAddress: string
   private txTimer: NodeJS.Timeout
@@ -48,6 +51,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   ) {
     this.watchedTransactions = new Set()
     this.transactionSeenAt = new Map()
+    this.transactionCtx = new Map()
     this.checksumWalletAddress = Web3.utils.toChecksumAddress(walletCfg.address)
   }
 
@@ -76,51 +80,49 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.gasPriceTimer)
   }
 
-  submitTransaction = async (
-    tx: RawTransactionDto
-  ): Promise<Result<string, TxSubmitError>> => {
-    let tries = 0
-    while (++tries <= 3) {
-      try {
-        const result = await this.kit.sendTransaction({
-          to: tx.destination,
-          value: tx.value,
-          data: tx.data,
-          from: this.walletCfg.address,
-          gas: this.appCfg.transactionMaxGas,
-          gasPrice: this.gasPrice
-        })
+  @retry({
+      tries: 3
+  })
+  async submitTransaction(
+    tx: RawTransactionDto,
+    ctx?: RelayerTraceContext
+  ): Promise<Result<string, TxSubmitError>> {
+    try {
+      const result = await this.kit.sendTransaction({
+        to: tx.destination,
+        value: tx.value,
+        data: tx.data,
+        from: this.walletCfg.address,
+        gas: this.appCfg.transactionMaxGas,
+        gasPrice: this.gasPrice
+      })
 
-        // If we don't do this explicitly it results in
-        // an unhandled exception being logged if the
-        // tx reverts.
-        // tslint:disable-next-line:no-empty
-        result.waitReceipt().then().catch(() => {})
+      // If we don't do this explicitly it results in
+      // an unhandled exception being logged if the
+      // tx reverts.
+      // tslint:disable-next-line:no-empty
+      result.waitReceipt().then().catch(() => {})
 
-        const txHash = await result.getHash()
-        this.watchTransaction(txHash)
+      const txHash = await result.getHash()
+      this.watchTransaction(txHash, ctx)
 
 
-        this.logger.event(EventType.TxSubmitted, {
-          txHash: txHash,
-          destination: tx.destination
-        })
+      this.logger.event(EventType.TxSubmitted, {
+        txHash: txHash,
+        destination: tx.destination
+      }, ctx)
 
-        return Ok(txHash)
-      } catch (e) {
-        if (tries === 3) {
-          const err = new TxSubmitError(e, tx)
-          // this.logger.error(err)
-          return Err(err)
-        }
-      }
+      return Ok(txHash)
+    } catch (e) {
+      return Err(new TxSubmitError(e, tx))
     }
   }
 
   async submitTransactionObject(
-    txo: TransactionObject<any>
-  ): Promise<Result<string, any>> {
-    return this.submitTransaction(toRawTransaction(txo))
+    txo: TransactionObject<any>,
+    ctx?: RelayerTraceContext
+  ): Promise<Result<string, TxSubmitError>> {
+    return this.submitTransaction(toRawTransaction(txo), ctx)
   }
 
   private async checkTransactions() {
@@ -150,6 +152,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    * @private
    */
   private async finalizeTransaction(tx: Transaction) {
+    const ctx = this.transactionCtx.get(tx.hash)
     this.unwatchTransaction(tx.hash)
 
     const txReceipt = await this.kit.web3.eth.getTransactionReceipt(tx.hash)
@@ -162,7 +165,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       gasPrice: gasPrice,
       gasCost: gasPrice * txReceipt.gasUsed,
       destination: tx.to
-    })
+    }, ctx)
   }
 
 
@@ -172,6 +175,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    */
   private async deadLetter(tx: Transaction) {
     try {
+      const ctx = this.transactionCtx.get(tx.hash)
       const result = await this.kit.sendTransaction({
         to: this.walletCfg.address,
         from: this.walletCfg.address,
@@ -180,28 +184,35 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       })
       const deadLetterHash = await result.getHash()
       this.unwatchTransaction(tx.hash)
-      this.watchTransaction(deadLetterHash)
+      this.watchTransaction(deadLetterHash, ctx)
 
       this.logger.event(EventType.TxTimeout, {
         destination: tx.to,
         txHash: tx.hash,
         deadLetterHash,
         nonce: tx.nonce
-      })
+      }, ctx)
     } catch (e) {
       const err = new TxDeadletterError(e, tx.hash)
       this.logger.error(err)
     }
   }
 
-  private watchTransaction(txHash: string) {
+  private watchTransaction(
+    txHash: string,
+    ctx?: RelayerTraceContext
+  ) {
     this.watchedTransactions.add(txHash)
     this.transactionSeenAt.set(txHash, Date.now())
+    if (ctx) {
+      this.transactionCtx.set(txHash, ctx)
+    }
   }
 
   private unwatchTransaction(txHash: string) {
     this.watchedTransactions.delete(txHash)
     this.transactionSeenAt.delete(txHash)
+    this.transactionCtx.delete(txHash)
   }
 
   private isExpired(txHash: string): boolean {

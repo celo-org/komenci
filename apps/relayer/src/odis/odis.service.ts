@@ -4,11 +4,15 @@ import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
 import { AuthSigner, ServiceContext } from '@celo/contractkit/lib/identity/odis/query'
+import { retry } from '@celo/komencikit/lib/retry'
 import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { Inject, Injectable } from '@nestjs/common'
+import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
+import { GetPhoneNumberSignatureDto } from 'apps/relayer/src/dto/GetPhoneNumberSignatureDto'
 
 export enum OdisQueryErrorTypes {
   OutOfQuota = "OutOfQuota",
+  Timeout = "Timeout",
   Unknown = "Unknown"
 }
 
@@ -24,55 +28,85 @@ export class OdisUnknownError extends RootError<OdisQueryErrorTypes.Unknown> {
   }
 }
 
-export type OdisQueryError = OdisOutOfQuotaError | OdisUnknownError
+export class OdisTimeoutError extends RootError<OdisQueryErrorTypes.Timeout> {
+  constructor() {
+    super(OdisQueryErrorTypes.Timeout)
+  }
+}
+
+export type OdisQueryError = OdisOutOfQuotaError | OdisUnknownError | OdisTimeoutError
 
 @Injectable()
 export class OdisService {
+  private authSigner : AuthSigner
+  private serviceContext: ServiceContext
+
   constructor(
     private contractKit: ContractKit,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     @Inject(networkConfig.KEY) private networkCfg: NetworkConfig,
-  ) {}
-
-  // TODO: Relocate this to the onboarding service once we update the ContractKit interface
-  // to accept pre-signed auth header (then we can just expose signPersonalMessage)
-  getPhoneNumberIdentifier = async (
-    input: DistributedBlindedPepperDto
-  ): Promise<Result<string, OdisQueryError>> => {
-    const authSigner: AuthSigner = {
+    @Inject(appConfig.KEY) private appCfg: AppConfig,
+  ) {
+    this.authSigner = {
       authenticationMethod: OdisUtils.Query.AuthenticationMethod.WALLET_KEY,
       contractKit: this.contractKit
     }
 
-    const serviceContext: ServiceContext = {
+    this.serviceContext = {
       odisUrl: this.networkCfg.odis.url,
       odisPubKey: this.networkCfg.odis.publicKey
     }
+  }
 
-    // Query the phone number identifier
-    // Re-attempt once if the
-    let attempts = 0
-    while (attempts++ <= 1) {
-      try {
-        const combinedSignature = await OdisUtils.PhoneNumberIdentifier.getBlindedPhoneNumberSignature(
-          this.walletCfg.address,
-          authSigner,
-          serviceContext,
-          input.blindedPhoneNumber,
-          undefined,
-          input.clientVersion
-        )
-        return Ok(combinedSignature)
-      } catch (e) {
-        // Increase the quota if it's hit
-        if (e.message.includes('odisQuotaError')) {
-          console.log(e)
-          await replenishQuota(this.walletCfg.address, this.contractKit)
-        } else {
-          return Err(new OdisUnknownError(e))
-        }
+  // TODO: Relocate this to the onboarding service once we update the ContractKit interface
+  // to accept pre-signed auth header (then we can just expose signPersonalMessage)
+  @retry({
+    bailOnErrorTypes: [
+      OdisQueryErrorTypes.Unknown
+    ],
+    tries: 2,
+  })
+  async getPhoneNumberSignature(
+    input: GetPhoneNumberSignatureDto
+  ): Promise<Result<string, OdisQueryError>> {
+    const timeout = new Promise<Result<string, OdisTimeoutError>>(
+      resolve => setTimeout(
+        () => resolve(Err(new OdisTimeoutError())),
+        this.appCfg.odisTimeoutMs
+      )
+    )
+    const res = await Promise.race([
+      this.queryOdis(input),
+      timeout
+    ])
+
+    if (res.ok === false && res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
+      await replenishQuota(this.walletCfg.address, this.contractKit)
+    }
+
+    return res
+  }
+
+
+  private async queryOdis(
+    input: GetPhoneNumberSignatureDto
+  ): Promise<Result<string, OdisQueryError>> {
+    try {
+      const signature = await OdisUtils.PhoneNumberIdentifier.getBlindedPhoneNumberSignature(
+        this.walletCfg.address,
+        this.authSigner,
+        this.serviceContext,
+        input.blindedPhoneNumber,
+        undefined,
+        input.clientVersion
+      )
+      return Ok(signature)
+    } catch (e) {
+      if (e.message.includes('odisQuotaError')) {
+        return Err(new OdisOutOfQuotaError())
+      } else {
+        return Err(new OdisUnknownError(e))
       }
     }
-    return Err(new OdisOutOfQuotaError())
   }
 }
