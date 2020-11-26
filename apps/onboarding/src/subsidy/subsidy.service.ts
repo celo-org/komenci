@@ -1,16 +1,16 @@
 import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { InvalidWallet, TxParseErrors } from '@app/onboarding/wallet/errors'
+import { MethodFilter } from '@app/onboarding/wallet/method-filter'
 import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { Ok, Result } from '@celo/base/lib/result'
-import { ContractKit } from '@celo/contractkit'
+import { CeloContract, ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, OnModuleInit, Scope } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { Session } from '../session/session.entity'
 
-@Injectable()
 export class SubsidyService {
   constructor(
     private readonly walletService: WalletService,
@@ -33,14 +33,16 @@ export class SubsidyService {
       return walletValid
     }
 
-    const attestations = await this.contractKit.contracts.getAttestations()
+
     const res = await this.txParserService.parse(
       input.requestTx,
-      input.walletAddress, {
-        [attestations.address]: {
-          [attestations.methodIds.request]: true
-        }
-    })
+      input.walletAddress,
+      new MethodFilter().addContract(
+        CeloContract.Accounts,
+        await this.contractKit.contracts.getAttestations(),
+        ["request"]
+      )
+    )
 
     if (res.ok === false) {
       return res

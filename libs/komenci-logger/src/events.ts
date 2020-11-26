@@ -52,6 +52,8 @@ export type EventPayload = {
     destination: Address
     value: string,
     methodId: string,
+    methodName: string,
+    contractName: string
   }
   // Relayer service events payloads:
   [EventType.RelayerMTWInit]: {

@@ -76,7 +76,7 @@ describe('OdisService', () => {
       }
       
       const svc = await setupService({}, {}, {})
-      const res = await svc.getPhoneNumberIdentifier(input)
+      const res = await svc.getPhoneNumberSignature(input)
       expect(res.ok).toBe(true)
       if (res.ok) {
         expect(getBlindedPhoneNumberSignature).toHaveBeenCalled()
@@ -98,7 +98,7 @@ describe('OdisService', () => {
         }
 
         const svc = await setupService({}, {}, {})
-        const res = await svc.getPhoneNumberIdentifier(input)
+        const res = await svc.getPhoneNumberSignature(input)
         expect(res.ok).toBe(false)
         if (res.ok === false) {
           expect(res.error.errorType).toBe(OdisQueryErrorTypes.OutOfQuota)
@@ -127,7 +127,7 @@ describe('OdisService', () => {
         }
 
         const svc = await setupService({}, {}, {})
-        const res = await svc.getPhoneNumberIdentifier(input)
+        const res = await svc.getPhoneNumberSignature(input)
         expect(res.ok).toBe(true)
         if (res.ok) {
           expect(getBlindedPhoneNumberSignature).toHaveBeenCalled()
@@ -152,7 +152,7 @@ describe('OdisService', () => {
         }
 
         const svc = await setupService({}, {}, {})
-        const res = await svc.getPhoneNumberIdentifier(input)
+        const res = await svc.getPhoneNumberSignature(input)
         expect(res.ok).toBe(false)
         if (res.ok === false) {
           expect(res.error.errorType).toBe(OdisQueryErrorTypes.Unknown)

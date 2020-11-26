@@ -30,7 +30,6 @@ export class GatewayService implements OnModuleInit {
       this.moduleRef.create(DeviceAttestationRule),
       this.moduleRef.create(SignatureRule)
     ])
-
   }
 
   async verify(
