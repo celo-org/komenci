@@ -1,4 +1,5 @@
 import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerService } from '@app/komenci-logger'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
@@ -9,6 +10,7 @@ import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils
 import { Inject, Injectable } from '@nestjs/common'
 import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
 import { GetPhoneNumberSignatureDto } from 'apps/relayer/src/dto/GetPhoneNumberSignatureDto'
+import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
 
 export enum OdisQueryErrorTypes {
   OutOfQuota = "OutOfQuota",
@@ -46,6 +48,7 @@ export class OdisService {
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     @Inject(networkConfig.KEY) private networkCfg: NetworkConfig,
     @Inject(appConfig.KEY) private appCfg: AppConfig,
+    private logger: KomenciLoggerService
   ) {
     this.authSigner = {
       authenticationMethod: OdisUtils.Query.AuthenticationMethod.WALLET_KEY,
@@ -67,7 +70,7 @@ export class OdisService {
     tries: 2,
   })
   async getPhoneNumberSignature(
-    input: GetPhoneNumberSignatureDto
+    input: GetPhoneNumberSignatureDto,
   ): Promise<Result<string, OdisQueryError>> {
     const timeout = new Promise<Result<string, OdisTimeoutError>>(
       resolve => setTimeout(
@@ -80,8 +83,11 @@ export class OdisService {
       timeout
     ])
 
-    if (res.ok === false && res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
-      await replenishQuota(this.walletCfg.address, this.contractKit)
+    if (res.ok === false) {
+      this.logger.errorWithContext(res.error, input.context)
+      if (res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
+        await replenishQuota(this.walletCfg.address, this.contractKit)
+      }
     }
 
     return res

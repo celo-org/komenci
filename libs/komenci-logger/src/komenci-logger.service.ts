@@ -40,18 +40,36 @@ export class KomenciLoggerService implements KomenciLogger {
       this.logger.error(
         { error: error.errorType, ...error.getMetadata() },
         error.stack,
-        "KomenciLoggerService",
       )
     } else if (isRootError(error)) {
       this.logger.error(
         { error: error.errorType, },
         error.stack,
-        "KomenciLoggerService",
       )
     } else if (isError(error)) {
       this.logger.error((error as Error).stack, context, ...args)
     } else {
       this.logger.error(trace || error, context, ...args)
+    }
+  }
+
+  errorWithContext(error: Error, ctx: EventContext) {
+    const context = this.expandContext(ctx)
+    if (isApiError(error) || isMetadataError(error)) {
+      this.logger.error(
+        {
+          error: error.errorType,
+          ...error.getMetadata(),
+          ...context
+        },
+      )
+    } else if (isRootError(error)) {
+      this.logger.error(
+        { error: error.errorType, ...context },
+        error.stack,
+      )
+    } else if (isError(error)) {
+      this.logger.error(context, (error as Error).stack)
     }
   }
 

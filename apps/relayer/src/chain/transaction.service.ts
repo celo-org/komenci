@@ -174,8 +174,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    * @param tx Expired tx
    */
   private async deadLetter(tx: Transaction) {
+    const ctx = this.transactionCtx.get(tx.hash)
     try {
-      const ctx = this.transactionCtx.get(tx.hash)
       const result = await this.kit.sendTransaction({
         to: this.walletCfg.address,
         from: this.walletCfg.address,
@@ -194,7 +194,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       }, ctx)
     } catch (e) {
       const err = new TxDeadletterError(e, tx.hash)
-      this.logger.error(err)
+      this.logger.errorWithContext(err, ctx)
     }
   }
 
