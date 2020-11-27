@@ -12,22 +12,26 @@ export interface TransactionWithMetadata {
   contractName: string
 }
 
+interface Method {
+  methodName: string,
+  contractName: CeloContract
+}
+
 export class MethodFilter {
-  private allowed: Map<string, boolean> = new Map()
-  private methodName: Map<string, string> = new Map()
-  private contractName: Map<string, string> = new Map()
+  private methods: Map<string, Method> = new Map()
 
   addContract<T extends Contract>(
     name: CeloContract,
     wrapper: BaseWrapper<T>,
     methods: Array<keyof T["methods"]>
   ): MethodFilter {
-    this.contractName.set(normalizeAddress(wrapper.address), name)
     methods.forEach(methodName => {
       const methodId = wrapper.methodIds[methodName]
       const methodKey = this.buildKey(wrapper.address, methodId)
-      this.allowed.set(methodKey, true)
-      this.methodName.set(methodKey, methodName as string)
+      this.methods.set(methodKey, {
+        methodName: `${methodName}`,
+        contractName: name
+      })
     })
 
     return this
@@ -36,16 +40,18 @@ export class MethodFilter {
   find(raw: RawTransaction): Result<TransactionWithMetadata, any> {
     const methodId = extractMethodId(raw.data)
     const key = this.buildKey(raw.destination, methodId)
-    if (this.allowed.get(key) === true) {
+    const method = this.methods.get(key)
+
+    if (method) {
       return Ok({
         raw: raw,
         methodId: methodId,
-        methodName: this.methodName.get(key),
-        contractName: this.contractName.get(normalizeAddress(raw.destination))
+        ...method,
       })
     }
     return Err(new Error())
   }
+
   private buildKey(contractAddress, methodId: string): string {
     return `${normalizeAddress(contractAddress)}:${normalizeMethodId(methodId)}`
   }
