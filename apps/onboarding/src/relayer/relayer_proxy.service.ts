@@ -1,10 +1,13 @@
 import { MetadataError } from '@app/komenci-logger/errors'
 import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
-import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
+import { Session } from '@app/onboarding/session/session.entity'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { Inject, Injectable, Scope } from '@nestjs/common'
+import { REQUEST } from '@nestjs/core'
 import { ClientProxy } from '@nestjs/microservices'
 import { RelayerCmd, RelayerResponse } from 'apps/relayer/src/app.controller'
+import { GetPhoneNumberSignatureDto } from 'apps/relayer/src/dto/GetPhoneNumberSignatureDto'
+import { RelayerCommandDto } from 'apps/relayer/src/dto/RelayerCommandDto'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
 import { SubmitTransactionBatchDto } from 'apps/relayer/src/dto/SubmitTransactionBatchDto'
 import { SubmitTransactionDto } from 'apps/relayer/src/dto/SubmitTransactionDto'
@@ -63,7 +66,8 @@ type RelayerResult<TResp> = Result<RelayerResponse<TResp>, RelayerError>
 export class RelayerProxyService {
   constructor(
     @Inject('RELAYER_SERVICE') private client: ClientProxy,
-    @Inject(appConfig.KEY) private cfg: AppConfig
+    @Inject(appConfig.KEY) private cfg: AppConfig,
+    @Inject(REQUEST) private req: Request & { id?: string, session?: Session }
   ) {}
 
   async signPersonalMessage(
@@ -73,7 +77,7 @@ export class RelayerProxyService {
   }
 
   async getPhoneNumberIdentifier(
-    input: DistributedBlindedPepperDto
+    input: GetPhoneNumberSignatureDto
   ): Promise<RelayerResult<string>> {
     return this.execute(RelayerCmd.GetPhoneNumberIdentifier, input)
   }
@@ -81,7 +85,7 @@ export class RelayerProxyService {
   async submitTransaction(
     input: SubmitTransactionDto
   ): Promise<RelayerResult<string>> {
-    return this.execute<string>(RelayerCmd.SubmitTransaction, input)
+    return this.execute(RelayerCmd.SubmitTransaction, input)
   }
 
 
@@ -91,16 +95,21 @@ export class RelayerProxyService {
     return this.execute(RelayerCmd.SubmitTransactionBatch, input)
   }
 
-  private execute<TResp, TInput = any>(
+  private execute<TResp, TInput extends RelayerCommandDto>(
     cmd: RelayerCmd,
     input: TInput,
   ): Promise<RelayerResult<TResp>> {
+    const inputWithContext: TInput = {
+      ...input,
+      context: this.context
+    }
+
     return race<RelayerResult<TResp>>(
       of('timeout').pipe(
         delay(this.cfg.relayerRpcTimeoutMs),
         map(_ => Err(new RelayerTimeout(cmd)))
       ),
-      this.client.send<RelayerResponse<TResp>>({cmd}, input).pipe(
+      this.client.send<RelayerResponse<TResp>>({cmd}, inputWithContext).pipe(
         map((resp) => Ok(resp)),
         catchError(err => {
           const res = InternalErrorPayload.decode(err)
@@ -117,5 +126,20 @@ export class RelayerProxyService {
       )
     ).toPromise()
   }
+
+  private get context() {
+    return {
+      traceId: this.req.id,
+      labels: (
+        this.req.session
+          ? [
+            {key: 'sessionId', value: this.req.session?.id},
+            {key: 'externalAccount', value: this.req.session?.externalAccount},
+          ]
+          : []
+      )
+    }
+  }
+
 }
 

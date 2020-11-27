@@ -66,7 +66,8 @@
     "uuid": "^8.3.0",
     "web3": "1.2.4",
     "web3-core": "1.2.4",
-    "web3-core-helpers": "1.2.4"
+    "web3-core-helpers": "1.2.4",
+    "web3-eth-contract": "1.2.4"
   },
   "devDependencies": {
     "@celo/typescript": "^0.0.1",

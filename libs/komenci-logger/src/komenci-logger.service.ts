@@ -10,6 +10,11 @@ export interface KomenciLogger extends LoggerService {
   event: <K extends keyof EventPayload>(eventType: K, payload: EventPayload[K]) => void
 }
 
+interface EventContext {
+  traceId: string,
+  labels: Array<{key: string, value: string}>
+}
+
 @Injectable()
 export class KomenciLoggerService implements KomenciLogger {
   constructor(private readonly logger: PinoLogger) {}
@@ -35,13 +40,11 @@ export class KomenciLoggerService implements KomenciLogger {
       this.logger.error(
         { error: error.errorType, ...error.getMetadata() },
         error.stack,
-        "KomenciLoggerService",
       )
     } else if (isRootError(error)) {
       this.logger.error(
         { error: error.errorType, },
         error.stack,
-        "KomenciLoggerService",
       )
     } else if (isError(error)) {
       this.logger.error((error as Error).stack, context, ...args)
@@ -50,15 +53,50 @@ export class KomenciLoggerService implements KomenciLogger {
     }
   }
 
+  errorWithContext(error: Error, ctx?: EventContext) {
+    const context = ctx ? this.expandContext(ctx) : {}
+    if (isApiError(error) || isMetadataError(error)) {
+      this.logger.error(
+        {
+          error: error.errorType,
+          ...error.getMetadata(),
+          ...context
+        },
+      )
+    } else if (isRootError(error)) {
+      this.logger.error(
+        { error: error.errorType, ...context },
+        error.stack,
+      )
+    } else if (isError(error)) {
+      this.logger.error(context, (error as Error).stack)
+    }
+  }
+
   logAndThrow(error: any): void {
     this.error(error)
     throw(error)
   }
 
-  event<K extends keyof EventPayload>(eventType: K, payload: EventPayload[K]): void {
+  event<K extends keyof EventPayload>(
+    eventType: K,
+    payload: EventPayload[K],
+    context?: EventContext,
+  ): void {
     this.log({
       event: eventType,
-      ...payload
+      ...payload,
+      ...(context ? this.expandContext(context) : {})
     }, eventType)
+  }
+
+  private expandContext(context: EventContext): Record<string, string> {
+    return {
+      'logging.googleapis.com/trace': context.traceId,
+      ...(context.labels.reduce((acc, l) => {
+        acc[l.key] = l.value
+        return acc
+      }, {}))
+    }
   }
 }

@@ -1,53 +1,50 @@
 import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
 import { decodeExecuteMetaTransaction, decodeExecuteTransactions } from '@app/onboarding/wallet/decode-txs'
 import {
-  InvalidRootTransaction, TransactionDecodeError, TransactionNotAllowed,
+  InvalidRootTransaction,
+  TransactionDecodeError,
+  TransactionNotAllowed,
   TxParseErrors,
 } from '@app/onboarding/wallet/errors'
-import { Address, Err, normalizeAddress, Ok, Result } from '@celo/base'
-import { ContractKit } from '@celo/contractkit'
+import { MethodFilter, TransactionWithMetadata } from '@app/onboarding/wallet/method-filter'
+import { Err, normalizeAddress, Ok, Result } from '@celo/base'
+import { CeloContract, ContractKit } from '@celo/contractkit'
 import { BaseWrapper } from '@celo/contractkit/lib/wrappers/BaseWrapper'
 import { MetaTransactionWalletWrapper, RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { Injectable, OnModuleInit } from '@nestjs/common'
 
-export type AllowedTransactions = Record<Address, Record<string, boolean>>
-
 @Injectable()
 export class TxParserService implements OnModuleInit {
-  defaultAllowedTransactions: AllowedTransactions
+  defaultFilter: MethodFilter
   constructor(
     private readonly contractKit: ContractKit
   ) {}
 
   async onModuleInit() {
-    const attestations = await this.contractKit.contracts.getAttestations()
-    const accounts = await this.contractKit.contracts.getAccounts()
-    const cUSD = await this.contractKit.contracts.getStableToken()
-    const escrow = await this.contractKit.contracts.getEscrow()
-
-    this.defaultAllowedTransactions = normalizeAllowed({
-      [attestations.address]: {
-        [attestations.methodIds.selectIssuers]: true,
-        [attestations.methodIds.complete]: true,
-      },
-      [accounts.address]: {
-        [accounts.methodIds.setAccount]: true
-      },
-      [cUSD.address]: {
-        [cUSD.methodIds.approve]: true,
-        [cUSD.methodIds.transfer]: true,
-      },
-      [escrow.address]: {
-        [escrow.methodIds.withdraw]: true
-      }
-    })
+    this.defaultFilter = new MethodFilter().addContract(
+      CeloContract.Attestations,
+      await this.contractKit.contracts.getAttestations(),
+      ["selectIssuers", "complete"]
+    ).addContract(
+      CeloContract.Accounts,
+      await this.contractKit.contracts.getAccounts(),
+      ["setAccount"]
+    ).addContract(
+      CeloContract.StableToken,
+      await this.contractKit.contracts.getStableToken(),
+      ["approve", "transfer"]
+    ).addContract(
+      CeloContract.Escrow,
+       await this.contractKit.contracts.getEscrow(),
+      ["withdraw"]
+    )
   }
 
   async parse(
     tx: RawTransaction,
     metaTxWalletAddress: string,
-    allowedTransactions?: AllowedTransactions
-  ): Promise<Result<RawTransaction[], TxParseErrors>> {
+    methodFilter?: MethodFilter
+  ): Promise<Result<TransactionWithMetadata[], TxParseErrors>> {
     const wallet = await this.contractKit.contracts.getMetaTransactionWallet(metaTxWalletAddress)
     if (!isCallTo(tx, wallet, 'executeMetaTransaction')) {
       return Err(new InvalidRootTransaction(tx))
@@ -57,23 +54,19 @@ export class TxParserService implements OnModuleInit {
       return childrenResp
     }
 
-    allowedTransactions = allowedTransactions === undefined
-      ? this.defaultAllowedTransactions
-      : normalizeAllowed(allowedTransactions)
+    methodFilter = methodFilter || this.defaultFilter
+    const children: TransactionWithMetadata[] = []
 
     for (const child of childrenResp.result) {
-      const normDest = normalizeAddress(child.destination)
-      const methodId = extractMethodId(child.data)
-
-      if (!(
-        allowedTransactions[normDest] &&
-        allowedTransactions[normDest][methodId] === true
-      )) {
+      const method = methodFilter.find(child)
+      if (method.ok) {
+        children.push(method.result)
+      } else {
         return Err(new TransactionNotAllowed(child))
       }
     }
 
-    return Ok(childrenResp.result)
+    return Ok(children)
   }
 
   private getChildren(
@@ -92,18 +85,6 @@ export class TxParserService implements OnModuleInit {
       return Ok([child])
     }
   }
-}
-
-const normalizeAllowed = (allowedMap: AllowedTransactions): AllowedTransactions => {
-  return Object.keys(allowedMap).reduce((addressAcc, address) => {
-    addressAcc[normalizeAddress(address)] = Object.keys(
-      allowedMap[address]
-    ).reduce((methodAcc, methodId) => {
-      methodAcc[normalizeMethodId(methodId)] = allowedMap[address][methodId]
-      return methodAcc
-    }, {})
-    return addressAcc
-  }, {})
 }
 
 const isCallTo = <TContract extends BaseWrapper<any>>(
