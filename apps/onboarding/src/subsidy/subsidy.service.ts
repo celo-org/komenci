@@ -38,7 +38,7 @@ export class SubsidyService {
       input.requestTx,
       input.walletAddress,
       new MethodFilter().addContract(
-        CeloContract.Accounts,
+        CeloContract.Attestations,
         await this.contractKit.contracts.getAttestations(),
         ["request"]
       )
