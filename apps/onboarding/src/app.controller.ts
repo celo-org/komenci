@@ -10,6 +10,7 @@ import { QuotaGuard } from '@app/onboarding/session/quota.guard'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
+import { TransactionWithMetadata } from '@app/onboarding/wallet/method-filter'
 import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
@@ -279,7 +280,7 @@ export class AppController {
   private logMetaTransaction(
     relayerResp: RelayerResponse<string>,
     metaTx: RawTransaction,
-    childTxs: RawTransaction[],
+    childTxs: TransactionWithMetadata[],
     session: SessionEntity
   ) {
     this.logger.event(EventType.MetaTransactionSubmitted, {
@@ -292,9 +293,11 @@ export class AppController {
     })
 
     childTxs.map(childTx => ({
-      value: childTx.value,
-      destination: childTx.destination,
-      methodId: extractMethodId(childTx.data)
+      value: childTx.raw.value,
+      destination: childTx.raw.destination,
+      methodId: childTx.methodId,
+      methodName: childTx.methodName,
+      contractName: childTx.contractName
     })).forEach((childTx) => this.logger.event(
       EventType.ChildMetaTransactionSubmitted, {
         sessionId: session.id,

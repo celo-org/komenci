@@ -235,7 +235,7 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, undefined)
 
         // Ensure the checkTransactions method is called
         jest.runOnlyPendingTimers()
@@ -308,7 +308,7 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, undefined)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
         jest.runOnlyPendingTimers()

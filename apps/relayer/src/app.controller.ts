@@ -2,20 +2,19 @@ import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config
 import { RpcErrorFilter } from '@app/komenci-logger/filters/rpc-error.filter'
 import { makeAsyncThrowable } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
-import { PhoneNumberHashDetails } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Body, Controller, Get, Inject, Req, UseFilters } from '@nestjs/common'
-import { MessagePattern, RpcException } from '@nestjs/microservices'
+import { Body, Controller, Inject, UseFilters } from '@nestjs/common'
+import { MessagePattern } from '@nestjs/microservices'
 import { TransactionService } from 'apps/relayer/src/chain/transaction.service'
+import { GetPhoneNumberSignatureDto } from 'apps/relayer/src/dto/GetPhoneNumberSignatureDto'
 import { SignPersonalMessageDto } from 'apps/relayer/src/dto/SignPersonalMessageDto'
 import { SubmitTransactionBatchDto } from 'apps/relayer/src/dto/SubmitTransactionBatchDto'
 import { SubmitTransactionDto } from 'apps/relayer/src/dto/SubmitTransactionDto'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
 import Web3 from 'web3'
-import { DistributedBlindedPepperDto } from '../../onboarding/src/dto/DistributedBlindedPepperDto'
 
 export interface RelayerResponse<T> {
   payload: T
@@ -55,11 +54,11 @@ export class AppController {
 
   @MessagePattern({ cmd: RelayerCmd.GetPhoneNumberIdentifier})
   async getPhoneNumberIdentifier(
-    @Body() input: DistributedBlindedPepperDto,
+    @Body() input: GetPhoneNumberSignatureDto,
   ): Promise<RelayerResponse<string>> {
     return this.wrapResponse(
       await makeAsyncThrowable(
-        this.odisService.getPhoneNumberIdentifier,
+        this.odisService.getPhoneNumberSignature
       )(input)
     )
   }
@@ -71,7 +70,7 @@ export class AppController {
     return this.wrapResponse(
       await makeAsyncThrowable(
         this.transactionService.submitTransaction
-      )(input.transaction)
+      )(input.transaction, input.context)
     )
   }
 
@@ -87,7 +86,8 @@ export class AppController {
           this.metaTxWallet.executeTransactions(
             input.transactions
           ).txo
-        )
+        ),
+        input.context
       )
     )
   }

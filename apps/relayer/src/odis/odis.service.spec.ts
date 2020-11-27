@@ -1,4 +1,5 @@
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
+import { KomenciLoggerModule } from '@app/komenci-logger'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
@@ -39,7 +40,9 @@ describe('OdisService', () => {
     }
 
     const module = await Test.createTestingModule({
-      imports: [],
+      imports: [
+        KomenciLoggerModule.forRoot()
+      ],
       providers: [
         OdisService,
         { provide: ContractKit, useValue: contractKit },
@@ -76,7 +79,7 @@ describe('OdisService', () => {
       }
       
       const svc = await setupService({}, {}, {})
-      const res = await svc.getPhoneNumberIdentifier(input)
+      const res = await svc.getPhoneNumberSignature(input)
       expect(res.ok).toBe(true)
       if (res.ok) {
         expect(getBlindedPhoneNumberSignature).toHaveBeenCalled()
@@ -98,7 +101,7 @@ describe('OdisService', () => {
         }
 
         const svc = await setupService({}, {}, {})
-        const res = await svc.getPhoneNumberIdentifier(input)
+        const res = await svc.getPhoneNumberSignature(input)
         expect(res.ok).toBe(false)
         if (res.ok === false) {
           expect(res.error.errorType).toBe(OdisQueryErrorTypes.OutOfQuota)
@@ -127,7 +130,7 @@ describe('OdisService', () => {
         }
 
         const svc = await setupService({}, {}, {})
-        const res = await svc.getPhoneNumberIdentifier(input)
+        const res = await svc.getPhoneNumberSignature(input)
         expect(res.ok).toBe(true)
         if (res.ok) {
           expect(getBlindedPhoneNumberSignature).toHaveBeenCalled()
@@ -152,7 +155,7 @@ describe('OdisService', () => {
         }
 
         const svc = await setupService({}, {}, {})
-        const res = await svc.getPhoneNumberIdentifier(input)
+        const res = await svc.getPhoneNumberSignature(input)
         expect(res.ok).toBe(false)
         if (res.ok === false) {
           expect(res.error.errorType).toBe(OdisQueryErrorTypes.Unknown)

@@ -52,6 +52,8 @@ export type EventPayload = {
     destination: Address
     value: string,
     methodId: string,
+    methodName: string,
+    contractName: string
   }
   // Relayer service events payloads:
   [EventType.RelayerMTWInit]: {
@@ -59,7 +61,7 @@ export type EventPayload = {
   }
   [EventType.TxSubmitted]: TxEvent
   [EventType.TxConfirmed]: TxEvent & {
-    isRevert: boolean
+    status: string
     gasPrice: number
     gasUsed: number
     gasCost: number

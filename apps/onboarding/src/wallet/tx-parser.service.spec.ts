@@ -4,15 +4,17 @@ import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { normalizeMethodId } from '@app/blockchain/utils'
 import { buildMockWeb3Provider } from '@app/onboarding/utils/testing/mock-web3-provider'
 import { TxParseErrorTypes } from '@app/onboarding/wallet/errors'
-import { AllowedTransactions, TxParserService } from '@app/onboarding/wallet/tx-parser.service'
+import { MethodFilter } from '@app/onboarding/wallet/method-filter'
+import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
-import { CeloTransactionObject, ContractKit } from '@celo/contractkit'
+import { CeloContract, CeloTransactionObject, ContractKit } from '@celo/contractkit'
 import { AccountsWrapper } from '@celo/contractkit/lib/wrappers/Accounts'
 import { AttestationsWrapper } from '@celo/contractkit/lib/wrappers/Attestations'
 import {
   MetaTransactionWalletWrapper,
   RawTransaction,
-  toRawTransaction, TransactionInput,
+  toRawTransaction,
+  TransactionInput,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { StableTokenWrapper } from '@celo/contractkit/lib/wrappers/StableTokenWrapper'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -51,19 +53,9 @@ describe('TxParserService', () => {
       expect(onModuleInitSpy).toHaveBeenCalled()
     })
 
-    it('should set default allowed transactions', async () => {
+    it('should set default method filter', async () => {
       await module.init()
-      expect(service.defaultAllowedTransactions).not.toBeUndefined()
-    })
-
-    it('should set the allowed transactions containing normalized addresses and methodIds', async () => {
-      await module.init()
-      Object.keys(service.defaultAllowedTransactions).forEach(address => {
-        expect(address).toBe(normalizeAddress(address))
-        Object.keys(service.defaultAllowedTransactions[address]).forEach(methodId => {
-          expect(methodId).toBe(normalizeMethodId(methodId))
-        })
-      })
+      expect(service.defaultFilter).not.toBeUndefined()
     })
   })
 
@@ -73,16 +65,12 @@ describe('TxParserService', () => {
     const metaTxWallet = addresses[0]
     const otherMetaTxWallet = addresses[1]
 
-    const subjectRaw = async (rawTx: RawTransaction, allowOverride?: AllowedTransactions) => {
-      return service.parse(
-        rawTx,
-        metaTxWallet,
-        allowOverride
-      )
+    const subjectRaw = async (rawTx: RawTransaction, filterOverride?: MethodFilter) => {
+      return service.parse(rawTx, metaTxWallet, filterOverride)
     }
 
-    const subject = async (tx: CeloTransactionObject<any>, allowOverride?: AllowedTransactions) => {
-      return subjectRaw(toRawTransaction(tx.txo), allowOverride)
+    const subject = async (tx: CeloTransactionObject<any>, filterOverride?: MethodFilter) => {
+      return subjectRaw(toRawTransaction(tx.txo), filterOverride)
     }
 
     const normalizedTx = (tx: TransactionInput<any>): RawTransaction => {
@@ -144,7 +132,12 @@ describe('TxParserService', () => {
 
         if (res.ok === true) {
           const txs = res.result
-          expect(txs[0]).toMatchObject(normalizedTx(childTx))
+          expect(txs[0]).toMatchObject({
+            contractName: CeloContract.StableToken,
+            methodId: normalizeMethodId(cUSD.methodIds.approve),
+            methodName: "approve",
+            raw: normalizedTx(childTx)
+          })
         }
       })
     })
@@ -152,9 +145,9 @@ describe('TxParserService', () => {
     describe('with a batched transaction', () => {
       describe('containing an invalid transaction', () => {
         it('returns an TransactionNotAllowed error', async () => {
-          const childTx1 = cUSD.approve(addresses[2], "1000").txo
-          const childTx2 = accounts.createAccount().txo
-          const batchTx = wallet.executeTransactions([childTx1, childTx2]).txo
+          const childTx0 = cUSD.approve(addresses[2], "1000").txo
+          const childTx1 = accounts.createAccount().txo
+          const batchTx = wallet.executeTransactions([childTx0, childTx1]).txo
 
           const res = await subject(await wallet.executeMetaTransaction(batchTx, mockSig))
           expect(res.ok).toBe(false)
@@ -162,7 +155,7 @@ describe('TxParserService', () => {
           if (res.ok === false) {
             expect(res.error.errorType).toBe(TxParseErrorTypes.TransactionNotAllowed)
             if (res.error.errorType === TxParseErrorTypes.TransactionNotAllowed) {
-              expect(res.error.tx).toMatchObject(normalizedTx(childTx2))
+              expect(res.error.tx).toMatchObject(normalizedTx(childTx1))
             }
           }
         })
@@ -170,17 +163,27 @@ describe('TxParserService', () => {
 
       describe('with only valid transactions', () => {
         it('returns an TransactionNotAllowed error', async () => {
-          const childTx1 = cUSD.approve(addresses[2], "1000").txo
-          const childTx2 = cUSD.approve(addresses[3], "1000").txo
-          const batchTx = wallet.executeTransactions([childTx1, childTx2]).txo
+          const childTx0 = cUSD.approve(addresses[2], "1000").txo
+          const childTx1 = cUSD.transfer(addresses[3], "1000").txo
+          const batchTx = wallet.executeTransactions([childTx0, childTx1]).txo
 
           const res = await subject(await wallet.executeMetaTransaction(batchTx, mockSig))
           expect(res.ok).toBe(true)
 
           if (res.ok === true) {
             const txs = res.result
-            expect(txs[0]).toMatchObject(normalizedTx(childTx1))
-            expect(txs[1]).toMatchObject(normalizedTx(childTx2))
+            expect(txs[0]).toMatchObject({
+              contractName: CeloContract.StableToken,
+              methodId: normalizeMethodId(cUSD.methodIds.approve),
+              methodName: "approve",
+              raw: normalizedTx(childTx0)
+            })
+            expect(txs[1]).toMatchObject({
+              contractName: CeloContract.StableToken,
+              methodId: normalizeMethodId(cUSD.methodIds.transfer),
+              methodName: "transfer",
+              raw: normalizedTx(childTx1)
+            })
           }
         })
       })
@@ -191,11 +194,14 @@ describe('TxParserService', () => {
         it('returns an TransactionNotAllowed error', async () => {
           const childTx = cUSD.approve(addresses[2], "1000").txo
 
-          const res = await subject(await wallet.executeMetaTransaction(childTx, mockSig), {
-            [cUSD.address]: {
-              [cUSD.methodIds.transfer]: true
-            }
-          })
+          const res = await subject(
+            await wallet.executeMetaTransaction(childTx, mockSig),
+            new MethodFilter().addContract(
+              CeloContract.StableToken,
+              cUSD,
+              ["transfer"]
+            )
+          )
 
           expect(res.ok).toBe(false)
           if (res.ok === false) {
@@ -212,11 +218,14 @@ describe('TxParserService', () => {
           const childTx = cUSD.approve(addresses[2], "1000").txo
           const batchTx = wallet.executeTransactions([childTx]).txo
 
-          const res = await subject(await wallet.executeMetaTransaction(batchTx, mockSig), {
-            [cUSD.address]: {
-              [cUSD.methodIds.transfer]: true
-            }
-          })
+          const res = await subject(
+            await wallet.executeMetaTransaction(childTx, mockSig),
+            new MethodFilter().addContract(
+              CeloContract.StableToken,
+              cUSD,
+              ["transfer"]
+            )
+          )
 
           expect(res.ok).toBe(false)
           if (res.ok === false) {
