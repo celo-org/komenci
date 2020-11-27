@@ -61,7 +61,7 @@ export type EventPayload = {
   }
   [EventType.TxSubmitted]: TxEvent
   [EventType.TxConfirmed]: TxEvent & {
-    isRevert: boolean
+    status: string
     gasPrice: number
     gasUsed: number
     gasCost: number

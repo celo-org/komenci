@@ -159,7 +159,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     const gasPrice = parseInt(tx.gasPrice, 10)
 
     this.logger.event(EventType.TxConfirmed, {
-      isRevert: txReceipt.status === false,
+      status: txReceipt.status === false ? "Reverted" : "Ok",
       txHash: tx.hash,
       gasUsed: txReceipt.gasUsed,
       gasPrice: gasPrice,
