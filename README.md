@@ -6,7 +6,6 @@ It achieves this through the use of a Smart Contract Wallet that support Meta Tr
 Each Valora user, which passes some safeguards (reCAPTCHA, DeviceCheck/SafetyNet) gets one such contract deployed and is allowed
 to forward meta-transactions related to the verification flow to Komenci.
 
-
 ## Structure
 
 A Nest monorepo project combines several independent applications and libraries which are used by these applications.
@@ -14,7 +13,7 @@ These applications can be either full-blown HTTP servers or [microservices](http
 with efficient and configurable transport mechanism.
 In our case we have:
 
-- `apps/onboarding` - the Onboarding Service 
+- `apps/onboarding` - the Onboarding Service
 - `apps/relayer` - the Relayer Service which is a TCP microservice
 - `libs/blockchain` - a library which wraps contract-kit
 - `libs/celo` - (:warning: NOT A NESTJS LIBRARY) `celo-monorepo` as a submodule - this allows us to import and use packages that haven't been released on NPM
@@ -35,17 +34,18 @@ yarn deps:celo:build
 ```
 
 Occasionally, you may need to pull in changes from `celo-monorepo`. To update it, run the following:
+
 ```bash
 git submodule update --remote libs/celo
 yarn deps:celo:build
 ```
 
-#### Database
+### Database
 
 The services rely on a SQL database to be running. Access can be configured through the config files.
-To spin up postgres in Docker simply run 
+To spin up postgres in Docker simply run:
 
-```
+```bash
 // run postgres
 docker run --rm  --name pg-docker -e POSTGRES_PASSWORD=komenci -u postgres -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data postgres
 ```
@@ -55,7 +55,8 @@ Make sure you either set up a komenci user and database and update the username 
 #### Configs
 
 Setup local config files:
-```
+
+``` bash
 > cp apps/onboarding/.env.local.example apps/onboarding/.env.local
 > cp apps/onboarding/.env.local.example apps/onboarding/.env.test
 > cp apps/relayer/.env.local.example apps/relayer/.env.local
@@ -65,10 +66,9 @@ Setup local config files:
 ### Notes on `celo-monorepo`
 
 The reason for including `celo-monorerpo` as a submodule is because currently there's no other way to include unreleased packages from a monorepo in another repo.
-So Komenci would be bound by the release cycle of `celo-monorepo` packages. This might be fine in the future and, because of the way the integration is configured, 
-it will not require a big change - just removing the path transformations in `tsconfig.json`, and we can move back to `@celo/<package>` from NPM.
+So Komenci would be bound by the release cycle of `celo-monorepo` packages. This might be fine in the future and, because of the way the integration is configured, it will not require a big change - just removing the path transformations in `tsconfig.json`, and we can move back to `@celo/<package>` from NPM.
 
-When changes to `celo-monorerpo` packages have to be pulled in the build steps will be rerun and potentially extended if more packages are imported by Komenci.
+When changes to `celo-monorepo` packages have to be pulled in the build steps will be rerun and potentially extended if more packages are imported by Komenci.
 
 ## Running
 
