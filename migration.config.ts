@@ -5,11 +5,11 @@ module.exports = {
     username:  process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'docker',
     database: process.env.DB_DATABASE || 'postgres',
-    entities: ["apps/onboarding/src/session/session.entity.ts"],
+    entities: ['apps/onboarding/src/session/session.entity.ts'],
     synchronize: process.env.DB_SYNCHRONIZE === "false",
-    // "migrationsTableName": "custom_migration_table",
-    // "migrations": ["migration/*.js"],
-    // "cli": {
-    //     "migrationsDir": "migration"
-    // }
+    migrationsTableName: "migration",
+    migrations: ["apps/onboarding/src/migrations/*.ts"],
+    cli: {
+        migrationsDir: "apps/onboarding/src/migrations"
+    }
 }
