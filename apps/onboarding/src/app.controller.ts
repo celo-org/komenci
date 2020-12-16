@@ -1,15 +1,20 @@
+import { extractMethodId } from '@app/blockchain/utils'
 import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
+
+import { SubmitMetaTransactionDto } from '@app/onboarding/dto/SubmitMetaTransactionDto'
 import { QuotaAction } from '@app/onboarding/session/quota.decorator'
 import { QuotaGuard } from '@app/onboarding/session/quota.guard'
 import { Session as SessionEntity } from '@app/onboarding/session/session.entity'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
 import { WalletErrorType } from '@app/onboarding/wallet/errors'
-import { TxFilter, WalletService } from '@app/onboarding/wallet/wallet.service'
+import { TransactionWithMetadata } from '@app/onboarding/wallet/method-filter'
+import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
+import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
-import { normalizeAddress, throwIfError } from '@celo/base'
+import { normalizeAddress, throwIfError, trimLeading0x } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import {
@@ -25,10 +30,9 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
-import { SubmitMetaTransactionDto } from 'apps/relayer/src/dto/SubmitMetaTransactionDto'
+import { RelayerResponse } from 'apps/relayer/src/app.controller'
 
 import { AuthService } from './auth/auth.service'
 import { appConfig, AppConfig } from './config/app.config'
@@ -69,9 +73,6 @@ interface StartSessionResponse {
   scope: Scope.REQUEST
 })
 export class AppController {
-  // Cache for the allowed metaTx filter
-  _allowedMetaTransaction?: TxFilter[]
-
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
     private readonly gatewayService: GatewayService,
@@ -84,7 +85,8 @@ export class AppController {
     private readonly networkCfg: NetworkConfig,
     @Inject(appConfig.KEY)
     private readonly appCfg: AppConfig,
-    private readonly logger: KomenciLoggerService
+    private readonly logger: KomenciLoggerService,
+    private readonly txParserService: TxParserService
 ) {}
 
   @Get('health')
@@ -108,7 +110,7 @@ export class AppController {
       )
 
       this.logger.event(EventType.SessionStart, {
-        externalAccount: startSessionDto.externalAccount,
+        externalAccount: trimLeading0x(startSessionDto.externalAccount),
         sessionId: response.sessionId
       })
 
@@ -253,31 +255,18 @@ export class AppController {
     @Body() body: SubmitMetaTransactionDto,
     @Session() session: SessionEntity
   ) {
-    const metaTx: RawTransaction = {
-      ...body,
-      value: '0x0'
-    }
-    const metaTaxMetadata = throwIfError(await this.walletService.extractMetaTxData(metaTx))
-
-    throwIfError(await this.walletService.isAllowedMetaTransaction(
-      metaTaxMetadata,
-      await this.allowedMetaTransactions()
+    throwIfError(await this.walletService.isValidWallet(
+      body.destination,
+      session.externalAccount
     ))
 
+    const metaTx: RawTransaction = { ...body, value: '0x0' }
+    const childTxs = throwIfError(await this.txParserService.parse(metaTx, body.destination))
     const resp = throwIfError(await this.relayerProxyService.submitTransaction({
       transaction: metaTx
     }))
 
-    this.logger.event(EventType.MetaTransactionSubmitted, {
-      sessionId: session.id,
-      relayerAddress: resp.relayerAddress,
-      externalAccount: session.externalAccount,
-      txHash: resp.payload,
-      destination: normalizeAddress(metaTx.destination),
-      metaTxMethodID: metaTaxMetadata.methodId,
-      metaTxDestination: metaTaxMetadata.destination
-    })
-
+    this.logMetaTransaction(resp, metaTx, childTxs, session)
     await this.sessionService.incrementUsage(
       session,
       TrackedAction.SubmitMetaTransaction
@@ -288,40 +277,35 @@ export class AppController {
     }
   }
 
-  private async allowedMetaTransactions(): Promise<TxFilter[]> {
-    if (this._allowedMetaTransaction === undefined) {
-      const attestations = await this.contractKit.contracts.getAttestations()
-      const accounts = await this.contractKit.contracts.getAccounts()
-      const cUSD = await this.contractKit.contracts.getStableToken()
-      const escrow = await this.contractKit.contracts.getEscrow()
+  private logMetaTransaction(
+    relayerResp: RelayerResponse<string>,
+    metaTx: RawTransaction,
+    childTxs: TransactionWithMetadata[],
+    session: SessionEntity
+  ) {
+    this.logger.event(EventType.MetaTransactionSubmitted, {
+      sessionId: session.id,
+      relayerAddress: relayerResp.relayerAddress,
+      externalAccount: session.externalAccount,
+      txHash: relayerResp.payload,
+      destination: normalizeAddress(metaTx.destination),
+      childTxsCount: childTxs.length
+    })
 
-      this._allowedMetaTransaction = [
-        {
-          destination: attestations.address,
-          methodId: attestations.methodIds.selectIssuers
-        },
-        {
-          destination: attestations.address,
-          methodId: attestations.methodIds.complete
-        },
-        {
-          destination: accounts.address,
-          methodId: accounts.methodIds.setAccount
-        },
-        {
-          destination: cUSD.address,
-          methodId: cUSD.methodIds.approve
-        },
-        {
-          destination: cUSD.address,
-          methodId: cUSD.methodIds.transfer
-        },
-        {
-          destination: escrow.address,
-          methodId: escrow.methodIds.withdraw
-        }
-      ]
-    }
-    return this._allowedMetaTransaction
+    childTxs.map(childTx => ({
+      value: childTx.raw.value,
+      destination: childTx.raw.destination,
+      methodId: childTx.methodId,
+      methodName: childTx.methodName,
+      contractName: childTx.contractName
+    })).forEach((childTx) => this.logger.event(
+      EventType.ChildMetaTransactionSubmitted, {
+        sessionId: session.id,
+        relayerAddress: relayerResp.relayerAddress,
+        externalAccount: session.externalAccount,
+        txHash: relayerResp.payload,
+        ...childTx
+      })
+    )
   }
 }

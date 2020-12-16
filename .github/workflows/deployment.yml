@@ -40,6 +40,7 @@ jobs:
       run: |
         docker build .\
             -t celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
-            --build-arg MONORERPO_BUILD_VERSION=${{ steps.celo-monorepo-commit.outputs.commit }}
+            --build-arg MONOREPO_BUILD_VERSION=${{ steps.celo-monorepo-commit.outputs.commit }} \
+            --build-arg KOMENCI_VERSION=${{ github.sha }}
 
         docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}

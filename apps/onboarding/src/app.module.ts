@@ -1,21 +1,22 @@
 import { BlockchainModule, ContractsModule } from '@app/blockchain'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
-import { EventType, KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
+import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
 import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
+import { loggerConfigFactory } from '@app/onboarding/logger-config.factory'
 import { SubsidyService } from '@app/onboarding/subsidy/subsidy.service'
+import { TxParserService } from '@app/onboarding/wallet/tx-parser.service'
 import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
-import { HttpModule, Logger, Module, Scope } from '@nestjs/common'
+import { HttpModule, Module, Scope } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER } from '@nestjs/core'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
-import { v4 as uuidv4 } from "uuid"
 import { AppController } from './app.controller'
 import { AuthModule } from './auth/auth.module'
-import { appConfig, AppConfig } from './config/app.config'
+import { appConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
 import { quotaConfig } from './config/quota.config'
 import { relayerConfig } from './config/relayer.config'
@@ -39,38 +40,7 @@ import { SessionModule } from './session/session.module'
     KomenciLoggerModule.forRootAsync({
       providers: [ConfigService],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const appCfg = config.get<AppConfig>('app')
-        return {
-          exclude: [
-            "v1/health"
-          ],
-          pinoHttp: {
-            genReqId: () => {
-              return uuidv4()
-            },
-            customSuccessMessage: (res) => {
-              return "RequestCompleted"
-            },
-            customErrorMessage: (res) => {
-              return "RequestFailed"
-            },
-            serializers: {
-              req: req => {
-                return {
-                  id: req.id,
-                  method: req.method,
-                  url: req.url,
-                  hostname: req.hostname,
-                  remoteAddress: req.ip,
-                }
-              }
-            },
-            level: appCfg.log_level,
-            prettyPrint: process.env.NODE_ENV !== 'production'
-          }
-        }
-      }
+      useFactory: loggerConfigFactory
     }),
     GatewayModule,
     HttpModule,
@@ -106,6 +76,7 @@ import { SessionModule } from './session/session.module'
   providers: [
     SubsidyService,
     WalletService,
+    TxParserService,
     SessionService,
     RelayerProxyService,
     {

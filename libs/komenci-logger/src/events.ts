@@ -1,4 +1,5 @@
 import { Address, Result } from '@celo/base'
+import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 
 export enum EventType {
   // Onboarding service events:
@@ -9,6 +10,7 @@ export enum EventType {
   PepperRequested = 'PepperRequested',
   AttestationsRequested = 'AttestationsRequested',
   MetaTransactionSubmitted = 'MetaTransactionSubmitted',
+  ChildMetaTransactionSubmitted = 'ChildMetaTransactionSubmitted',
   // Relayer service events:
   RelayerMTWInit = 'RelayerMTWInit',
   TxSubmitted = 'TxSubmitted',
@@ -16,6 +18,7 @@ export enum EventType {
   TxTimeout = 'TxTimeout',
   RuleVerified = 'RuleVerified',
   RelayerBalance = 'RelayerBalance',
+  GasPriceUpdate = 'GasPriceUpdate',
 }
 
 export type EventPayload = {
@@ -43,8 +46,14 @@ export type EventPayload = {
   }
   [EventType.MetaTransactionSubmitted]: SessionTxEvent & {
     destination: Address
-    metaTxMethodID: string
-    metaTxDestination: Address
+    childTxsCount: number
+  }
+  [EventType.ChildMetaTransactionSubmitted]: SessionTxEvent & {
+    destination: Address
+    value: string,
+    methodId: string,
+    methodName: string,
+    contractName: string
   }
   // Relayer service events payloads:
   [EventType.RelayerMTWInit]: {
@@ -52,7 +61,7 @@ export type EventPayload = {
   }
   [EventType.TxSubmitted]: TxEvent
   [EventType.TxConfirmed]: TxEvent & {
-    isRevert: boolean
+    status: string
     gasPrice: number
     gasUsed: number
     gasCost: number
@@ -64,6 +73,10 @@ export type EventPayload = {
   [EventType.TxTimeout]: TxEvent & {
     deadLetterHash: string,
     nonce: number
+  },
+  [EventType.GasPriceUpdate]: {
+    gasPriceGwei: number
+    cappedAtMax: boolean
   }
 }
 
