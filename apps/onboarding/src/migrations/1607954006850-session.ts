@@ -1,5 +1,6 @@
-import {MigrationInterface, QueryRunner, Table} from "typeorm";
+import {MigrationInterface, QueryRunner, Table} from "typeorm"
 
+/* tslint:disable */
 export class session1607954006850 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<any> {
@@ -37,13 +38,13 @@ export class session1607954006850 implements MigrationInterface {
                 type: 'timestamp',
                 isNullable: true
               }
-            ],
+            ]
           }),
           false,
-        );
+        )
       }
       public async down(queryRunner: QueryRunner): Promise<any> {
-        queryRunner.query(`DROP TABLE session`);
+        queryRunner.query(`DROP TABLE session`)
       }
 }
 
