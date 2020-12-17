@@ -170,7 +170,7 @@ You may also want to test the reCAPTCHA end-to-end. You can easily do so by [run
 
 In order to create the tables in the database that has the structure of our Session we should run the following command: 
 
-```yarn run typeorm:cli scheam:sync```
+```yarn run typeorm:cli schema:sync```
 
 The entities that we are going to update are in the file migration.config.json. If for any reason a migration is needed (ex. some field in the database changed) we should run the following command:
 
