@@ -15,6 +15,8 @@ export const appConfig = registerAs('app', () => {
     gasPriceFallback: process.env.GAS_PRICE_FALLBACK || "1000000000", // 1 Gwei
     maxGasPrice: process.env.MAX_GAS_PRICE || "100000000000", // 50 Gwei
     odisTimeoutMs: parseInt(process.env.ODIS_TIMEOUT_MS, 10) || 10000, // 10s
+    minCeloBalance: parseInt(process.env.MIN_CELO_BALANCE, 10) || 100,
+    minCUSDBalance: parseInt(process.env.MIN_CUSD_BALANCE, 10) || 100,
   }
 })
 

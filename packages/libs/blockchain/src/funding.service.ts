@@ -4,12 +4,14 @@ import { RelayerAccounts } from '@komenci/core'
 import { Inject, Injectable } from '@nestjs/common'
 import BigNumber from 'bignumber.js'
 
-interface RelayerBalance {
-  celoBalance: BigNumber,
-  cUSDBalance: BigNumber,
+export interface Balance {
+  celo: BigNumber,
+  cUSD: BigNumber,
 }
 
-export type BalanceSummary = Record<Address, RelayerBalance>
+export interface RelayerWithBalance extends RelayerAccounts, Balance {}
+
+export type BalanceSummary = Record<Address, Balance>
 
 export interface RelayerDisbursement {
   celo: TransactionResult
@@ -31,7 +33,7 @@ export class FundingService {
     const celo = await this.contractKit.contracts.getGoldToken()
 
     const balances = await Promise.all(
-      relayers.map(async (r, idx) => {
+      relayers.map(async (r) => {
         return Promise.all([
           celo.balanceOf(r.externalAccount),
           cUSD.balanceOf(r.metaTransactionWallet),
@@ -47,6 +49,22 @@ export class FundingService {
       }
       return summary
     }, {})
+  }
+
+  public async getRelayerBalanceList(relayers: RelayerAccounts[]): Promise<RelayerWithBalance[]> {
+    const cUSD = await this.contractKit.contracts.getStableToken()
+    const celo = await this.contractKit.contracts.getGoldToken()
+
+    return Promise.all(
+      relayers.map(async (r) => {
+        return {
+          externalAccount: r.externalAccount,
+          metaTransactionWallet: r.metaTransactionWallet,
+          celo: await celo.balanceOf(r.externalAccount),
+          cUSD: await cUSD.balanceOf(r.metaTransactionWallet),
+        }
+      })
+    )
   }
 
   public async disburseFunds(
@@ -96,7 +114,7 @@ export class FundingService {
     }, {})
   }
 
-  public async getFundBalance(fund: Address): Promise<{celo: BigNumber, cUSD: BigNumber}> {
+  public async getFundBalance(fund: Address): Promise<Balance> {
     const cUSD = await this.contractKit.contracts.getStableToken()
     const celo = await this.contractKit.contracts.getGoldToken()
 
@@ -129,5 +147,46 @@ export class FundingService {
     }
 
     return true
+  }
+
+  public fundHasEnoughCelo(fundBalance: Balance, amount: BigNumber, relayerCount: number): boolean {
+    return fundBalance.celo.isGreaterThanOrEqualTo(amount.times(relayerCount))
+  }
+  public fundHasEnoughCUSD(fundBalance: Balance, amount: BigNumber, relayerCount: number): boolean {
+    return fundBalance.cUSD.isGreaterThanOrEqualTo(amount.times(relayerCount))
+  }
+
+
+  public async fundRelayersWithCelo(
+    fund: Address,
+    relayersToFund: RelayerAccounts[],
+    topUpAmount: BigNumber
+  ) {
+
+    const celo = await this.contractKit.contracts.getGoldToken()
+
+    return Promise.all(
+      relayersToFund.map(async (relayer) =>
+        // @ts-ignore
+        celo.transfer(relayer.externalAccount, topUpAmount.toFixed()).send({
+          from: fund,
+        }))
+    )
+  }
+
+  public async fundRelayersWithCUSD(
+    fund: Address,
+    relayersToFund: RelayerAccounts[],
+    topUpAmount: BigNumber
+  ) {
+    const cUSD = await this.contractKit.contracts.getStableToken()
+
+    return Promise.all(
+      relayersToFund.map(async (relayer) =>
+        // @ts-ignore
+        cUSD.transfer(relayer.metaTransactionWallet, topUpAmount.toFixed()).send({
+          from: fund,
+        }))
+    )
   }
 }

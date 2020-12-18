@@ -27,7 +27,14 @@ export enum EventType {
   RewardSendingStatus = 'RewardSendingStatus',
   RelayerSendingError = 'RelayerSendingError',
   AttestationEventsFetched = 'AttestationEventsFetched',
-  AttestationCompleted = 'AttestationCompleted'
+  AttestationCompleted = 'AttestationCompleted',
+  // Funder Service events
+  FundBalance = 'FundBalance',
+  NoRelayersToFund = 'NoRelayersToFund',
+  CeloTopUp = 'CeloTopUp',
+  CUSDTopUp = 'CUSDTopUp',
+  InsufficientCelo = 'InsufficientCelo',
+  InsufficientCUSD = 'InsufficientCUSD'
 }
 
 export type EventPayload = {
@@ -134,6 +141,29 @@ export type EventPayload = {
     issuer: string
     address: string
     identifier: string
+  },
+  [EventType.FundBalance]: {
+    cUSD: number
+    celo: number
+  },
+  [EventType.NoRelayersToFund]: {},
+  [EventType.CeloTopUp]: {
+    celoPerRelayer: number
+    totalCelo: number
+    relayerAddresses: Address[]
+  },
+  [EventType.CUSDTopUp]: {
+    cUSDPerRelayer: number
+    totalCUSD: number
+    relayerAddresses: Address[]
+  },
+  [EventType.InsufficientCelo]: {
+    fundCelo: number
+    requiredCelo: number
+  },
+  [EventType.InsufficientCUSD]: {
+    fundCUSD: number
+    requiredCUSD: number
   }
 }
 
