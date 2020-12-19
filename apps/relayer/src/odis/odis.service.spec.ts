@@ -30,7 +30,7 @@ describe('OdisService', () => {
   // @ts-ignore
   contractKit.contracts = new WrapperCache()
   const goldToken = {
-    transfer: ()=>{return celoTxObject}
+    transfer: () => celoTxObject
   }
   jest.spyOn(contractKit.contracts, 'getGoldToken').mockResolvedValue(goldToken as any)
 
