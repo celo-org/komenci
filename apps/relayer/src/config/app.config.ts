@@ -14,7 +14,7 @@ export const appConfig = registerAs('app', () => {
     gasPriceMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 5,
     gasPriceFallback: process.env.GAS_PRICE_FALLBACK || "500000000", // 0.5 Gwei
     maxGasPrice: process.env.MAX_GAS_PRICE || "3000000000", // 3 Gwei
-    odisTimeoutMs: parseInt(process.env.ODIS_TIMEOUT_MS, 10) || 4000, // 4s
+    odisTimeoutMs: parseInt(process.env.ODIS_TIMEOUT_MS, 10) || 10000, // 10s
   }
 })
 
