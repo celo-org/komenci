@@ -6,7 +6,6 @@ import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { ContractKit, OdisUtils } from '@celo/contractkit'
 import { AuthSigner, ServiceContext } from '@celo/contractkit/lib/identity/odis/query'
 import { retry } from '@celo/komencikit/lib/retry'
-import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { Inject, Injectable } from '@nestjs/common'
 import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
 import { GetPhoneNumberSignatureDto } from 'apps/relayer/src/dto/GetPhoneNumberSignatureDto'
@@ -86,7 +85,11 @@ export class OdisService {
     if (res.ok === false) {
       this.logger.errorWithContext(res.error, input.context)
       if (res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
-        await replenishQuota(this.walletCfg.address, this.contractKit)
+        // Cody TODO: Reinstate once merge with mono is ready
+        // await replenishQuota(this.walletCfg.address, this.contractKit)
+        const goldToken = await this.contractKit.contracts.getGoldToken()
+        const selfTransferTx = goldToken.transfer(this.walletCfg.address, 1)
+        await selfTransferTx.sendAndWaitForReceipt({from: this.walletCfg.address})
       }
     }
 
