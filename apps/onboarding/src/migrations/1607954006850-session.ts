@@ -40,11 +40,10 @@ export class session1607954006850 implements MigrationInterface {
               }
             ]
           }),
-          false,
+          true,
         )
       }
       public async down(queryRunner: QueryRunner): Promise<any> {
         queryRunner.query(`DROP TABLE session`)
       }
 }
-
