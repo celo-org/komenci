@@ -6,9 +6,11 @@ import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { Ok, Result } from '@celo/base/lib/result'
 import { CeloContract, ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { Injectable } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { Session } from '../session/session.entity'
 
+@Injectable()
 export class SubsidyService {
   constructor(
     private readonly walletService: WalletService,

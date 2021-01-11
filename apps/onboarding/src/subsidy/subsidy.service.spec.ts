@@ -56,13 +56,6 @@ describe('SubsidyService', () => {
     stableToken = await contractKit.contracts.getStableToken()
     walletService = testingModule.get(WalletService)
     service = testingModule.get(SubsidyService)
-
-    // @ts-ignore
-    service.contractKit = contractKit
-    // @ts-ignore
-    service.walletService = walletService
-    // @ts-ignore
-    service.txParserService = testingModule.get(TxParserService)
   })
 
   beforeEach(() => {
