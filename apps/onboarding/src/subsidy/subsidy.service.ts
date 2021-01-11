@@ -1,4 +1,3 @@
-import { AppConfig, appConfig } from '@app/onboarding/config/app.config'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 import { InvalidWallet, TxParseErrors } from '@app/onboarding/wallet/errors'
 import { MethodFilter } from '@app/onboarding/wallet/method-filter'
@@ -7,7 +6,6 @@ import { WalletService } from '@app/onboarding/wallet/wallet.service'
 import { Ok, Result } from '@celo/base/lib/result'
 import { CeloContract, ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Inject, Injectable, OnModuleInit, Scope } from '@nestjs/common'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { Session } from '../session/session.entity'
 
@@ -16,8 +14,6 @@ export class SubsidyService {
     private readonly walletService: WalletService,
     private readonly txParserService: TxParserService,
     private readonly contractKit: ContractKit,
-    @Inject(appConfig.KEY)
-    private readonly cfg: AppConfig
   ) {}
 
   public async isValid(
@@ -34,7 +30,7 @@ export class SubsidyService {
     }
 
 
-    const res = await this.txParserService.parse(
+    const requestTxRes = await this.txParserService.parse(
       input.requestTx,
       input.walletAddress,
       new MethodFilter().addContract(
@@ -44,9 +40,26 @@ export class SubsidyService {
       )
     )
 
-    if (res.ok === false) {
-      return res
+    if (requestTxRes.ok === false) {
+      return requestTxRes
     }
+
+    if (input.approveTx !== undefined) {
+      const approveTxRes = await this.txParserService.parse(
+        input.approveTx,
+        input.walletAddress,
+        new MethodFilter().addContract(
+          CeloContract.StableToken,
+          await this.contractKit.contracts.getStableToken(),
+          ["approve"]
+        )
+      )
+
+      if (approveTxRes.ok === false) {
+        return approveTxRes
+      }
+    }
+
     return Ok(true)
   }
 
@@ -57,58 +70,17 @@ export class SubsidyService {
       identifier,
       walletAddress,
       attestationsRequested,
-      requestTx
+      requestTx,
+      approveTx
     } = input
 
-    const batch = [
-      await this.buildSubsidyTransfer(attestationsRequested, walletAddress),
-      requestTx
-    ]
-
-    if (!this.cfg.useAttestationGuards) {
-      return batch
-    } else {
-      // TODO: Once we have a new version of Attestations.sol deployed
-      // to testnets we can toggle this feature and test the flow
-      // When we're comfortable we can remove the feature flag and do
-      // only guarded attestations.
-
-      const beforeRequestsCount = await this.getCurrentRequestedAttestations(
-        identifier,
-        walletAddress
-      )
-      const afterRequestsCount = beforeRequestsCount + attestationsRequested
-
-      return [
-        await this.buildGuard(identifier, walletAddress, beforeRequestsCount),
-        ...batch,
-        await this.buildGuard(identifier, walletAddress, afterRequestsCount)
-      ]
+    const batch: RawTransactionDto[] = []
+    batch.push(await this.buildSubsidyTransfer(attestationsRequested, walletAddress))
+    if (approveTx !== undefined) {
+      batch.push(approveTx)
     }
-  }
-
-  private async getCurrentRequestedAttestations(
-    identifier: string,
-    account: string
-  ): Promise<number> {
-    const attestations = await this.contractKit.contracts.getAttestations()
-    const stats = await attestations.getAttestationStat(identifier, account)
-    return stats.total
-  }
-
-  private async buildGuard(
-    identifier: string,
-    account: string,
-    count: number
-  ): Promise<RawTransactionDto> {
-    const attestations = await this.contractKit.contracts.getAttestations()
-    return toRawTransaction(
-      (attestations as any).requireNAttestationsRequested(
-        identifier,
-        account,
-        count
-      ).txo
-    )
+    batch.push(requestTx)
+    return batch
   }
 
   private async buildSubsidyTransfer(
