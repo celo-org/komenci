@@ -26,7 +26,11 @@
     "tools": "node dist/apps/tools/main.js",
     "tools:dev": "nest start tools --",
     "secrets:decrypt": "bash scripts/secrets.sh decrypt",
-    "secrets:encrypt": "bash scripts/secrets.sh encrypt"
+    "secrets:encrypt": "bash scripts/secrets.sh encrypt",
+    "typeorm": "ts-node ./node_modules/typeorm/cli -f migration.config.ts",
+    "typeorm:create": "ts-node ./node_modules/typeorm/cli -f migration.config.ts migration:create",
+    "typeorm:generate": "ts-node ./node_modules/typeorm/cli -f migration.config.ts migration:generate -n",
+    "typeorm:migration:run": "ts-node ./node_modules/typeorm/cli -f migration.config.ts migration:run"
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.1.2",
