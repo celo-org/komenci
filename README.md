@@ -46,7 +46,6 @@ The services rely on a SQL database to be running. Access can be configured thro
 To spin up postgres in Docker simply run:
 
 ```bash
-// run postgres
 docker run --rm  --name pg-docker -e POSTGRES_PASSWORD=komenci -u postgres -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data postgres
 ```
 
@@ -57,10 +56,10 @@ Make sure you either set up a komenci user and database and update the username 
 Setup local config files:
 
 ``` bash
-> cp apps/onboarding/.env.local.example apps/onboarding/.env.local
-> cp apps/onboarding/.env.local.example apps/onboarding/.env.test
-> cp apps/relayer/.env.local.example apps/relayer/.env.local
-> cp apps/relayer/.env.local.example apps/relayer/.env.test
+cp apps/onboarding/.env.local.example apps/onboarding/.env.local
+cp apps/onboarding/.env.local.example apps/onboarding/.env.test
+cp apps/relayer/.env.local.example apps/relayer/.env.local
+cp apps/relayer/.env.local.example apps/relayer/.env.test
 ```
 
 ### Notes on `celo-monorepo`
@@ -74,9 +73,9 @@ When changes to `celo-monorepo` packages have to be pulled in the build steps wi
 
 ```bash
 # Start the relayer in one terminal:
-$ yarn start:dev relayer
+yarn start:dev relayer
 # Start the onboarding service in another
-$ yarn start:dev onboarding
+yarn start:dev onboarding
 ```
 
 By default the onboarding service should be pointing to the port of the relayer.
@@ -92,7 +91,7 @@ The addresses for the contracts are loaded from `./apps/relayer/.env.local`.
 
 In order to play around with load-balancing the relayers there's a toy haproxy config and a docker-compose that spins up a network which looks like:
 
-```
+```bash
                                         *-------------------*
                                    o----| Relayer 1: 0xaaaa |
 *-------------*      *---------*   |    *-------------------*   
@@ -104,12 +103,14 @@ In order to play around with load-balancing the relayers there's a toy haproxy c
 
 To test it out run:
 
-```$ docker-compose -f docker-compose.proxy.yml up
+```bash
+docker-compose -f docker-compose.proxy.yml up
 ```
 
 This should build everything and spin up the network. 
 It might take 1-2 seconds for HAProxy to pick up the relayers once they're online. You should see this:
-```
+
+```bash
 relayer_proxy_1  | [WARNING] 245/063307 (6) : Server relayer_pool/relayer2 is UP, reason: Layer4 check passed, check duration: 0ms. 1 active and 0 backup servers online. 0 sessions requeued, 0 total in queue.
 relayer_proxy_1  | [WARNING] 245/063307 (6) : Server relayer_pool/relayer1 is UP, reason: Layer4 check passed, check duration: 0ms. 2 active and 0 backup servers online. 0 sessions requeued, 0 total in queue.
 ```
@@ -121,12 +122,13 @@ After that navigate to [localhost:3000/distributedBlindedPepper](http://localhos
 For the first release Relayer funding happens manually by using the `tools` app which is a Commander CLI.
 In order to get started first run:
 
-```
+```bash
 nest build tools
 ```
 
 Then we can run the tools like so:
-```
+
+```bash
 env NETWORK=alfajores yarn tools fund getRelayerBalance
 ```
 
@@ -152,10 +154,24 @@ For alfajores this can be a local wallet (private key), but in other envs this w
 ## reCAPTCHA Testing
 
 You may bypass the reCAPTCHA check by setting the following env variables:
+
 ```bash
 export RULE_CAPTCHA_CONFIG_BYPASS_ENABLED=true
 export RULE_CAPTCHA_CONFIG_BYPASS_TOKEN=special-captcha-bypass-token
 ```
+
 This will allow you to pass in `special-captcha-bypass-token` as a successful reCAPTCHA solution.
 
 You may also want to test the reCAPTCHA end-to-end. You can easily do so by [running the onboarding service](#running) locally and navigating to `http://localhost:3000/recaptcha-test.html`. This will produce a token which you may use to manually test the service. Note that the expiry of a token is two minutes. Both client-side site keys can be found [in the html](./apps/onboarding/public/recaptcha-test.html) and can be swapped manually depending on which environment you'd like to get a token for.
+
+## Database migration
+
+In order to create the tables in the database that has the structure of our Session we should run the following command: 
+
+```yarn run typeorm:cli schema:sync```
+
+The entities that we are going to update are in the file migration.config.json. If for any reason a migration is needed (ex. some field in the database changed) we should run the following command:
+
+``` yarn run typeorm:cli migration:run ```
+
+More detailed documentation about the proccess can be found in the following [link](https://typeorm.io/#/migrations/creating-a-new-migration).
