@@ -6,7 +6,9 @@ const generateUtils = require('./libs/celo/packages/celotool/lib/lib/generate_ut
 const mnemonics = require('./truffle-deployer-config')
 
 const generatePrivateKey = generateUtils.generatePrivateKeyWithDerivations
+const generateAddress = generateUtils.generateAddress
 const fornoURLForEnv = (env) => "https://"+env+"-forno.celo-testnet.org"
+
 
 const walletCache = {}
 const walletForEnv = (env) => {
@@ -78,7 +80,7 @@ module.exports = {
     test: {
       ...baseNetworkConfig,
       host: 'localhost',
-      port: '8565',
+      port: '8545',
       network_id: 1101,
     },
   },

@@ -117,6 +117,12 @@ jobs:
       - name: Run unit tests
         run: |
             yarn test:cov
+      - name: Start ganache
+        run: | 
+            npm install -g ganache-cli 
+            npm install -g truffle 
+            ganache-cli --port 8545 -i 1101
+            truffle migrate --network test --compile-none    
       - name: Run integration tests
         run: |
             yarn test:e2e

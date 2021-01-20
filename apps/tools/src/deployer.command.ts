@@ -6,7 +6,7 @@ import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTr
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { isValidAddress } from '@celo/utils/lib/address'
 import { Inject } from '@nestjs/common'
-import { fundConfig } from 'apps/tools/src/fund.config'
+import { fundConfig } from './fund.config'
 import commander from 'commander'
 import { Command, Console, createSpinner } from 'nestjs-console'
 import { Logger } from 'nestjs-pino'
