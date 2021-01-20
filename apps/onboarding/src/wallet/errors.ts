@@ -30,7 +30,7 @@ export class InvalidWallet extends ApiError<WalletErrorType> {
   metadataProps = ['reason']
 
   constructor(readonly reason: WalletValidationError) {
-    super(WalletErrorType.InvalidImplementation)
+    super(WalletErrorType.InvalidWallet)
     this.message = "Invalid wallet"
   }
 }

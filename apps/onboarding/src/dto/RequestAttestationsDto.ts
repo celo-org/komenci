@@ -2,7 +2,7 @@ import { IsCeloAddress } from '@app/onboarding/utils/validators'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import {
   IsNotEmpty,
-  IsNumber,
+  IsNumber, IsOptional,
   IsPositive,
   IsString,
   ValidateNested,
@@ -22,5 +22,9 @@ export class RequestAttestationsDto {
 
   @ValidateNested()
   requestTx: RawTransactionDto
+
+  @IsOptional()
+  @ValidateNested()
+  approveTx?: RawTransactionDto
 }
 
