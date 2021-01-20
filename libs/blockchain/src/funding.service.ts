@@ -1,6 +1,6 @@
 import { RelayerAccounts } from '@app/utils/config/network.config'
+import { TransactionResult } from '@celo/connect'
 import { Address, ContractKit } from '@celo/contractkit'
-import { TransactionResult } from '@celo/contractkit/lib/utils/tx-result'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { Injectable } from '@nestjs/common'
 import BigNumber from 'bignumber.js'

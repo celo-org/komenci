@@ -1,9 +1,18 @@
 #!/bin/bash
 
-yarn --cwd ./libs/celo/packages/base build
-yarn --cwd ./libs/celo/packages/utils build
-yarn --cwd ./libs/celo/packages/dev-utils build
-yarn --cwd ./libs/celo/packages/contractkit build:gen
-yarn --cwd ./libs/celo/packages/contractkit build
-yarn --cwd ./libs/celo/packages/komencikit build
-yarn --cwd ./libs/celo/packages/phone-number-privacy/common build
+yarn --cwd ./libs/celo lerna run build \
+  --scope @celo/base \
+  --scope @celo/utils \
+  --scope @celo/dev-utils \
+  --scope @celo/connect \
+  --scope @celo/wallet-base \
+  --scope @celo/wallet-local \
+  --scope @celo/wallet-remote \
+  --scope @celo/wallet-hsm \
+  --scope @celo/wallet-hsm-azure \
+  --scope @celo/protocol \
+  --scope @celo/identity \
+  --scope @celo/contractkit \
+  --scope @celo/komencikit \
+  --scope @celo/phone-number-privacy-common
+
