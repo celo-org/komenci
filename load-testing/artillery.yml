@@ -1,0 +1,35 @@
+config:
+  target: 'http://localhost:4000'
+  phases:
+    - duration: 10
+      arrivalRate: 1
+      rampTo: 5
+      name: Warm up
+    - duration: 20
+      arrivalRate: 3
+      rampTo: 20
+      name: Ramp up load
+    - duration: 30
+      arrivalRate: 20
+      name: Sustained load
+  processor: './lib/processor.js'
+  environments:
+    alfajores:
+      target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
+    baklava:
+      target: 'http://localhost:3000'
+    mainnet:
+      target: 'http://localhost:3000'
+scenarios:
+  - name: 'Komenci load test'
+    flow:
+      - get:
+          url: '/health'
+      - loop:
+          - log: '----------------------------------'
+          - log: 'Sent a request to the {{ $loopElement }}'
+          - log: 'And variables {{ $loopElement.variables }}'
+        over:
+        - id123
+        - id456
+        - id789
