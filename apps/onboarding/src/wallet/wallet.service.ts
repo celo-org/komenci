@@ -8,7 +8,7 @@ import {
   WalletNotDeployed,
 } from '@app/onboarding/wallet/errors'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
-import { Address, normalizeAddress, throwIfError } from '@celo/base'
+import { Address, ensureLeading0x, normalizeAddress, throwIfError } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ABI as MetaTxWalletABI, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
@@ -96,9 +96,11 @@ export class WalletService {
     const impl = newMetaTransactionWallet(this.web3, implementationAddress)
     const txn = toRawTransaction(
       this.walletDeployer.deploy(
-        session.externalAccount,
-        implementationAddress,
-        impl.methods.initialize(session.externalAccount).encodeABI()
+        ensureLeading0x(session.externalAccount),
+        ensureLeading0x(implementationAddress),
+        impl.methods.initialize(
+          ensureLeading0x(session.externalAccount)
+        ).encodeABI()
       ).txo
     )
     const resp = throwIfError(await this.relayerProxyService.submitTransaction({
