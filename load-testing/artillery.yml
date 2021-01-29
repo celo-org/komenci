@@ -3,33 +3,73 @@ config:
   phases:
     - duration: 10
       arrivalRate: 1
-      rampTo: 5
+      rampTo: 1
       name: Warm up
-    - duration: 20
-      arrivalRate: 3
-      rampTo: 20
-      name: Ramp up load
-    - duration: 30
-      arrivalRate: 20
-      name: Sustained load
+    # - duration: 20
+    #   arrivalRate: 3
+    #   rampTo: 20
+    #   name: Ramp up load
+    # - duration: 30
+    #   arrivalRate: 20
+    #   name: Sustained load
   processor: './lib/processor.js'
   environments:
     alfajores:
-      target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
+      target: 'https://weu.komenci.alfajores.celo-testnet.org/v1'
     baklava:
       target: 'http://localhost:3000'
     mainnet:
       target: 'http://localhost:3000'
 scenarios:
-  - name: 'Komenci load test'
-    flow:
-      - get:
-          url: '/health'
+  # - name: 'Komenci load test'
+  - flow:
       - loop:
-          - log: '----------------------------------'
           - log: 'Sent a request to the {{ $loopElement }}'
-          - log: 'And variables {{ $loopElement.variables }}'
-        over:
-        - id123
-        - id456
-        - id789
+          # - get:
+          #     url: '/health'
+          #     headers: {content-type: application/json}
+          - post: 
+              url: '/startSession'
+              headers: {content-type: application/json}
+              beforeRequest: "setStartSessionBody"
+              # afterResponse: "logHeaders"
+              capture:
+                json: "$.token"
+                as: "token"
+              log: "Start Session executed. Generated token {{ token }}"
+          - get: 
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/checkSession'
+              # afterResponse: "logHeaders"
+          - post:
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/deployWallet'
+              beforeRequest: "setDeployWalletBody"
+              afterResponse: "waitTx"
+              capture:
+                json: "$.walletAddress"
+                as: "walletAddress" 
+          - post: 
+              url: '/distributedBlindedPepper'
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              beforeRequest: "setDistributedBlindedPeppertBody"
+              afterResponse: "afterDistributedBlindedPepper"
+          - get: 
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/checkSession'
+              # afterResponse: "logHeaders"
+              # Set account
+          # - post: 
+          #     headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+          #     url: '/submitMetaTransaction'
+          #     beforeRequest: "setSubmitMetatransactionBody"
+          #     afterResponse: "logHeaders"
+          # - post: 
+          #     headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+          #     url: '/requestSubsidisedAttestations'
+          #     beforeRequest: "setRequestSubsidisedAttestationsBody"
+          # - post: 
+          #     headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+          #     url: '/submitMetaTransaction'
+          #     beforeRequest: "logHeaders"
+        count: 1
