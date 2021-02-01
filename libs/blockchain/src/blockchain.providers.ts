@@ -5,7 +5,6 @@ import { ReadOnlyWallet } from '@celo/connect'
 import { ContractKit, newKitFromWeb3 } from '@celo/contractkit'
 import { Wallet } from '@celo/wallet-base'
 import { AzureHSMWallet } from '@celo/wallet-hsm-azure'
-import { AzureKeyVaultSigningAlgorithm } from '@celo/wallet-hsm-azure/lib/azure-key-vault-client'
 import { LocalWallet } from '@celo/wallet-local'
 import { FactoryProvider } from '@nestjs/common'
 import Web3 from 'web3'
@@ -40,10 +39,7 @@ export const walletDef: FactoryProvider<Promise<ReadOnlyWallet>> = {
     }
     switch (options.wallet.type) {
       case WalletType.AzureHSM:
-        const azureWallet = new AzureHSMWallet(
-          options.wallet.vaultName,
-          AzureKeyVaultSigningAlgorithm.ES256K
-        )
+        const azureWallet = new AzureHSMWallet(options.wallet.vaultName)
         await azureWallet.init()
         return azureWallet
       case WalletType.Local:
