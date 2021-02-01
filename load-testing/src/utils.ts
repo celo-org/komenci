@@ -49,120 +49,100 @@ const web3 = new Web3(provider)
 const contractKit = newKitFromWeb3(web3, wallet)
 
 
-    export async function getLoginSignature(
-      account: any,
-      captchaToken: string
-    ){
-      try {
-        const loginStruct = buildLoginTypedData(normalizeAddressWith0x(account), captchaToken)
-        const signature = await contractKit.signTypedData(
-          account,
-          loginStruct
-        )
-
-        return Ok(serializeSignature(signature))
-      } catch (e) {
-        return Err(new LoginSignatureError(e))
-      }
-    }
-
-    /**
-   * Wait for the deploy tx and extract the wallet from events
-   * @param txHash the transaction hash of the wallet deploy tx
-   * @private
-   */
-  export async function getAddressFromDeploy(txHash: string){
-    const receiptResult = await this.waitForReceipt(txHash)
-    if (!receiptResult.ok) {
-      return receiptResult
-    }
-    const receipt = receiptResult.result
-
-    const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(receipt.to)
-
-    const events = await deployer.getPastEvents(deployer.eventTypes.WalletDeployed, {
-      fromBlock: receipt.blockNumber,
-      toBlock: receipt.blockNumber,
-    })
-
-    const deployWalletLog = events.find(
-      (
-        event: ContractEventLog<{
-          owner: string
-          wallet: string
-          implementation: string
-          0: string
-          1: string
-          2: string
-        }>
-      ) => normalizeAddressWith0x(event.returnValues.owner) === this.externalAccount
+export async function getLoginSignature(
+  account: any,
+  captchaToken: string
+){
+  try {
+    const loginStruct = buildLoginTypedData(normalizeAddressWith0x(account), captchaToken)
+    const signature = await contractKit.signTypedData(
+      account,
+      loginStruct
     )
 
-    if (deployWalletLog === undefined) {
-      return Err(new TxEventNotFound(txHash, deployer.eventTypes.WalletDeployed))
-    }
+    return Ok(serializeSignature(signature))
+  } catch (e) {
+    return Err(new LoginSignatureError(e))
+  }
+}
 
-    return Ok(deployWalletLog.returnValues.wallet)
+  /**
+ * Wait for the deploy tx and extract the wallet from events
+ * @param txHash the transaction hash of the wallet deploy tx
+ * @private
+ */
+export async function getAddressFromDeploy(txHash: string){
+  const receiptResult = await this.waitForReceipt(txHash)
+  if (!receiptResult.ok) {
+    return receiptResult
+  }
+  const receipt = receiptResult.result
+
+  const deployer = await contractKit.contracts.getMetaTransactionWalletDeployer(receipt.to)
+
+  const events = await deployer.getPastEvents(deployer.eventTypes.WalletDeployed, {
+    fromBlock: receipt.blockNumber,
+    toBlock: receipt.blockNumber,
+  })
+
+  const deployWalletLog = events.find(
+    (
+      event: ContractEventLog<{
+        owner: string
+        wallet: string
+        implementation: string
+        0: string
+        1: string
+        2: string
+      }>
+    ) => normalizeAddressWith0x(event.returnValues.owner) === this.externalAccount
+  )
+
+  if (deployWalletLog === undefined) {
+    return Err(new TxEventNotFound(txHash, deployer.eventTypes.WalletDeployed))
   }
 
-  export async function waitForReceipt(txHash: string) {
-    let receipt: any | null = null
-    let waited = 0
-    while (receipt == null && waited < 20000) {
-      receipt = await contractKit.web3.eth.getTransactionReceipt(txHash)
-      if (receipt == null) {
-        await sleep(100)
-        waited += 100
-      }
-    }
+  return Ok(deployWalletLog.returnValues.wallet)
+}
 
+export async function waitForReceipt(txHash: string) {
+  let receipt: any | null = null
+  let waited = 0
+  while (receipt == null && waited < 20000) {
+    receipt = await contractKit.web3.eth.getTransactionReceipt(txHash)
     if (receipt == null) {
-      return Err(new TxTimeoutError())
+      await sleep(100)
+      waited += 100
     }
-
-    if (!receipt.status) {
-      // TODO: Possible to extract reason?
-      return Err(new TxRevertError(txHash, ''))
-    }
-
-    return Ok(receipt)
   }
 
-
-  export async function setAccount(
-    metaTxWalletAddress: string,
-    name: string,
-    dataEncryptionKey: string,
-    walletAddress: any
-  ){
-    const accounts = await contractKit.contracts.getAccounts()
-    const proofOfPossession = await accounts.generateProofOfKeyPossession(
-      metaTxWalletAddress,
-      walletAddress
-    )
-
-    return this.submitMetaTransaction(
-      metaTxWalletAddress,
-      accounts.setAccount(name, dataEncryptionKey, walletAddress, proofOfPossession)
-    )
+  if (receipt == null) {
+    return Err(new TxTimeoutError())
   }
 
+  if (!receipt.status) {
+    // TODO: Possible to extract reason?
+    return Err(new TxRevertError(txHash, ''))
+  }
 
-  // export async function submitMetaTransaction(
-  //   metaTxWalletAddress: string,
-  //   tx: CeloTransactionObject<any>,
-  //   nonce?: number
-  // ){
-  //   const wallet = await this.getWallet(metaTxWalletAddress)
-  //   const signature = await wallet.signMetaTransaction(tx.txo, nonce)
-  //   const rawMetaTx = toRawTransaction(wallet.executeMetaTransaction(tx.txo, signature).txo)
+  return Ok(receipt)
+}
 
-  //   const resp = await this.client.exec(submitMetaTransaction(rawMetaTx))
-  //   if (!resp.ok) {
-  //     return resp
-  //   }
 
-  //   const txHash = resp.result.txHash
-  //   console.debug(`${TAG}/submitMetaTransaction Waiting for transaction receipt: ${txHash}`)
-  //   return this.waitForReceipt(txHash)
-  // }
+export async function setAccount(
+  metaTxWalletAddress: string,
+  name: string,
+  dataEncryptionKey: string,
+  walletAddress: any
+){
+  const accounts = await contractKit.contracts.getAccounts()
+  const proofOfPossession = await accounts.generateProofOfKeyPossession(
+    metaTxWalletAddress,
+    walletAddress
+  )
+
+  return this.submitMetaTransaction(
+    metaTxWalletAddress,
+    accounts.setAccount(name, dataEncryptionKey, walletAddress, proofOfPossession)
+  )
+}
