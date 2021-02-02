@@ -3,15 +3,15 @@ config:
   phases:
     - duration: 20
       arrivalRate: 1
-      # rampTo: 1
-      # maxVusers: 1
+      rampTo: 1
+      maxVusers: 50
       name: Warm up
-    # - duration: 20
-    #   arrivalRate: 2
-    #   rampTo: 1
+    # - duration: 120
+    #   arrivalRate: 3
+    #   rampTo: 20
     #   name: Ramp up load
-    # - duration: 20
-    #   arrivalRate: 2
+    # - duration: 240
+    #   arrivalRate: 20
     #   name: Sustained load
   processor: './lib/processor.js'
   environments:
@@ -25,7 +25,7 @@ config:
 scenarios:
   # - name: 'Komenci load test'
   - flow:
-      # - loop:
+      - loop:
           # - log: 'Sent a request to the {{ $loopElement }}'
           # - get:
           #     url: '/health'
@@ -77,7 +77,8 @@ scenarios:
               capture:
                 json: "$.txHash"
                 as: "txHash" 
-          - log: "Submitting MetaTransaction"
+              strict: false
+          - log: "Submitting MetaTransaction {{ txHash }}"
           - post: 
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/requestSubsidisedAttestations'
@@ -90,5 +91,5 @@ scenarios:
               url: '/submitMetaTransaction'
               beforeRequest: "selectIssuer"
               afterResponse: "getActionableAttestations"
-          - log: "Selecting Issuer: "
-        # count: 1
+          - log: "Issuer selected"
+        count: 1

@@ -1,7 +1,7 @@
 import { time } from 'console'
 import fs = require('fs')
 import path = require('path')
-import { getAddressFromDeploy, waitForReceipt } from './utils'
+import { getLoginSignature, getAddressFromDeploy, waitForReceipt } from './utils'
 const Web3 = require('web3')
 const { buildLoginTypedData } =  require('../../libs/celo/packages/komencikit/lib/login')
 const { compressedPubKey } = require('../../libs/celo/packages/utils/lib/dataEncryptionKey')
@@ -47,16 +47,13 @@ const ODIS_PUB_KEYS: Record<Network, string> = {
     'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
 }
 
-let environment
-
-const blsBlindingClient = new WasmBlsBlindingClient("kPoRxWdEdZ/Nd3uQnp3FJFs54zuiS+ksqvOm9x8vY6KHPG8jrfqysvIRU0wtqYsBKA7SoAsICMBv8C/Fb2ZpDOqhSqvr/sZbZoHmQfvbqrzbtDIPvUIrHgRS0ydJCMsA")
+// const blsBlindingClient = new WasmBlsBlindingClient("kPoRxWdEdZ/Nd3uQnp3FJFs54zuiS+ksqvOm9x8vY6KHPG8jrfqysvIRU0wtqYsBKA7SoAsICMBv8C/Fb2ZpDOqhSqvr/sZbZoHmQfvbqrzbtDIPvUIrHgRS0ydJCMsA")
 
 async function setStartSessionBody(requestParams, context, ee, next) {
-  environment = context.vars.$environment
-  console.log(`Loading test cases for environment: ${environment}`)
+  console.log(`Loading test cases for environment: ${context.vars.$environment}`)
 
   // Setting up variables for the scenario.
-  context.vars.provider = new Web3.providers.HttpProvider(fornoURL[Network.alfajores])
+  context.vars.provider = new Web3.providers.HttpProvider(fornoURL[context.vars.$environment])
   context.vars.web3 = new Web3(context.vars.provider)
   const captchaToken = 'special-captcha-bypass-token'
   context.vars.wallet = new LocalWallet()
@@ -68,9 +65,13 @@ async function setStartSessionBody(requestParams, context, ee, next) {
   context.vars.externalAccount = normalizeAddressWith0x(context.vars.account)
   context.vars.dekPublicKey = compressedPubKey(hexToBuffer(context.vars.dek))
   context.vars.e164Number = "+40" + Math.floor(Math.random() * 1000000000)
+  context.vars.blsBlindingClient = new WasmBlsBlindingClient(ODIS_PUB_KEYS[context.vars.$environment])
 
   // console.log(context.vars.$loopCount)
+  // const serializedSignature = await getLoginSignature(context.vars.contractKit, context.vars.externalAccount, captchaToken)
 
+  // console.log(serializeSignature.result)
+  try{
   const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
   const signature = await context.vars.contractKit.signTypedData(
     context.vars.externalAccount,
@@ -83,20 +84,29 @@ async function setStartSessionBody(requestParams, context, ee, next) {
     signature: serializedSignature
   }
   return next()
+
+  }catch(e){
+    console.log(e)
+    return
+  }
+
+  // requestParams.json = {
+  //   externalAccount: context.vars.externalAccount,
+  //   captchaResponseToken: captchaToken,
+  //   signature: serializedSignature
+  // }
 }
 
 async function setDeployWalletBody(requestParams, context, ee, next) {
-  // const walletImplementationAddress = WALLET_IMPLEMENTATIONS[environment]
+  const walletImplementationAddress = WALLET_IMPLEMENTATIONS[context.vars.$environment]['1.1.0.0-p3']
   requestParams.json = {
-    implementationAddress: "0x5C9a6E3c3E862eD306E2E3348EBC8b8310A99e5A" //walletImplementationAddress
+    implementationAddress: walletImplementationAddress
   }
   return next() 
 }
 
 async function setDistributedBlindedPeppertBody(requestParams, context, ee, next) {
-  // const walletImplementationAddress = WALLET_IMPLEMENTATIONS[environment]
-  // console.log(walletImplementationAddress)
-  const blindedPhoneNumber = await getBlindedPhoneNumber(context.vars.e164Number, blsBlindingClient)
+  const blindedPhoneNumber = await getBlindedPhoneNumber(context.vars.e164Number, context.vars.blsBlindingClient)
 
   requestParams.json = {
     blindedPhoneNumber: blindedPhoneNumber, 
@@ -115,7 +125,7 @@ async function afterDistributedBlindedPepper(requestParams, response, context, e
   const phoneNumberHashDetails = await getPhoneNumberIdentifierFromSignature(
     context.vars.e164Number,
     response.body.combinedSignature!,
-    blsBlindingClient
+    context.vars.blsBlindingClient
   )
   context.vars.identifier = phoneNumberHashDetails.phoneHash
   context.vars.pepper = phoneNumberHashDetails.pepper
@@ -162,7 +172,7 @@ async function waitTx(requestParams, response, context, ee, next) {
   const walletStatus = await verifyWallet(
     context.vars.contractKit,
     context.vars.metaTxWalletAddress.result,
-    ['0x5C9a6E3c3E862eD306E2E3348EBC8b8310A99e5A'], // pending to get from variable
+    [WALLET_IMPLEMENTATIONS[context.vars.$environment]['1.1.0.0-p3']], // pending to get from variable
     context.vars.externalAccount
   )
 
@@ -223,7 +233,7 @@ function logHeaders(requestParams, response, context, ee, next) {
 async function getActionableAttestations(requestParams, response, context, ee, next) {
   const attestations = await context.vars.contractKit.contracts.getAttestations()
   const attestationsToComplete = await attestations.getActionableAttestations(context.vars.identifier, context.vars.metaTxWalletAddress.result)
-  return next()
+  return
 }
 
 async function waitEvents(requestParams, response, context, ee, next) {
@@ -257,5 +267,6 @@ module.exports = {
   waitTx,
   setDistributedBlindedPeppertBody ,  
   afterDistributedBlindedPepper, 
-  setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents, getActionableAttestations 
+  setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents, 
+  getActionableAttestations 
   }
