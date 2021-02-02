@@ -1,18 +1,18 @@
 config:
   target: 'http://localhost:4000'
   phases:
-    - duration: 20
+    - duration: 60
       arrivalRate: 1
       rampTo: 1
       maxVusers: 50
       name: Warm up
-    # - duration: 120
-    #   arrivalRate: 3
-    #   rampTo: 20
-    #   name: Ramp up load
-    # - duration: 240
-    #   arrivalRate: 20
-    #   name: Sustained load
+    - duration: 120
+      arrivalRate: 3
+      rampTo: 20
+      name: Ramp up load
+    - duration: 240
+      arrivalRate: 20
+      name: Sustained load
   processor: './lib/processor.js'
   environments:
     alfajores:
@@ -23,9 +23,7 @@ config:
     mainnet:
       target: 'http://localhost:3000'
 scenarios:
-  # - name: 'Komenci load test'
   - flow:
-      - loop:
           # - log: 'Sent a request to the {{ $loopElement }}'
           # - get:
           #     url: '/health'
@@ -39,6 +37,7 @@ scenarios:
               capture:
                 json: "$.token"
                 as: "token"
+              strict: false
           # - log: "Start Session executed. Generated token {{ token }}"
           - log: "External account: {{ account }}"
           - get: 
@@ -92,4 +91,3 @@ scenarios:
               beforeRequest: "selectIssuer"
               afterResponse: "getActionableAttestations"
           - log: "Issuer selected"
-        count: 1

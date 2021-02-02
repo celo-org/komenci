@@ -29,11 +29,6 @@ export async function getLoginSignature(
   }
 }
 
-  /**
- * Wait for the deploy tx and extract the wallet from events
- * @param txHash the transaction hash of the wallet deploy tx
- * @private
- */
 export async function getAddressFromDeploy(contractKit, externalAccount,  txHash: string){
   const receiptResult = await this.waitForReceipt(contractKit, txHash)
   if (!receiptResult.ok) {

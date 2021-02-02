@@ -1,13 +1,10 @@
-import { time } from 'console'
-import fs = require('fs')
-import path = require('path')
-import { getLoginSignature, getAddressFromDeploy, waitForReceipt } from './utils'
+import { getAddressFromDeploy, waitForReceipt } from './utils'
 const Web3 = require('web3')
 const { buildLoginTypedData } =  require('../../libs/celo/packages/komencikit/lib/login')
 const { compressedPubKey } = require('../../libs/celo/packages/utils/lib/dataEncryptionKey')
-const { base64ToHex, hexToBuffer } = require('../../libs/celo/packages/base')
+const { hexToBuffer } = require('../../libs/celo/packages/base')
 const { LocalWallet } = require('../../libs/celo/packages/contractkit/lib/wallets/local-wallet')
-const { ContractKit, newKitFromWeb3 } = require('../../libs/celo/packages/contractkit/lib/kit')
+const { newKitFromWeb3 } = require('../../libs/celo/packages/contractkit/lib/kit')
 const { serializeSignature } = require('../../libs/celo/packages/base/lib/signatureUtils')
 const { normalizeAddressWith0x } = require('../../libs/celo/packages/base/lib/address')
 const { Err, Ok } = require('../../libs/celo/packages/base/lib/result')
@@ -18,7 +15,6 @@ const { getBlindedPhoneNumber, getPhoneNumberIdentifierFromSignature } = require
 const { toRawTransaction } = require('../../libs/celo/packages/contractkit/lib/wrappers/MetaTransactionWallet')
 
 
-let args = {};
 enum Network {
   alfajores = 'alfajores',
   rc1 = 'rc1',
@@ -47,8 +43,6 @@ const ODIS_PUB_KEYS: Record<Network, string> = {
     'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
 }
 
-// const blsBlindingClient = new WasmBlsBlindingClient("kPoRxWdEdZ/Nd3uQnp3FJFs54zuiS+ksqvOm9x8vY6KHPG8jrfqysvIRU0wtqYsBKA7SoAsICMBv8C/Fb2ZpDOqhSqvr/sZbZoHmQfvbqrzbtDIPvUIrHgRS0ydJCMsA")
-
 async function setStartSessionBody(requestParams, context, ee, next) {
   console.log(`Loading test cases for environment: ${context.vars.$environment}`)
 
@@ -67,10 +61,6 @@ async function setStartSessionBody(requestParams, context, ee, next) {
   context.vars.e164Number = "+40" + Math.floor(Math.random() * 1000000000)
   context.vars.blsBlindingClient = new WasmBlsBlindingClient(ODIS_PUB_KEYS[context.vars.$environment])
 
-  // console.log(context.vars.$loopCount)
-  // const serializedSignature = await getLoginSignature(context.vars.contractKit, context.vars.externalAccount, captchaToken)
-
-  // console.log(serializeSignature.result)
   try{
   const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
   const signature = await context.vars.contractKit.signTypedData(
@@ -89,12 +79,6 @@ async function setStartSessionBody(requestParams, context, ee, next) {
     console.log(e)
     return
   }
-
-  // requestParams.json = {
-  //   externalAccount: context.vars.externalAccount,
-  //   captchaResponseToken: captchaToken,
-  //   signature: serializedSignature
-  // }
 }
 
 async function setDeployWalletBody(requestParams, context, ee, next) {
@@ -136,7 +120,7 @@ async function afterDistributedBlindedPepper(requestParams, response, context, e
   return next()
 }
 
-// // For setAccount
+// For setAccount
 async function setSubmitMetatransactionBody(requestParams, context, ee, next){
   const accounts = await context.vars.contractKit.contracts.getAccounts()
   const proofOfPossession = await accounts.generateProofOfKeyPossession(
@@ -260,13 +244,4 @@ async function getWallet(contractKit, address: string){
   return _wallet
 }
 
-module.exports = { 
-  logHeaders, 
-  setStartSessionBody, 
-  setDeployWalletBody, 
-  waitTx,
-  setDistributedBlindedPeppertBody ,  
-  afterDistributedBlindedPepper, 
-  setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents, 
-  getActionableAttestations 
-  }
+module.exports = { logHeaders, setStartSessionBody, setDeployWalletBody, waitTx, setDistributedBlindedPeppertBody , afterDistributedBlindedPepper, setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents, getActionableAttestations }
