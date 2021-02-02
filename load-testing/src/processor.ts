@@ -1,13 +1,13 @@
 import { time } from 'console'
 import fs = require('fs')
 import path = require('path')
-import { getLoginSignature, getAddressFromDeploy, waitForReceipt } from './utils'
+import { getAddressFromDeploy, waitForReceipt } from './utils'
 const Web3 = require('web3')
 const { buildLoginTypedData } =  require('../../libs/celo/packages/komencikit/lib/login')
 const { compressedPubKey } = require('../../libs/celo/packages/utils/lib/dataEncryptionKey')
 const { base64ToHex, hexToBuffer } = require('../../libs/celo/packages/base')
 const { LocalWallet } = require('../../libs/celo/packages/contractkit/lib/wallets/local-wallet')
-const { newKitFromWeb3 } = require('../../libs/celo/packages/contractkit/lib/kit')
+const { ContractKit, newKitFromWeb3 } = require('../../libs/celo/packages/contractkit/lib/kit')
 const { serializeSignature } = require('../../libs/celo/packages/base/lib/signatureUtils')
 const { normalizeAddressWith0x } = require('../../libs/celo/packages/base/lib/address')
 const { Err, Ok } = require('../../libs/celo/packages/base/lib/result')
@@ -47,39 +47,38 @@ const ODIS_PUB_KEYS: Record<Network, string> = {
     'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
 }
 
-const provider = new Web3.providers.HttpProvider(fornoURL[Network.alfajores])
-const web3 = new Web3(provider)
-const wallet = new LocalWallet()
-const contractKit = newKitFromWeb3(web3, wallet)
 let environment
-const captchaToken = 'special-captcha-bypass-token'
-const pkey = Web3.utils.randomHex(32)
-const dek = Web3.utils.randomHex(32)
-wallet.addAccount(pkey)
-const account = wallet.getAccounts()[0]
-let externalAccount = normalizeAddressWith0x(account)
-const dekPublicKey = compressedPubKey(hexToBuffer(dek))
 
-let metaTxWalletAddress
-let identifier
-
-
-let e164Number
 const blsBlindingClient = new WasmBlsBlindingClient("kPoRxWdEdZ/Nd3uQnp3FJFs54zuiS+ksqvOm9x8vY6KHPG8jrfqysvIRU0wtqYsBKA7SoAsICMBv8C/Fb2ZpDOqhSqvr/sZbZoHmQfvbqrzbtDIPvUIrHgRS0ydJCMsA")
 
 async function setStartSessionBody(requestParams, context, ee, next) {
   environment = context.vars.$environment
   console.log(`Loading test cases for environment: ${environment}`)
+
+  // Setting up variables for the scenario.
+  context.vars.provider = new Web3.providers.HttpProvider(fornoURL[Network.alfajores])
+  context.vars.web3 = new Web3(context.vars.provider)
+  const captchaToken = 'special-captcha-bypass-token'
+  context.vars.wallet = new LocalWallet()
+  context.vars.contractKit = newKitFromWeb3(context.vars.web3, context.vars.wallet)
+  context.vars.pkey = Web3.utils.randomHex(32)
+  context.vars.dek = Web3.utils.randomHex(32)
+  context.vars.wallet.addAccount(context.vars.pkey)
+  context.vars.account = context.vars.wallet.getAccounts()[0]
+  context.vars.externalAccount = normalizeAddressWith0x(context.vars.account)
+  context.vars.dekPublicKey = compressedPubKey(hexToBuffer(context.vars.dek))
+  context.vars.e164Number = "+40" + Math.floor(Math.random() * 1000000000)
+
   // console.log(context.vars.$loopCount)
 
-  const loginStruct = buildLoginTypedData(externalAccount, captchaToken)
-  const signature = await contractKit.signTypedData(
-    externalAccount,
+  const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
+  const signature = await context.vars.contractKit.signTypedData(
+    context.vars.externalAccount,
     loginStruct
   )
   const serializedSignature = serializeSignature(signature)
   requestParams.json = {
-    externalAccount: externalAccount,
+    externalAccount: context.vars.externalAccount,
     captchaResponseToken: captchaToken,
     signature: serializedSignature
   }
@@ -97,9 +96,7 @@ async function setDeployWalletBody(requestParams, context, ee, next) {
 async function setDistributedBlindedPeppertBody(requestParams, context, ee, next) {
   // const walletImplementationAddress = WALLET_IMPLEMENTATIONS[environment]
   // console.log(walletImplementationAddress)
-  e164Number = "+40" + Math.floor(Math.random() * 1000000000)
-  console.log(e164Number)
-  const blindedPhoneNumber = await getBlindedPhoneNumber(e164Number, blsBlindingClient)
+  const blindedPhoneNumber = await getBlindedPhoneNumber(context.vars.e164Number, blsBlindingClient)
 
   requestParams.json = {
     blindedPhoneNumber: blindedPhoneNumber, 
@@ -116,11 +113,12 @@ async function afterDistributedBlindedPepper(requestParams, response, context, e
     return
   }
   const phoneNumberHashDetails = await getPhoneNumberIdentifierFromSignature(
-    e164Number,
+    context.vars.e164Number,
     response.body.combinedSignature!,
     blsBlindingClient
   )
-  identifier = phoneNumberHashDetails.phoneHash
+  context.vars.identifier = phoneNumberHashDetails.phoneHash
+  context.vars.pepper = phoneNumberHashDetails.pepper
   console.log({
     identifier: phoneNumberHashDetails.phoneHash,
     pepper: phoneNumberHashDetails.pepper,
@@ -128,16 +126,16 @@ async function afterDistributedBlindedPepper(requestParams, response, context, e
   return next()
 }
 
-// For setAccount
+// // For setAccount
 async function setSubmitMetatransactionBody(requestParams, context, ee, next){
-  const accounts = await contractKit.contracts.getAccounts()
+  const accounts = await context.vars.contractKit.contracts.getAccounts()
   const proofOfPossession = await accounts.generateProofOfKeyPossession(
-    metaTxWalletAddress.result,
-    externalAccount
+    context.vars.metaTxWalletAddress.result,
+    context.vars.externalAccount
   )
 
-  const tx = await accounts.setAccount('', dekPublicKey, externalAccount, proofOfPossession)
-  const wallet = await getWallet(metaTxWalletAddress.result)
+  const tx = await accounts.setAccount('', context.vars.dekPublicKey, context.vars.externalAccount, proofOfPossession)
+  const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress.result)
 
   const nonce = await wallet.nonce()
 
@@ -152,21 +150,20 @@ async function setSubmitMetatransactionBody(requestParams, context, ee, next){
 }
 
 async function waitTx(requestParams, response, context, ee, next) {
-
-  metaTxWalletAddress =
+  context.vars.metaTxWalletAddress =
   response.body.status === 'deployed'
       ? Ok(response.body.walletAddress)
-      : await getAddressFromDeploy(response.body.txHash)
-
-  if (!metaTxWalletAddress.ok) {
-    return metaTxWalletAddress
+      : await getAddressFromDeploy(context.vars.contractKit, context.vars.externalAccount, response.body.txHash)
+  
+  if (!context.vars.metaTxWalletAddress.ok) {
+    return context.vars.metaTxWalletAddress
   }
 
   const walletStatus = await verifyWallet(
-    contractKit,
-    metaTxWalletAddress.result,
+    context.vars.contractKit,
+    context.vars.metaTxWalletAddress.result,
     ['0x5C9a6E3c3E862eD306E2E3348EBC8b8310A99e5A'], // pending to get from variable
-    externalAccount
+    context.vars.externalAccount
   )
 
   if (!walletStatus.ok) {
@@ -177,8 +174,8 @@ async function waitTx(requestParams, response, context, ee, next) {
 
 async function setRequestSubsidisedAttestationsBody(requestParams, context, ee, next) {
 
-  const attestations = await contractKit.contracts.getAttestations()
-  const wallet = await getWallet(metaTxWalletAddress.result)
+  const attestations = await context.vars.contractKit.contracts.getAttestations()
+  const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress.result)
   const nonce = await wallet.nonce()
 
   const attestationsRequested = 3
@@ -187,14 +184,14 @@ async function setRequestSubsidisedAttestationsBody(requestParams, context, ee, 
   const approveTxSig = await wallet.signMetaTransaction(approveTx.txo, nonce)
   const approveMetaTx = await wallet.executeMetaTransaction(approveTx.txo, approveTxSig)
 
-  const requestTx = await attestations.request(identifier, attestationsRequested)
+  const requestTx = await attestations.request(context.vars.identifier, attestationsRequested)
   const requestTxSig = await wallet.signMetaTransaction(requestTx.txo, nonce + 1)
   const requestMetaTx = await wallet.executeMetaTransaction(requestTx.txo, requestTxSig)
 
   requestParams.json = {
-    identifier: identifier,
+    identifier: context.vars.identifier,
     attestationsRequested: attestationsRequested,
-    walletAddress: metaTxWalletAddress.result,
+    walletAddress: context.vars.metaTxWalletAddress.result,
     requestTx: toRawTransaction(requestMetaTx.txo),
     approveTx: toRawTransaction(approveMetaTx.txo),
   }
@@ -202,10 +199,10 @@ async function setRequestSubsidisedAttestationsBody(requestParams, context, ee, 
 }
 
 async function selectIssuer(requestParams, context, ee, next) {
-    const attestations = await contractKit.contracts.getAttestations()
-    await attestations.waitForSelectingIssuers(identifier, metaTxWalletAddress.result)
-    const issuer = await attestations.selectIssuers(identifier)
-    const wallet = await getWallet(metaTxWalletAddress.result)
+    const attestations = await context.vars.contractKit.contracts.getAttestations()
+    await attestations.waitForSelectingIssuers(context.vars.identifier, context.vars.metaTxWalletAddress.result)
+    const issuer = await attestations.selectIssuers(context.vars.identifier)
+    const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress.result)
     const nonce = await wallet.nonce()
 
     const signature = await wallet.signMetaTransaction(issuer.txo, nonce)
@@ -216,8 +213,6 @@ async function selectIssuer(requestParams, context, ee, next) {
       data: rawMetaTx.data
     }
     return next()
-  return next() 
-    return next()
 }
 
 function logHeaders(requestParams, response, context, ee, next) {
@@ -226,14 +221,14 @@ function logHeaders(requestParams, response, context, ee, next) {
 }
 
 async function getActionableAttestations(requestParams, response, context, ee, next) {
-  const attestations = await contractKit.contracts.getAttestations()
-  const attestationsToComplete = await attestations.getActionableAttestations(identifier, metaTxWalletAddress.result)
+  const attestations = await context.vars.contractKit.contracts.getAttestations()
+  const attestationsToComplete = await attestations.getActionableAttestations(context.vars.identifier, context.vars.metaTxWalletAddress.result)
   return next()
 }
 
 async function waitEvents(requestParams, response, context, ee, next) {
-  const tx = await waitForReceipt(response.body.txHash)
-  const attestations = await contractKit.contracts.getAttestations()
+  const tx = await waitForReceipt(context.vars.contractKit,response.body.txHash)
+  const attestations = await context.vars.contractKit.contracts.getAttestations()
   const events = await attestations.getPastEvents(attestations.eventTypes.AttestationsRequested, {
     fromBlock: tx.result.blockNumber,
     toBlock: tx.result.blockNumber,
@@ -242,17 +237,25 @@ async function waitEvents(requestParams, response, context, ee, next) {
 }
 
 async function waitReceipt(requestParams, response, context, ee, next) {
-  await waitForReceipt(response.body.txHash)
+  await waitForReceipt(context.vars.contractKit, response.body.txHash)
   return next()
 }
 
 
 let _wallet
-async function getWallet(address: string){
+async function getWallet(contractKit, address: string){
   if (_wallet?.address !== address) {
     _wallet = await contractKit.contracts.getMetaTransactionWallet(address)
   }
   return _wallet
 }
 
-module.exports = { logHeaders, setStartSessionBody, setDeployWalletBody, setDistributedBlindedPeppertBody , waitTx, afterDistributedBlindedPepper, setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents, getActionableAttestations }
+module.exports = { 
+  logHeaders, 
+  setStartSessionBody, 
+  setDeployWalletBody, 
+  waitTx,
+  setDistributedBlindedPeppertBody ,  
+  afterDistributedBlindedPepper, 
+  setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents, getActionableAttestations 
+  }

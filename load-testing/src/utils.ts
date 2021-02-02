@@ -19,7 +19,6 @@ enum Network {
   alfajores = 'alfajores',
   rc1 = 'rc1',
 }
-const wallet = new LocalWallet()
 const fornoURL: Record<Network, string> = {
   alfajores: 'https://alfajores-forno.celo-testnet.org',
   rc1: 'https://rc1-forno.celo-testnet.org',
@@ -44,35 +43,35 @@ const ODIS_PUB_KEYS: Record<Network, string> = {
     'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
 }
 
-const provider = new Web3.providers.HttpProvider(fornoURL[Network.alfajores])
-const web3 = new Web3(provider)
-const contractKit = newKitFromWeb3(web3, wallet)
+// const provider = new Web3.providers.HttpProvider(fornoURL[Network.alfajores])
+// const web3 = new Web3(provider)
+// const contractKit = newKitFromWeb3(web3, wallet)
 
 
-export async function getLoginSignature(
-  account: any,
-  captchaToken: string
-){
-  try {
-    const loginStruct = buildLoginTypedData(normalizeAddressWith0x(account), captchaToken)
-    const signature = await contractKit.signTypedData(
-      account,
-      loginStruct
-    )
+// export async function getLoginSignature(
+//   account: any,
+//   captchaToken: string
+// ){
+//   try {
+//     const loginStruct = buildLoginTypedData(normalizeAddressWith0x(account), captchaToken)
+//     const signature = await contractKit.signTypedData(
+//       account,
+//       loginStruct
+//     )
 
-    return Ok(serializeSignature(signature))
-  } catch (e) {
-    return Err(new LoginSignatureError(e))
-  }
-}
+//     return Ok(serializeSignature(signature))
+//   } catch (e) {
+//     return Err(new LoginSignatureError(e))
+//   }
+// }
 
   /**
  * Wait for the deploy tx and extract the wallet from events
  * @param txHash the transaction hash of the wallet deploy tx
  * @private
  */
-export async function getAddressFromDeploy(txHash: string){
-  const receiptResult = await this.waitForReceipt(txHash)
+export async function getAddressFromDeploy(contractKit, externalAccount,  txHash: string){
+  const receiptResult = await this.waitForReceipt(contractKit, txHash)
   if (!receiptResult.ok) {
     return receiptResult
   }
@@ -95,7 +94,7 @@ export async function getAddressFromDeploy(txHash: string){
         1: string
         2: string
       }>
-    ) => normalizeAddressWith0x(event.returnValues.owner) === this.externalAccount
+    ) => normalizeAddressWith0x(event.returnValues.owner) === externalAccount
   )
 
   if (deployWalletLog === undefined) {
@@ -105,7 +104,7 @@ export async function getAddressFromDeploy(txHash: string){
   return Ok(deployWalletLog.returnValues.wallet)
 }
 
-export async function waitForReceipt(txHash: string) {
+export async function waitForReceipt(contractKit, txHash: string) {
   let receipt: any | null = null
   let waited = 0
   while (receipt == null && waited < 20000) {
@@ -129,20 +128,20 @@ export async function waitForReceipt(txHash: string) {
 }
 
 
-export async function setAccount(
-  metaTxWalletAddress: string,
-  name: string,
-  dataEncryptionKey: string,
-  walletAddress: any
-){
-  const accounts = await contractKit.contracts.getAccounts()
-  const proofOfPossession = await accounts.generateProofOfKeyPossession(
-    metaTxWalletAddress,
-    walletAddress
-  )
+// export async function setAccount(
+//   metaTxWalletAddress: string,
+//   name: string,
+//   dataEncryptionKey: string,
+//   walletAddress: any
+// ){
+//   const accounts = await contractKit.contracts.getAccounts()
+//   const proofOfPossession = await accounts.generateProofOfKeyPossession(
+//     metaTxWalletAddress,
+//     walletAddress
+//   )
 
-  return this.submitMetaTransaction(
-    metaTxWalletAddress,
-    accounts.setAccount(name, dataEncryptionKey, walletAddress, proofOfPossession)
-  )
-}
+//   return this.submitMetaTransaction(
+//     metaTxWalletAddress,
+//     accounts.setAccount(name, dataEncryptionKey, walletAddress, proofOfPossession)
+//   )
+// }

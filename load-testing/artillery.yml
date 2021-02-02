@@ -6,18 +6,18 @@ config:
       # rampTo: 1
       # maxVusers: 1
       name: Warm up
-    - duration: 20
-      arrivalRate: 2
-      rampTo: 1
-      name: Ramp up load
-    - duration: 20
-      arrivalRate: 2
-      name: Sustained load
+    # - duration: 20
+    #   arrivalRate: 2
+    #   rampTo: 1
+    #   name: Ramp up load
+    # - duration: 20
+    #   arrivalRate: 2
+    #   name: Sustained load
   processor: './lib/processor.js'
   environments:
     alfajores:
-      # target: 'https://weu.komenci.alfajores.celo-testnet.org/v1'
-      target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
+      target: 'https://weu.komenci.alfajores.celo-testnet.org/v1'
+      # target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
     baklava:
       target: 'http://localhost:3000'
     mainnet:
@@ -25,11 +25,12 @@ config:
 scenarios:
   # - name: 'Komenci load test'
   - flow:
-      - loop:
+      # - loop:
           # - log: 'Sent a request to the {{ $loopElement }}'
           # - get:
           #     url: '/health'
           #     headers: {content-type: application/json}
+              # beforeRequest: "setUpEnvironment"
           - post: 
               url: '/startSession'
               headers: {content-type: application/json}
@@ -38,21 +39,22 @@ scenarios:
               capture:
                 json: "$.token"
                 as: "token"
-          - log: "Start Session executed. Generated token {{ token }}"
+          # - log: "Start Session executed. Generated token {{ token }}"
+          - log: "External account: {{ account }}"
           - get: 
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/checkSession'
               # afterResponse: "logHeaders"
-          - log: "Session checked"
+          # - log: "Session checked"
           - post:
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/deployWallet'
               beforeRequest: "setDeployWalletBody"
               afterResponse: "waitTx"
-              capture:
-                json: "$.walletAddress"
-                as: "walletAddress" 
-          - log: "Wallet deployed as {{ walletAddress }}"
+          #     capture:
+          #       json: "$.walletAddress"
+          #       as: "walletAddress" 
+          # - log: "Wallet deployed as {{ walletAddress }}"
           - post: 
               url: '/distributedBlindedPepper'
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
@@ -89,4 +91,4 @@ scenarios:
               beforeRequest: "selectIssuer"
               afterResponse: "getActionableAttestations"
           - log: "Selecting Issuer: "
-        count: 1
+        # count: 1
