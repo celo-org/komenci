@@ -1,21 +1,21 @@
 const {serializeSignature} = require('../../libs/celo/packages/base/lib/signatureUtils')
 const { buildLoginTypedData } =  require('../../libs/celo/packages/komencikit/lib/login')
 const {Err, Ok} = require('../../libs/celo/packages/base/lib/result')
-import { EventLog } from 'web3-core';
+import { EventLog } from 'web3-core'
 const {normalizeAddressWith0x} = require('../../libs/celo/packages/base/lib/address')
 const {sleep} = require('../../libs/celo/packages/utils/lib/async')
 const { TxEventNotFound, TxTimeoutError, TxRevertError, LoginSignatureError } = require('../../libs/celo/packages/komencikit/lib/errors')
 
 
 interface ContractEventLog<T> extends EventLog {
-  returnValues: T;
+  returnValues: T
 }
 
 export async function getLoginSignature(
   contractKit,
   account: any,
   captchaToken: string
-){
+) {
   try {
     const loginStruct = buildLoginTypedData(normalizeAddressWith0x(account), captchaToken)
     const signature = await contractKit.signTypedData(
@@ -29,7 +29,7 @@ export async function getLoginSignature(
   }
 }
 
-export async function getAddressFromDeploy(contractKit, externalAccount,  txHash: string){
+export async function getAddressFromDeploy(contractKit, externalAccount,  txHash: string) {
   const receiptResult = await this.waitForReceipt(contractKit, txHash)
   if (!receiptResult.ok) {
     return receiptResult

@@ -61,7 +61,7 @@ async function setStartSessionBody(requestParams, context, ee, next) {
   context.vars.e164Number = "+40" + Math.floor(Math.random() * 1000000000)
   context.vars.blsBlindingClient = new WasmBlsBlindingClient(ODIS_PUB_KEYS[context.vars.$environment])
 
-  try{
+  try {
   const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
   const signature = await context.vars.contractKit.signTypedData(
     context.vars.externalAccount,
@@ -75,7 +75,7 @@ async function setStartSessionBody(requestParams, context, ee, next) {
   }
   return next()
 
-  }catch(e){
+  }catch(e) {
     console.log(e)
     return
   }
@@ -102,7 +102,7 @@ async function setDistributedBlindedPeppertBody(requestParams, context, ee, next
 
 
 async function afterDistributedBlindedPepper(requestParams, response, context, ee, next) {
-  if(!response.body.combinedSignature){
+  if(!response.body.combinedSignature) {
     console.log("Out of quota")
     return
   }
@@ -121,7 +121,7 @@ async function afterDistributedBlindedPepper(requestParams, response, context, e
 }
 
 // For setAccount
-async function setSubmitMetatransactionBody(requestParams, context, ee, next){
+async function setSubmitMetatransactionBody(requestParams, context, ee, next) {
   const accounts = await context.vars.contractKit.contracts.getAccounts()
   const proofOfPossession = await accounts.generateProofOfKeyPossession(
     context.vars.metaTxWalletAddress.result,
@@ -237,7 +237,7 @@ async function waitReceipt(requestParams, response, context, ee, next) {
 
 
 let _wallet
-async function getWallet(contractKit, address: string){
+async function getWallet(contractKit, address: string) {
   if (_wallet?.address !== address) {
     _wallet = await contractKit.contracts.getMetaTransactionWallet(address)
   }
