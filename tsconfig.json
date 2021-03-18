@@ -39,6 +39,8 @@
         "libs/celo/packages/phone-number-privacy/common/lib/*"
       ],
       "@celo/*": [
+        "libs/celo/packages/sdk/wallets/*",
+        "libs/celo/packages/sdk/*",
         "libs/celo/packages/*"
       ],
       "@app/komenci-logger": [

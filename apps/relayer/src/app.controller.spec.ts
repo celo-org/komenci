@@ -4,8 +4,10 @@ import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
 import { walletConfig, WalletType } from '@app/blockchain/config/wallet.config'
 import { KomenciLoggerService } from '@app/komenci-logger'
 import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
-import { ContractKit, OdisUtils } from '@celo/contractkit'
-import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
+import { Connection } from '@celo/connect'
+import { ContractKit } from '@celo/contractkit'
+import { OdisUtils } from '@celo/identity'
+import { LocalWallet } from '@celo/wallet-local'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { OdisService } from 'apps/relayer/src/odis/odis.service'
@@ -20,7 +22,7 @@ mockWallet.addAccount(PRIVATE_KEY)
 
 jest.mock('@app/komenci-logger/komenci-logger.service')
 
-jest.mock('@celo/contractkit/lib/identity/odis/bls-blinding-client', () => {
+jest.mock('@celo/identity/lib/odis/bls-blinding-client', () => {
   class WasmBlsBlindingClient {
     blindMessage = (m: string) => m
     unblindAndVerifyMessage = (m: string) => m
@@ -34,8 +36,10 @@ jest.mock('@celo/contractkit/lib/identity/odis/bls-blinding-client', () => {
 const odisUrl = ODIS_URL + '/getBlindedMessageSig'
 
 const mockContractKit = new ContractKit(
-  new Web3(new Web3.providers.HttpProvider(process.env.NODE_URL)),
-  mockWallet
+  new Connection(
+    new Web3(new Web3.providers.HttpProvider(process.env.NODE_URL)),
+    mockWallet
+  )
 )
 
 

@@ -1,11 +1,11 @@
 import { BlockchainOptions } from '@app/blockchain/blockchain.module'
 import { NodeProviderType } from '@app/blockchain/config/node.config'
 import { WalletType } from '@app/blockchain/config/wallet.config'
-import { ContractKit } from '@celo/contractkit'
-import { AzureKeyVaultSigningAlgorithm } from '@celo/contractkit/lib/utils/azure-key-vault-client'
-import { AzureHSMWallet } from '@celo/contractkit/lib/wallets/azure-hsm-wallet'
-import { LocalWallet } from '@celo/contractkit/lib/wallets/local-wallet'
-import { ReadOnlyWallet, Wallet } from '@celo/contractkit/lib/wallets/wallet'
+import { ReadOnlyWallet } from '@celo/connect'
+import { ContractKit, newKitFromWeb3 } from '@celo/contractkit'
+import { Wallet } from '@celo/wallet-base'
+import { AzureHSMWallet } from '@celo/wallet-hsm-azure'
+import { LocalWallet } from '@celo/wallet-local'
 import { FactoryProvider } from '@nestjs/common'
 import Web3 from 'web3'
 import { provider } from 'web3-core'
@@ -39,10 +39,7 @@ export const walletDef: FactoryProvider<Promise<ReadOnlyWallet>> = {
     }
     switch (options.wallet.type) {
       case WalletType.AzureHSM:
-        const azureWallet = new AzureHSMWallet(
-          options.wallet.vaultName,
-          AzureKeyVaultSigningAlgorithm.ES256K
-        )
+        const azureWallet = new AzureHSMWallet(options.wallet.vaultName)
         await azureWallet.init()
         return azureWallet
       case WalletType.Local:
@@ -65,7 +62,7 @@ export const web3Def: FactoryProvider<Web3> = {
 export const contractKitDef: FactoryProvider<ContractKit> = {
   provide: ContractKit,
   useFactory: (web3: Web3, wallet: Wallet) => {
-    return new ContractKit(web3, wallet)
+    return newKitFromWeb3(web3, wallet)
   },
   inject: [Web3, WALLET]
 }

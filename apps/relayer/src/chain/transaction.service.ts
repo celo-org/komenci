@@ -1,6 +1,3 @@
-// tslint:disable-next-line:no-reference
-/// <reference path="../../../../libs/celo/packages/contractkit/types/web3-celo.d.ts" />
-
 import { BlockchainService } from '@app/blockchain/blockchain.service'
 import {
   WalletConfig,
@@ -9,6 +6,7 @@ import {
 import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { Address, sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
+import { CeloTxObject } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { retry } from '@celo/komencikit/lib/retry'
@@ -25,7 +23,6 @@ import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
 import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
-import { TransactionObject } from 'web3-eth'
 import { AppConfig, appConfig } from '../config/app.config'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
@@ -119,7 +116,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   }
 
   async submitTransactionObject(
-    txo: TransactionObject<any>,
+    txo: CeloTxObject<any>,
     ctx?: RelayerTraceContext
   ): Promise<Result<string, TxSubmitError>> {
     return this.submitTransaction(toRawTransaction(txo), ctx)
