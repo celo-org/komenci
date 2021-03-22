@@ -43,6 +43,9 @@ apps/onboarding/.env
 apps/tools/.env.local
 apps/tools/.env.test
 apps/tools/.env
+apps/rewards/.env.local
+apps/rewards/.env.test
+apps/rewards/.env
 
 # Encrypted file
 .env.mnemonic.deployer
