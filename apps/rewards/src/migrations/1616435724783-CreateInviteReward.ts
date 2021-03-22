@@ -43,6 +43,6 @@ export class CreateInviteReward1616435724783 implements MigrationInterface {
     )
   }
   public async down(queryRunner: QueryRunner): Promise<any> {
-    queryRunner.query(`DROP TABLE invite_reward`)
+    await queryRunner.query(`DROP TABLE invite_reward`)
   }
 }

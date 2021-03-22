@@ -10,16 +10,16 @@ import {
   AttestationsWrapper
 } from '@celo/contractkit/lib/wrappers/Attestations'
 import { EscrowWrapper } from '@celo/contractkit/lib/wrappers/Escrow'
-import { v4 as uuidv4 } from 'uuid'
 import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { v4 as uuidv4 } from 'uuid'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
+import { partialEventLog, partialTransaction } from '../utils/testing'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 import { InviteRewardService } from './inviteReward.service'
-import { partialEventLog, partialTransaction } from '../utils/testing'
 
 const inviteeAddress = '0x001'
 const inviterAddress = '0x002'
@@ -185,8 +185,8 @@ describe('InviteRewardService', () => {
   }
 
   describe('#sendInviteRewards', () => {
-    let saveBlockMock = jest.fn()
-    let saveInviteRewardMock = jest.fn()
+    const saveBlockMock = jest.fn()
+    const saveInviteRewardMock = jest.fn()
     let notifiedBlockId
 
     beforeEach(() => {

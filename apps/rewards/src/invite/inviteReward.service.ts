@@ -1,15 +1,15 @@
 import { KomenciLoggerService } from '@app/komenci-logger'
-import { Inject, Injectable } from '@nestjs/common'
 import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
-import { Cron, CronExpression } from '@nestjs/schedule'
-import { CeloContract, ContractKit } from '@celo/contractkit'
-import { InviteRewardRepository } from './inviteReward.repository'
-import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
-import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
-import { v4 as uuidv4 } from 'uuid'
 import { isAccountConsideredVerified } from '@celo/base/lib'
+import { CeloContract, ContractKit } from '@celo/contractkit'
+import { Inject, Injectable } from '@nestjs/common'
+import { Cron, CronExpression } from '@nestjs/schedule'
 import { Raw } from 'typeorm'
+import { v4 as uuidv4 } from 'uuid'
+import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
+import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
+import { InviteRewardRepository } from './inviteReward.repository'
 
 const WEEKLY_INVITE_LIMIT = 20
 

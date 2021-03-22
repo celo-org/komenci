@@ -28,6 +28,6 @@ export class CreateNotifiedBlock1616435756861 implements MigrationInterface {
     )
   }
   public async down(queryRunner: QueryRunner): Promise<any> {
-    queryRunner.query(`DROP TABLE notified_block`)
+    await queryRunner.query(`DROP TABLE notified_block`)
   }
 }
