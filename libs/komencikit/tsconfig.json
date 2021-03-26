@@ -4,7 +4,10 @@
     "experimentalDecorators": true,
     "rootDir": "src",
     "outDir": "lib",
+    "target": "ES5",
+    "declaration": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "types/**/*"]
+  "include": ["src/**/*", "types/**/*"],
+  "exclude": ["src/**/*.spec.ts"]
 }

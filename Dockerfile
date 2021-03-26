@@ -10,6 +10,9 @@ RUN SKIPPOSTINSTALL=1 yarn
 
 COPY . .
 
-RUN yarn postinstall
+# Second `yarn` needed to:
+# - Build `libs/komencit`
+# - Setup `libs/komencit` as an npm workspace and link it
+RUN yarn 
 RUN yarn nest build onboarding
-RUN yarn nest build relayer
+RUN yarn nest build relayer 

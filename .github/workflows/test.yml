@@ -1,4 +1,4 @@
-name: Build
+name: Run Tests
 
 on: [pull_request]
 
@@ -30,12 +30,15 @@ jobs:
             cp apps/onboarding/.env.test.ci apps/onboarding/.env
             cp apps/relayer/.env.test.ci apps/relayer/.env.test
             cp apps/relayer/.env.test.ci apps/relayer/.env
-      - name: Run postgres for testing
-        run: |
-            docker run --name pg-docker -e POSTGRES_PASSWORD=docker -d -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
+      - name: Run komencikit tests
+        run: yarn --cwd libs/komencikit test
       - name: Run unit tests
+        run: yarn test:cov
+      - name: Run postgres for e2e tests
         run: |
-            yarn test:cov
+            docker run --name pg-docker \
+              -e POSTGRES_PASSWORD=docker \
+              -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data \
+              -d -p 5432:5432 postgres
       - name: Run integration tests
-        run: |
-            yarn test:e2e
+        run: yarn test:e2e
