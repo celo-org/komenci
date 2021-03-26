@@ -127,7 +127,6 @@ const run = async () => {
   console.log('DeployWallet: ', deployWallet)
   if (!deployWallet.ok) {
     return
-    ;-b
   }
   const walletAddress = deployWallet.result
   // cached:
@@ -231,7 +230,7 @@ const run = async () => {
 
         if (matchingIssuer === null) {
           console.warn('No matching issuer found for code')
-          resolve()
+          resolve(null)
           return
         }
 
@@ -243,7 +242,7 @@ const run = async () => {
         )
         if (!isValidRequest) {
           console.warn('Code was not valid')
-          resolve()
+          resolve(null)
           return
         }
 
@@ -255,10 +254,11 @@ const run = async () => {
         )
 
         console.log(completeResult)
-        resolve()
+        resolve(null)
       })
     })
   }
 }
 
+// tslint:disable-next-line
 run()

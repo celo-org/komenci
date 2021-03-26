@@ -65,6 +65,7 @@ export class KomenciKit {
   private client: KomenciClient
   private options: KomenciOptions
   private externalAccount: string
+  private _wallet?: MetaTransactionWalletWrapper
 
   constructor(
     private contractKit: ContractKit,
@@ -118,7 +119,7 @@ export class KomenciKit {
     captchaToken: string
   ): Promise<Result<StartSessionResp, FetchError | AuthenticationFailed | LoginSignatureError>> => {
     const signatureResp = await this.getLoginSignature(captchaToken)
-    if (!signatureResp.ok) {
+    if (signatureResp.ok === false) {
       return signatureResp
     }
 
@@ -130,7 +131,7 @@ export class KomenciKit {
 
     const resp = await this.client.exec(startSession(payload))
 
-    if (resp.ok) {
+    if (resp.ok === true) {
       this.client.setToken(resp.result.token)
       if (resp.result.callbackUrl) {
         this.client.setCallbackUrl(resp.result.callbackUrl)
@@ -176,7 +177,7 @@ export class KomenciKit {
       getDistributedBlindedPepper({ blindedPhoneNumber, clientVersion })
     )
 
-    if (resp.ok) {
+    if (resp.ok === true) {
       // Unblind the result to get the pepper and resulting identifier
       const phoneNumberHashDetails = await getPhoneNumberIdentifierFromSignature(
         e164Number,
@@ -236,7 +237,7 @@ export class KomenciKit {
       this.externalAccount
     )
 
-    if (!walletStatus.ok) {
+    if (walletStatus.ok === false) {
       return Err(new InvalidWallet(walletStatus.error))
     }
 
@@ -293,7 +294,7 @@ export class KomenciKit {
       })
     )
 
-    if (!resp.ok) {
+    if (resp.ok === false) {
       return resp
     }
 
@@ -416,7 +417,7 @@ export class KomenciKit {
     const rawMetaTx = toRawTransaction(wallet.executeMetaTransaction(tx.txo, signature).txo)
 
     const resp = await this.client.exec(submitMetaTransaction(rawMetaTx))
-    if (!resp.ok) {
+    if (resp.ok === false) {
       return resp
     }
 
@@ -460,7 +461,6 @@ export class KomenciKit {
    * @param txHash - the hash of the transaction to watch
    * @private
    */
-  _wallet?: MetaTransactionWalletWrapper
   private async getWallet(address: string): Promise<MetaTransactionWalletWrapper> {
     if (this._wallet?.address !== address) {
       this._wallet = await this.contractKit.contracts.getMetaTransactionWallet(address)
@@ -500,7 +500,7 @@ export class KomenciKit {
    */
   private async getAddressFromDeploy(txHash: string): Promise<Result<string, TxError>> {
     const receiptResult = await this.waitForReceipt(txHash)
-    if (!receiptResult.ok) {
+    if (receiptResult.ok === false) {
       return receiptResult
     }
     const receipt = receiptResult.result
