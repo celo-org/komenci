@@ -9,7 +9,7 @@ import { Err, Ok, Result } from '@celo/base/lib/result'
 import { CeloTxObject } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { retry } from '@app/komencikit/retry'
+import { retry } from '@celo/komencikit/lib/retry'
 import {
   Inject,
   Injectable,

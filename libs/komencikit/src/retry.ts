@@ -17,8 +17,13 @@ export const retry = <TArgs extends any[], TError extends RootError<any>>(
   return (
     target: any,
     propertyKey: string,
-    descriptor: TypedPropertyDescriptor<Retryable<TArgs, any, TError>>
+    descriptor?: TypedPropertyDescriptor<Retryable<TArgs, any, TError>>
   ) => {
+    if (descriptor == null) {
+      // XXX: descriptor is marked as optional to satisfy the typing monster
+      // https://stackoverflow.com/questions/37694322/typescript-ts1241-unable-to-resolve-signature-of-method-decorator-when-called-a
+      throw Error('@retry did not receive a descriptor - this should never happen')
+    }
     const actual = descriptor.value
     if (!actual) {
       throw Error('@retry used on an method which is undefined')

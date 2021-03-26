@@ -14,7 +14,7 @@ import { ABI as MetaTxWalletABI, newMetaTransactionWallet } from '@celo/contract
 import { ContractKit } from '@celo/contractkit/lib/kit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
-import { verifyWallet } from '@app/komencikit/verifyWallet'
+import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
 import { Inject, Injectable, Scope } from '@nestjs/common'
 import Web3 from 'web3'
 import { AppConfig, appConfig } from '../config/app.config'

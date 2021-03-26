@@ -1,7 +1,4 @@
 {
-  "exclude": [
-    "libs/celo"
-  ],
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -28,12 +25,6 @@
       ],
       "@app/blockchain/*": [
         "libs/blockchain/src/*"
-      ],
-      "@app/komencikit": [
-        "libs/komencikit/src"
-      ],
-      "@app/komencikit/*": [
-        "libs/komencikit/src/*"
       ],
       "@app/onboarding": [
         "apps/onboarding/src"
