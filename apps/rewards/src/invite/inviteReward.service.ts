@@ -4,13 +4,16 @@ import { isAccountConsideredVerified } from '@celo/base/lib'
 import { CeloContract, ContractKit } from '@celo/contractkit'
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { Raw } from 'typeorm'
+import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { EventLog } from 'web3-core'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 
+const NOTIFIED_BLOCK_KEY = 'inviteReward'
+const EVENTS_BATCH_SIZE = 10000
 const WEEKLY_INVITE_LIMIT = 20
 
 @Injectable()
@@ -31,87 +34,92 @@ export class InviteRewardService {
     )
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  // This cron job will fetch Escrow events from Forno, run checks to see if we should send the inviter
+  // a reward and send it if so.
+  // Since there may be several instances of this service, we need to make sure we don't send more than
+  // one reward for the same invitee. The invitee record is unique on the database, so any attempt to
+  // create a new row with the same one will fail.
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async sendInviteRewards() {
     if (this.isRunning) {
       this.logger.log('Skipping because previous run is still ongoing')
       return
     }
     this.isRunning = true
+    try {
+      const cUsdTokenAddress = (
+        await this.contractKit.registry.addressFor(CeloContract.StableToken)
+      ).toLowerCase()
 
-    const cUsdTokenAddress = (
-      await this.contractKit.registry.addressFor(CeloContract.StableToken)
-    ).toLowerCase()
-
-    await this.usingLastNotifiedBlock(async fromBlock => {
-      this.logger.log(
-        `Starting to fetch invite rewards from block ${fromBlock}`
-      )
-      const escrow = await this.contractKit.contracts.getEscrow()
-      const withdrawalEvents = await escrow.getPastEvents('Withdrawal', {
-        fromBlock
-      })
-      this.logger.log(`Withdrawal events received: ${withdrawalEvents.length}`)
-      let maxBlock = fromBlock
-      for (const withdrawal of withdrawalEvents) {
-        const {
-          transactionHash,
-          blockNumber,
-          returnValues: { identifier, token, to }
-        } = withdrawal
-        maxBlock = Math.max(maxBlock, blockNumber)
-
-        const inviter = to.toLowerCase()
-        if (cUsdTokenAddress !== token.toLowerCase()) {
-          continue
-        }
-        const tx = await this.contractKit.web3.eth.getTransaction(
-          transactionHash
+      await this.usingLastNotifiedBlock(async fromBlock => {
+        this.logger.log(
+          `Starting to fetch invite rewards from block ${fromBlock}`
         )
-        if (!this.isKomenciSender(tx.from)) {
-          continue
-        }
-        const invitee = tx.to?.toLowerCase() ?? ''
-        const conditions = await Promise.all([
-          this.addressIsConsideredVerified(inviter, identifier),
-          this.addressIsConsideredVerified(invitee, identifier),
-          this.inviterHasNotReachedWeeklyLimit(inviter),
-          this.inviteeRewardNotInProgress(invitee)
-        ])
-        if (conditions.every(condition => condition)) {
-          this.logger.log(
-            `Starting to send reward to ${inviter} for inviting ${invitee}`
+
+        const withdrawalEvents = await this.fetchWithdrawalEvents(fromBlock)
+        this.logger.log(
+          `Withdrawal events received: ${withdrawalEvents.length}`
+        )
+        let maxBlock = fromBlock
+        for (const withdrawal of withdrawalEvents) {
+          const {
+            transactionHash,
+            blockNumber,
+            returnValues: { identifier, token, to }
+          } = withdrawal
+          maxBlock = Math.max(maxBlock, blockNumber)
+
+          const inviter = to.toLowerCase()
+          if (cUsdTokenAddress !== token.toLowerCase()) {
+            continue
+          }
+          const tx = await this.contractKit.web3.eth.getTransaction(
+            transactionHash
           )
-          try {
+          if (!this.isKomenciSender(tx.from)) {
+            continue
+          }
+          const invitee = tx.to?.toLowerCase() ?? ''
+          const conditions = await Promise.all([
+            // TODO: Make sure that inviter is verfied
+            this.addressIsConsideredVerified(invitee, identifier),
+            this.inviterHasNotReachedWeeklyLimit(inviter),
+            this.inviteeRewardNotInProgress(invitee)
+          ])
+          if (conditions.every(condition => condition)) {
+            this.logger.log(
+              `Starting to send reward to ${inviter} for inviting ${invitee}`
+            )
             const inviteReward = await this.createInviteReward(inviter, invitee)
-            this.sendInviteReward(inviteReward)
-          } catch (error) {
-            this.logger.log(`Error creating and sending reward ${error}`)
+            if (inviteReward) {
+              this.sendInviteReward(inviteReward)
+            }
           }
         }
-      }
-      return maxBlock
-    })
-
-    this.isRunning = false
+        return maxBlock
+      })
+    } finally {
+      this.isRunning = false
+    }
   }
 
-  async usingLastNotifiedBlock(fn: (blockNumber: number) => Promise<number>) {
+  async usingLastNotifiedBlock(
+    inviteRewardsSenderFn: (blockNumber: number) => Promise<number>
+  ) {
     try {
       let lastNotifiedBlock = await this.notifiedBlockRepository.findOne({
-        key: 'inviteReward'
+        key: NOTIFIED_BLOCK_KEY
       })
       if (!lastNotifiedBlock) {
+        const blockNumber = await this.contractKit.web3.eth.getBlockNumber()
         lastNotifiedBlock = {
           id: uuidv4(),
-          key: 'inviteReward',
-          // TODO: Replace this by the correct starting block in alfajores and mainnet.
-          // For now, putting a high value to avoid potential issues if this is accidentally deployed.
-          blockNumber: 100000000
+          key: NOTIFIED_BLOCK_KEY,
+          blockNumber
         }
       }
       const fromBlock = lastNotifiedBlock.blockNumber + 1
-      const lastBlock = await fn(fromBlock)
+      const lastBlock = await inviteRewardsSenderFn(fromBlock)
       if (lastBlock > fromBlock) {
         await this.notifiedBlockRepository.save(
           NotifiedBlock.of({
@@ -122,8 +130,24 @@ export class InviteRewardService {
         )
       }
     } catch (error) {
-      this.logger.log(`Error while calculating invite rewards: ${error}`)
+      this.logger.error(`Error while calculating invite rewards: ${error}`)
     }
+  }
+
+  async fetchWithdrawalEvents(fromBlock: number) {
+    const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
+    const escrow = await this.contractKit.contracts.getEscrow()
+    let withdrawalEvents: EventLog[] = []
+    let currentFromBlock = fromBlock
+    while (currentFromBlock < lastBlock) {
+      const events = await escrow.getPastEvents('Withdrawal', {
+        fromBlock: currentFromBlock,
+        toBlock: currentFromBlock + EVENTS_BATCH_SIZE
+      })
+      withdrawalEvents.push(...events)
+      currentFromBlock += EVENTS_BATCH_SIZE
+    }
+    return withdrawalEvents
   }
 
   isKomenciSender(address: string) {
@@ -143,6 +167,7 @@ export class InviteRewardService {
     const [_, invites] = await this.inviteRewardRepository.findAndCount({
       where: {
         inviter,
+        state: Not(RewardStatus.Failed),
         createdAt: Raw(alias => `${alias} >= date_trunc('week', current_date)`)
       }
     })
@@ -155,14 +180,18 @@ export class InviteRewardService {
   }
 
   async createInviteReward(inviter: string, invitee: string) {
-    const inviteReward = InviteReward.of({
-      id: uuidv4(),
-      inviter,
-      invitee,
-      state: RewardStatus.Created,
-      createdAt: new Date(Date.now()).toISOString()
-    })
-    return this.inviteRewardRepository.save(inviteReward)
+    try {
+      const inviteReward = InviteReward.of({
+        id: uuidv4(),
+        inviter,
+        invitee,
+        state: RewardStatus.Created,
+        createdAt: new Date(Date.now()).toISOString()
+      })
+      return this.inviteRewardRepository.save(inviteReward)
+    } catch (error) {
+      this.logger.log(`Error creating reward: ${error}`)
+    }
   }
 
   sendInviteReward(invite: InviteReward) {

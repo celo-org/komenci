@@ -30,7 +30,8 @@ export class CreateInviteReward1616435724783 implements MigrationInterface {
           {
             name: 'rewardTxHash',
             type: 'varchar',
-            isNullable: true
+            isNullable: true,
+            isUnique: true
           },
           {
             name: 'createdAt',

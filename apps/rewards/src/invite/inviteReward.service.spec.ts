@@ -88,6 +88,10 @@ describe('InviteRewardService', () => {
     contractKit = module.get(ContractKit)
     escrow = await contractKit.contracts.getEscrow()
     attestations = await contractKit.contracts.getAttestations()
+
+    jest
+      .spyOn(contractKit.web3.eth, 'getBlockNumber')
+      .mockImplementation(() => Promise.resolve(20))
   })
 
   interface EscrowEventMetadata {
@@ -249,28 +253,6 @@ describe('InviteRewardService', () => {
       })
 
       it('doesnt send another one', async () => {
-        await service.sendInviteRewards()
-
-        expect(saveInviteRewardMock).not.toHaveBeenCalled()
-        expect(saveBlockMock).toHaveBeenCalledWith(
-          NotifiedBlock.of({
-            id: notifiedBlockId,
-            key: 'inviteReward',
-            blockNumber: 20
-          })
-        )
-      })
-    })
-
-    describe('when the inviter is not verified', () => {
-      beforeEach(() => {
-        mockAttestationStats({
-          [inviterAddress]: { completed: 0, total: 0 },
-          [inviteeAddress]: { completed: 3, total: 3 }
-        })
-      })
-
-      it('doesnt send the reward', async () => {
         await service.sendInviteRewards()
 
         expect(saveInviteRewardMock).not.toHaveBeenCalled()

@@ -26,7 +26,7 @@ export class InviteReward {
   @Column()
   state: RewardStatus
 
-  @Column()
+  @Column({ unique: true })
   rewardTxHash: string
 
   @Column('timestamp')
