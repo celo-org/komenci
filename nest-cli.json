@@ -70,6 +70,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/utils/tsconfig.lib.json"
       }
+    },
+    "komencikit": {
+      "type": "library",
+      "root": "libs/komencikit",
+      "entryFile": "index",
+      "sourceRoot": "libs/komencikit/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/komencikit/tsconfig.lib.json"
+      }
     }
   }
 }
