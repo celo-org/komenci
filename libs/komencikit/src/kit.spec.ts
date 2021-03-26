@@ -3,10 +3,10 @@ import { Err, Ok } from '@celo/base/lib/result'
 import { Connection } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { WasmBlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
-import Web3 from 'web3'
 import { ActionTypes } from './actions'
 import { AuthenticationFailed, KomenciErrorTypes, ServiceUnavailable, Unauthorised } from './errors'
 import { KomenciKit, KomenciOptionsInput } from './kit'
+import { randomHex } from 'web3-utils'
 
 jest.mock('@celo/contractkit')
 jest.mock('@celo/connect')
@@ -43,8 +43,8 @@ describe('KomenciKit', () => {
     jest.clearAllMocks()
   })
 
-  const account = Web3.utils.randomHex(20)
-  const implAddress = Web3.utils.randomHex(20)
+  const account = randomHex(20)
+  const implAddress = randomHex(20)
   const defaults: KomenciOptionsInput = {
     url: 'http://komenci.com/',
   }

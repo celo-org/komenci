@@ -1,13 +1,13 @@
-const { nodeFlakeTracking } = require('@celo/flake-tracker/src/jest/config.js')
+// const { nodeFlakeTracking } = require('@celo/flake-tracker/src/jest/config.js')
 
 module.exports = {
   preset: 'ts-jest',
-  ...nodeFlakeTracking,
+  // ...nodeFlakeTracking,
   testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).ts?(x)'],
   setupFilesAfterEnv: [
-    '@celo/dev-utils/lib/matchers',
+    // '@celo/dev-utils/lib/matchers',
     '<rootDir>/jest_setup.ts',
-    ...nodeFlakeTracking.setupFilesAfterEnv,
+    // ...nodeFlakeTracking.setupFilesAfterEnv,
   ],
   // TODO: Need ganache?
   // globalSetup: '<rootDir>/src/test-utils/setup.global.ts',
