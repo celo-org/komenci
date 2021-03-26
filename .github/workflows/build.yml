@@ -3,108 +3,36 @@ name: Build
 on: [pull_request]
 
 jobs:
-  prepare_komenci:
+  prepare:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
             node-version: '10.x'
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore Komenci cache
-        id: restore-komenci
-        uses: bowd/cache@v3
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-komenci-deps-${{ hashFiles('./yarn.lock') }}
-          only-check-key: true
-      - name: Restore yarn cache
-        uses: bowd/cache@v3
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-komenci-yarn-cache-${{ hashFiles('./yarn.lock') }}
-        if: steps.restore-komenci.outputs.cache-hit != 'true'
-      - name: Install Komenci dependencies
-        run: |
-          yarn
-        if: steps.restore-komenci.outputs.cache-hit != 'true'
-
-  prepare_celo:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-            submodules: true
-      - uses: actions/setup-node@v1
-        with:
-            node-version: '10.x'
-      - name: Get celo-monorepo commit
-        id: celo-monorepo-commit
-        run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore celo-monorepo cache
-        uses: bowd/cache@v3
-        id: restore-celo-monorepo
-        with:
-          path: |
-            libs/celo
-          key: ${{ runner.os }}-celo-${{ hashFiles('./scripts/build.celo.sh') }}-${{ steps.celo-monorepo-commit.outputs.commit }}
-          only-check-key: true
-      - name: Restore yarn cache
-        uses: bowd/cache@v3
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-celo-yarn-cache-${{ steps.celo-monorepo-commit.outputs.commit }}
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
-      - name: Install celo-monorepo dependencies
-        run: |
-            yarn deps:celo:install
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
-      - name: Build celo-monorepo dependencies
-        run : |
-            yarn deps:celo:build
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true'
 
   test:
     runs-on: ubuntu-latest
-    needs: [prepare_celo, prepare_komenci]
+    needs: [prepare]
     steps:
       - uses: actions/checkout@v2
-        with:
-            submodules: true
       - uses: actions/setup-node@v1
         with:
             node-version: '10.x'
-      - name: Get celo-monorepo commit
-        id: celo-monorepo-commit
-        run: echo "::set-output name=commit::$(git submodule status | awk '{print $1}')"
-      - name: Restore celo-monorepo cache
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Restore yarn cache
         uses: bowd/cache@v3
-        id: restore-celo-monorepo
+        id: yarn-cache
         with:
-          path: |
-            libs/celo
-          key: ${{ runner.os }}-celo-${{ hashFiles('./scripts/build.celo.sh') }}-${{ steps.celo-monorepo-commit.outputs.commit }}
-      - name: Restore Komenci cache
-        id: restore-komenci
-        uses: bowd/cache@v3
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-komenci-deps-${{ hashFiles('yarn.lock') }}
-      - name: Exit if caches not found
-        run: exit 1
-        if: steps.restore-celo-monorepo.outputs.cache-hit != 'true' || steps.restore-komenci.outputs.cache-hit != 'true'
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-cache
+        if: steps.restore-komenci.outputs.cache-hit != 'true'
+      - name: Install Komenci dependencies
+        run: yarn
       - name: Run linters
-        run: |
-            yarn lint
+        run: yarn lint
       - name: Setup testing config
         run: |
             cp apps/onboarding/.env.test.ci apps/onboarding/.env.test

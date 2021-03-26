@@ -11,9 +11,6 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "deps:celo:install": "yarn --cwd ./libs/celo",
-    "deps:celo:build": "bash ./scripts/build.celo.sh",
-    "deps:celo:build:contracts": "yarn --cwd ./libs/celo/packages/protocol build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
