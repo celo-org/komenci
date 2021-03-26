@@ -1,11 +1,9 @@
 import { base64ToHex, hexToBuffer } from '@celo/base'
-import { printAndIgnoreRequestErrors } from '@celo/celotool/lib/lib/attestation'
-import { newKitFromWeb3 } from '@celo/contractkit'
-import { requestAttestationsFromIssuers } from '@celo/env-tests/lib/shared/attestation'
+import { newKit } from '@celo/contractkit'
 import { WasmBlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
 import { compressedPubKey } from '@celo/utils/lib/dataEncryptionKey'
 import { LocalWallet } from '@celo/wallet-local'
-import Web3 from 'web3'
+import { randomHex } from 'web3-utils'
 import { KomenciKit } from '../src'
 
 enum Env {
@@ -69,8 +67,8 @@ console.log('Using wallet implementation: ', WALLET_IMPLEMENTATION_ADDRESS)
 const ODIS_PUB_KEY = ODIS_PUB_KEYS[network]
 
 const wallet = new LocalWallet()
-const pkey = Web3.utils.randomHex(32)
-const dek = Web3.utils.randomHex(32)
+const pkey = randomHex(32)
+const dek = randomHex(32)
 // const pkey = '0xdc771e7878396744e17afcb0dea4cfc96ce6f116107c7bcc0687b812048a2bf7'
 wallet.addAccount(pkey)
 console.log('Private key: ', pkey)
@@ -81,9 +79,7 @@ const fornoURL: Record<Network, string> = {
   rc1: 'https://rc1-forno.celo-testnet.org',
 }
 
-const provider = new Web3.providers.HttpProvider(fornoURL[network])
-const web3 = new Web3(provider)
-const contractKit = newKitFromWeb3(web3, wallet)
+const contractKit = newKit(fornoURL[network], wallet)
 const account = wallet.getAccounts()[0]
 console.log('Account: ', account)
 
@@ -144,7 +140,7 @@ const run = async () => {
     return
   }
   const identifier = getIdentifier.result.identifier
-  const pepper = getIdentifier.result.pepper
+  // const pepper = getIdentifier.result.pepper
   const checkSession2 = await komenciKit.checkSession()
   console.log(checkSession2)
   if (!checkSession2.ok) {
@@ -197,14 +193,14 @@ const run = async () => {
   )
   console.log(attestationsToComplete)
   console.log('====================')
-  const possibleErrors = await requestAttestationsFromIssuers(
-    attestationsToComplete,
-    attestations,
-    phoneNumber,
-    walletAddress,
-    pepper
-  )
-  printAndIgnoreRequestErrors(possibleErrors)
+  // const possibleErrors = await requestAttestationsFromIssuers(
+  //   attestationsToComplete,
+  //   attestations,
+  //   phoneNumber,
+  //   walletAddress,
+  //   pepper
+  // )
+  // console.log(possibleErrors)
   while (true) {
     attestationsToComplete = await attestations.getActionableAttestations(identifier, walletAddress)
 
