@@ -137,7 +137,7 @@ export class InviteRewardService {
   async fetchWithdrawalEvents(fromBlock: number) {
     const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
     const escrow = await this.contractKit.contracts.getEscrow()
-    let withdrawalEvents: EventLog[] = []
+    const withdrawalEvents: EventLog[] = []
     let currentFromBlock = fromBlock
     while (currentFromBlock < lastBlock) {
       const events = await escrow.getPastEvents('Withdrawal', {
@@ -145,7 +145,7 @@ export class InviteRewardService {
         toBlock: currentFromBlock + EVENTS_BATCH_SIZE
       })
       withdrawalEvents.push(...events)
-      currentFromBlock += EVENTS_BATCH_SIZE
+      currentFromBlock += EVENTS_BATCH_SIZE + 1
     }
     return withdrawalEvents
   }
