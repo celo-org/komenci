@@ -10,6 +10,5 @@ RUN yarn
 
 COPY . .
 
-RUN yarn run build:komencikit
 RUN yarn nest build onboarding
 RUN yarn nest build relayer
