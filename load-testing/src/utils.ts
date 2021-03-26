@@ -1,10 +1,16 @@
-const {serializeSignature} = require('../../libs/celo/packages/base/lib/signatureUtils')
-const { buildLoginTypedData } =  require('../../libs/celo/packages/komencikit/lib/login')
-const {Err, Ok} = require('../../libs/celo/packages/base/lib/result')
+import { serializeSignature } from '@celo/base/lib/signatureUtils'
+import { buildLoginTypedData } from '@celo/komencikit/lib/login'
+import { Err, Ok } from '@celo/base/lib/result'
+import { ContractKit } from '@celo/contractkit'
 import { EventLog } from 'web3-core'
-const {normalizeAddressWith0x} = require('../../libs/celo/packages/base/lib/address')
-const {sleep} = require('../../libs/celo/packages/utils/lib/async')
-const { TxEventNotFound, TxTimeoutError, TxRevertError, LoginSignatureError } = require('../../libs/celo/packages/komencikit/lib/errors')
+import { normalizeAddressWith0x } from '@celo/base/lib/address'
+import { sleep } from '@celo/utils/lib/async'
+import { 
+  TxEventNotFound, 
+  TxTimeoutError, 
+  TxRevertError, 
+  LoginSignatureError 
+} from '@celo/komencikit/lib/errors'
 
 
 interface ContractEventLog<T> extends EventLog {
@@ -12,7 +18,7 @@ interface ContractEventLog<T> extends EventLog {
 }
 
 export async function getLoginSignature(
-  contractKit,
+  contractKit: ContractKit,
   account: any,
   captchaToken: string
 ) {
@@ -30,7 +36,7 @@ export async function getLoginSignature(
 }
 
 export async function getAddressFromDeploy(contractKit, externalAccount,  txHash: string) {
-  const receiptResult = await this.waitForReceipt(contractKit, txHash)
+  const receiptResult = await waitForReceipt(contractKit, txHash)
   if (!receiptResult.ok) {
     return receiptResult
   }

@@ -1,18 +1,18 @@
 import { getAddressFromDeploy, waitForReceipt } from './utils'
-const Web3 = require('web3')
-const { buildLoginTypedData } =  require('../../libs/celo/packages/komencikit/lib/login')
-const { compressedPubKey } = require('../../libs/celo/packages/utils/lib/dataEncryptionKey')
-const { hexToBuffer } = require('../../libs/celo/packages/base')
-const { LocalWallet } = require('../../libs/celo/packages/contractkit/lib/wallets/local-wallet')
-const { newKitFromWeb3 } = require('../../libs/celo/packages/contractkit/lib/kit')
-const { serializeSignature } = require('../../libs/celo/packages/base/lib/signatureUtils')
-const { normalizeAddressWith0x } = require('../../libs/celo/packages/base/lib/address')
-const { Err, Ok } = require('../../libs/celo/packages/base/lib/result')
-const { InvalidWallet } = require('../../libs/celo/packages/komencikit/lib/errors')
-const { verifyWallet } = require('../../libs/celo/packages/komencikit/lib/verifyWallet')
-const { WasmBlsBlindingClient } = require('../../libs/celo/packages/contractkit/lib/identity/odis/bls-blinding-client')
-const { getBlindedPhoneNumber, getPhoneNumberIdentifierFromSignature } = require('../../libs/celo/packages/contractkit/lib/identity/odis/phone-number-identifier')
-const { toRawTransaction } = require('../../libs/celo/packages/contractkit/lib/wrappers/MetaTransactionWallet')
+import { buildLoginTypedData } from '@celo/komencikit/lib/login'
+import { compressedPubKey } from '@celo/utils/lib/dataEncryptionKey'
+import { hexToBuffer }from '@celo/base'
+import { LocalWallet } from '@celo/wallet-local'
+import { newKit } from '@celo/contractkit'
+import { randomHex } from 'web3-utils'
+import { serializeSignature } from '@celo//base/lib/signatureUtils'
+import { normalizeAddressWith0x }from '@celo/base/lib/address'
+import { Err, Ok } from '@celo/base/lib/result'
+import { InvalidWallet } from '@celo/komencikit/lib/errors'
+import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
+import { WasmBlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
+import { getBlindedPhoneNumber, getPhoneNumberIdentifierFromSignature } from '@celo/identity/lib/odis/phone-number-identifier'
+import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 
 
 enum Network {
@@ -47,13 +47,11 @@ async function setStartSessionBody(requestParams, context, ee, next) {
   console.log(`Loading test cases for environment: ${context.vars.$environment}`)
 
   // Setting up variables for the scenario.
-  context.vars.provider = new Web3.providers.HttpProvider(fornoURL[context.vars.$environment])
-  context.vars.web3 = new Web3(context.vars.provider)
   const captchaToken = 'special-captcha-bypass-token'
   context.vars.wallet = new LocalWallet()
-  context.vars.contractKit = newKitFromWeb3(context.vars.web3, context.vars.wallet)
-  context.vars.pkey = Web3.utils.randomHex(32)
-  context.vars.dek = Web3.utils.randomHex(32)
+  context.vars.contractKit = newKit(fornoURL[context.vars.$environment], context.vars.wallet)
+  context.vars.pkey = randomHex(32)
+  context.vars.dek = randomHex(32)
   context.vars.wallet.addAccount(context.vars.pkey)
   context.vars.account = context.vars.wallet.getAccounts()[0]
   context.vars.externalAccount = normalizeAddressWith0x(context.vars.account)
@@ -160,7 +158,7 @@ async function waitTx(requestParams, response, context, ee, next) {
     context.vars.externalAccount
   )
 
-  if (!walletStatus.ok) {
+  if (walletStatus.ok === false) {
     return Err(new InvalidWallet(walletStatus.error))
   }
   return next() // MUST be called for the scenario to continue
@@ -214,20 +212,13 @@ function logHeaders(requestParams, response, context, ee, next) {
   return next() // MUST be called for the scenario to continue
 }
 
-async function getActionableAttestations(requestParams, response, context, ee, next) {
-  const attestations = await context.vars.contractKit.contracts.getAttestations()
-  const attestationsToComplete = await attestations.getActionableAttestations(context.vars.identifier, context.vars.metaTxWalletAddress.result)
-  return
-}
-
 async function waitEvents(requestParams, response, context, ee, next) {
   const tx = await waitForReceipt(context.vars.contractKit,response.body.txHash)
-  const attestations = await context.vars.contractKit.contracts.getAttestations()
-  const events = await attestations.getPastEvents(attestations.eventTypes.AttestationsRequested, {
-    fromBlock: tx.result.blockNumber,
-    toBlock: tx.result.blockNumber,
-  })
-  return next()
+  if (tx.ok === true) {
+    return next()
+  } else {
+    next(tx.error)
+  }
 }
 
 async function waitReceipt(requestParams, response, context, ee, next) {
@@ -244,4 +235,4 @@ async function getWallet(contractKit, address: string) {
   return _wallet
 }
 
-module.exports = { logHeaders, setStartSessionBody, setDeployWalletBody, waitTx, setDistributedBlindedPeppertBody , afterDistributedBlindedPepper, setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents, getActionableAttestations }
+module.exports = { logHeaders, setStartSessionBody, setDeployWalletBody, waitTx, setDistributedBlindedPeppertBody , afterDistributedBlindedPepper, setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents }

@@ -6,17 +6,14 @@
   "private": true,
   "license": "UNLICENSED",
   "workspaces": [
-    "libs/komencikit"
+    "libs/komencikit",
+    "load-testing"
   ],
   "scripts": {
     "build": "nest build",
     "build:komencikit": "yarn --cwd ./libs/komencikit build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "lint": "tslint -c tslint.json --project tsconfig.json",
-    "load-testing:build": "cd load-testing && yarn build",
-    "load-testing:clean": "cd load-testing && yarn clean",
-    "load-testing:report": "cd load-testing && yarn report",
-    "load-testing": "cd load-testing && yarn load-testing",
     "prebuild": "rimraf dist",
     "postinstall": "test -n \"$SKIPPOSTINSTALL\" || yarn run postinstall-actual",
     "postinstall-actual": "yarn run build:komencikit",

@@ -13,11 +13,8 @@
     "load-testing": "artillery run artillery.yml",
     "report": "artillery report"
   },
-  "devDependencies": {
-    "typescript": "^3.8.3"
-  },
   "dependencies": {
-    "artillery": "^1.6.1",
-    "csv-parse": "^4.8.8"
+    "artillery": "1.6.1",
+    "csv-parse": "4.8.8"
   }
 }

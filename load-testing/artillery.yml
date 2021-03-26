@@ -16,7 +16,8 @@ config:
   processor: './lib/processor.js'
   environments:
     alfajores:
-      target: 'https://weu.komenci.alfajores.celo-testnet.org/v1'
+      target: https://staging-komenci.azurefd.net/v1
+      # target: 'https://weu.komenci.alfajores.celo-testnet.org/v1'
       # target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
     baklava:
       target: 'http://localhost:3000'
@@ -89,5 +90,4 @@ scenarios:
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/submitMetaTransaction'
               beforeRequest: "selectIssuer"
-              afterResponse: "getActionableAttestations"
           - log: "Issuer selected"

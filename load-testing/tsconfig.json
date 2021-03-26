@@ -1,8 +1,14 @@
 {
-    "compilerOptions": {
-      "rootDir": "src",
-      "outDir": "lib"
-    },
-    "include": ["src"],
-    "references": []
-  }
+  "extends": "@celo/typescript/tsconfig.json",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "rootDir": "src",
+    "outDir": "lib",
+    "target": "ES5",
+    "declaration": true,
+    "resolveJsonModule": true,
+    "noImplicitAny": false
+  },
+  "include": ["src/**/*", "types/**/*"],
+  "exclude": ["src/**/*.spec.ts", "node_modules"]
+}
