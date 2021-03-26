@@ -3,10 +3,10 @@ import { Err, Ok } from '@celo/base/lib/result'
 import { Connection } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { WasmBlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
+import { randomHex } from 'web3-utils'
 import { ActionTypes } from './actions'
 import { AuthenticationFailed, KomenciErrorTypes, ServiceUnavailable, Unauthorised } from './errors'
 import { KomenciKit, KomenciOptionsInput } from './kit'
-import { randomHex } from 'web3-utils'
 
 jest.mock('@celo/contractkit')
 jest.mock('@celo/connect')
