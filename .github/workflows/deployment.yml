@@ -28,6 +28,5 @@ jobs:
             --build-arg KOMENCI_VERSION=${{ github.sha }} \
             --cache-from celotestnet.azurecr.io/komenci/komenci:latest
 
-        docker push \
-          celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
-          celotestnet.azurecr.io/komenci/komenci:latest
+        docker push celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
+        docker push celotestnet.azurecr.io/komenci/komenci:latest
