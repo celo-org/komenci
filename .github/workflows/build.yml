@@ -22,6 +22,8 @@ jobs:
         if: steps.restore-komenci.outputs.cache-hit != 'true'
       - name: Install Komenci dependencies
         run: yarn
+      - name: Build KomenciKit dependencies
+        run: yarn run build:komencikit
       - name: Run linters
         run: yarn lint
       - name: Setup testing config
