@@ -77,7 +77,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.gasPriceTimer)
   }
 
-  @retry({
+  @retry<[RawTransactionDto, RelayerTraceContext], TxSubmitError>({
       tries: 3
   })
   async submitTransaction(
