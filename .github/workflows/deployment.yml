@@ -29,5 +29,5 @@ jobs:
             --cache-from celotestnet.azurecr.io/komenci/komenci:latest
 
         docker push \
-          celotestnet.azurecr.io/komenci/komenci:${{ github.sha }}
+          celotestnet.azurecr.io/komenci/komenci:${{ github.sha }} \
           celotestnet.azurecr.io/komenci/komenci:latest
