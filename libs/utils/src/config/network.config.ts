@@ -51,7 +51,39 @@ const configs: Record<Network, NetworkConfig> = {
       {
         externalAccount: "0xb354d3d2908ba6a2b791683b0f454a38f69cb282",
         metaTransactionWallet: "0xE329d3103EF8D8f3D376Ab9A86De3e51b5439f40"
-      }
+      },
+      {
+        externalAccount: "0xd7fc8227642bfab9aa927066e5952fece574f0d6",
+        metaTransactionWallet: "0x3363D06380d92b60AcFc1429A67B9c5dF1A0cb9d"
+      },
+      {
+        externalAccount: "0xbb5932e6b6a588cd1c6764f50d1fe410e6a2d71e",
+        metaTransactionWallet: "0xe3CA53b083D2bDb539282810B25472BFbcB51EBA"
+      },
+      {
+        externalAccount: "0xc934bff63a0db800acdf7061eb5cc03211e7bccf",
+        metaTransactionWallet: "0x54faF22d680E1255587aAb48BF00cdae82b61cC4"
+      },
+      {
+        externalAccount: "0x409832bd2d72017f12cfaa3d6dc0103767bb7e7e",
+        metaTransactionWallet: "0x8b3013F2A2CD2661a5083b839443aaeA0f4604B8"
+      },
+      {
+        externalAccount: "0x75222b1aed66393fa43c6454000e097363d85c73",
+        metaTransactionWallet: "0x7e9C6a7D24aE1260F0993b5BAe09f715d7B196AE"
+      },
+      {
+        externalAccount: "0xefbc10d42f77c778431043bd3a34b283f90f3979",
+        metaTransactionWallet: "0x49dd16cF30cF8BED55ef29917E93EfA871983028"
+      },
+      {
+        externalAccount: "0x70b69157973cd31dae5dc68ee1891b9eae379c42",
+        metaTransactionWallet: "0x122FdAc181afF98De634cd8686975Ae9A070924e"
+      },
+      {
+        externalAccount: "0x04a444af9a79b6784bcd57c50ba1e051ba536ed4",
+        metaTransactionWallet: "0x7D6655c13AAE83329A3507d9F4Ca7Ca4A9eCF2ca"
+      },
     ],
     contracts: {
       MetaTransactionWalletVersions: {

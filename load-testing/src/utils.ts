@@ -1,16 +1,16 @@
-import { serializeSignature } from '@celo/base/lib/signatureUtils'
-import { buildLoginTypedData } from '@celo/komencikit/lib/login'
-import { Err, Ok } from '@celo/base/lib/result'
-import { ContractKit } from '@celo/contractkit'
-import { EventLog } from 'web3-core'
 import { normalizeAddressWith0x } from '@celo/base/lib/address'
-import { sleep } from '@celo/utils/lib/async'
+import { Err, Ok } from '@celo/base/lib/result'
+import { serializeSignature } from '@celo/base/lib/signatureUtils'
+import { ContractKit } from '@celo/contractkit'
 import { 
+  LoginSignatureError, 
   TxEventNotFound, 
-  TxTimeoutError, 
   TxRevertError, 
-  LoginSignatureError 
+  TxTimeoutError 
 } from '@celo/komencikit/lib/errors'
+import { buildLoginTypedData } from '@celo/komencikit/lib/login'
+import { sleep } from '@celo/utils/lib/async'
+import { EventLog } from 'web3-core'
 
 
 interface ContractEventLog<T> extends EventLog {

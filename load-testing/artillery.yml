@@ -11,7 +11,7 @@ config:
       rampTo: 20
       name: Ramp up load
     - duration: 240
-      arrivalRate: 20
+      arrivalRate: 10
       name: Sustained load
   processor: './lib/processor.js'
   environments:

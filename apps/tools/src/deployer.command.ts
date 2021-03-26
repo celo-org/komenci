@@ -81,7 +81,13 @@ export class DeployerCommand {
           })
 
           if (receipt.status === true) {
-            spin.info(`Relayer:${relayerEOA} wallet deployed! tx:${receipt.transactionHash}`)
+            const event = (await this.deployer.getPastEvents(this.deployer.eventTypes.WalletDeployed, {
+              fromBlock: receipt.blockNumber,
+              toBlock: receipt.blockNumber
+            })).find((evt) => {
+              return evt.returnValues.owner.toLocaleLowerCase() === relayerEOA
+            })
+            spin.info(`Relayer:${relayerEOA} wallet deployed to: ${event.returnValues.wallet}`)
           } else {
             spin.fail(`Relayer:${relayerEOA} could not deploy wallet - tx:${receipt.transactionHash}`)
           }
