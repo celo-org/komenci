@@ -35,14 +35,6 @@
       "@app/onboarding/*": [
         "apps/onboarding/src/*"
       ],
-      "@celo/phone-number-privacy-common/lib/*": [
-        "libs/celo/packages/phone-number-privacy/common/lib/*"
-      ],
-      "@celo/*": [
-        "libs/celo/packages/sdk/wallets/*",
-        "libs/celo/packages/sdk/*",
-        "libs/celo/packages/*"
-      ],
       "@app/komenci-logger": [
         "libs/komenci-logger/src"
       ],
