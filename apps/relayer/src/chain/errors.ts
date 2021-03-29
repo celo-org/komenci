@@ -23,7 +23,7 @@ export class TxDeadletterError extends MetadataError<ChainErrorTypes.TxDeadlette
 
   constructor(readonly err: Error, readonly txHash: string) {
     super(ChainErrorTypes.TxDeadletterError)
-    this.message = `TxSubmitError: ${err.message}`
+    this.message = `TxDeadletterError: ${err.message}`
   }
 }
 

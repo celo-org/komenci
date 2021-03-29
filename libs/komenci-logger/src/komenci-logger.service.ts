@@ -59,17 +59,25 @@ export class KomenciLoggerService implements KomenciLogger {
       this.logger.error(
         {
           error: error.errorType,
+          message: error.message,
           ...error.getMetadata(),
           ...context
         },
       )
     } else if (isRootError(error)) {
       this.logger.error(
-        { error: error.errorType, ...context },
+        { 
+          error: error.errorType, 
+          message: error.message,
+          ...context
+        },
         error.stack,
       )
     } else if (isError(error)) {
-      this.logger.error(context, (error as Error).stack)
+      this.logger.error({
+        message: error.message,
+        ...context
+      }, (error as Error).stack)
     }
   }
 
