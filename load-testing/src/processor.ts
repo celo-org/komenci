@@ -187,7 +187,7 @@ export async function setRequestSubsidisedAttestationsBody(requestParams, contex
   return next() 
 }
 
-export async function selectIssuer(requestParams, context, ee, next) {
+export async function prepareSelectIssuers(requestParams, context, ee, next) {
     const attestations = await context.vars.contractKit.contracts.getAttestations()
     await attestations.waitForSelectingIssuers(context.vars.identifier, context.vars.metaTxWalletAddress.result)
     const issuer = await attestations.selectIssuers(context.vars.identifier)
