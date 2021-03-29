@@ -2,18 +2,11 @@ config:
   target: 'http://localhost:4000'
   phases:
     - duration: 60
-      arrivalRate: 1
-      rampTo: 1
-      maxVusers: 10
+      arrivalCount: 40
       name: Warm up
-    # - duration: 120
-    #   arrivalRate: 3
-    #   rampTo: 5
-    #   maxVusers: 300
-    #   name: Ramp up load
-    # - duration: 240
-    #   arrivalRate: 10
-    #   name: Sustained load
+    - duration: 150
+      arrivalCount: 300
+      name: Ramp up load
   processor: './lib/processor.js'
   environments:
     alfajores:
@@ -77,7 +70,7 @@ scenarios:
               name: "Request Attestations"
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/requestSubsidisedAttestations'
-              beforeRequest: "setRequestSubsidisedAttestationsBody"
+              beforeRequest: "prepareSubsidisedAttestations"
               afterResponse: "waitForTransaction"
           - log: "Request Subsidised Attestations"
           - think: 0.2

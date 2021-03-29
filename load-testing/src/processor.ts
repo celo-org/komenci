@@ -1,14 +1,11 @@
 import { serializeSignature } from '@celo//base/lib/signatureUtils'
 import { hexToBuffer }from '@celo/base'
 import { normalizeAddressWith0x }from '@celo/base/lib/address'
-import { Err, Ok } from '@celo/base/lib/result'
-import { newKit } from '@celo/contractkit'
+import { ContractKit, newKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { WasmBlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
 import { getBlindedPhoneNumber, getPhoneNumberIdentifierFromSignature } from '@celo/identity/lib/odis/phone-number-identifier'
-import { InvalidWallet } from '@celo/komencikit/lib/errors'
 import { buildLoginTypedData } from '@celo/komencikit/lib/login'
-import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
 import { compressedPubKey } from '@celo/utils/lib/dataEncryptionKey'
 import { LocalWallet } from '@celo/wallet-local'
 import { randomHex } from 'web3-utils'
@@ -43,61 +40,74 @@ const ODIS_PUB_KEYS: Record<Network, string> = {
     'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
 }
 
-export async function prepareStartSession(requestParams, context, ee, next) {
-  console.log(`Loading test cases for environment: ${context.vars.$environment}`)
+const wrapped = (fn: (...args: any[]) => Promise<void>) => {
+  return async (...args: any[]) => {
+    const next = args[args.length -1]
+    try {
+      await fn(...args)
+      next()
+    } catch (e) {
+      console.log(e)
+      next(e)
+    }
+  }
+}
 
-  // Setting up variables for the scenario.
+let _kit: ContractKit | null = null
+let _kitWallet: LocalWallet | null = null
+
+export const prepareStartSession = wrapped(async (requestParams, context, ee) => {
   const captchaToken = 'special-captcha-bypass-token'
-  context.vars.wallet = new LocalWallet()
-  context.vars.contractKit = newKit(fornoURL[context.vars.$environment], context.vars.wallet)
+  if (_kit == null || _kitWallet == null) {
+    _kitWallet = new LocalWallet()
+    _kit = newKit(fornoURL[context.vars.$environment], _kitWallet)
+  }
+
   context.vars.pkey = randomHex(32)
   context.vars.dek = randomHex(32)
-  context.vars.wallet.addAccount(context.vars.pkey)
-  context.vars.account = context.vars.wallet.getAccounts()[0]
+  _kitWallet.addAccount(context.vars.pkey)
+  context.vars.wallet = _wallet
+  context.vars.contractKit = _kit
+  // Setting up variables for the scenario.
+  const accounts = _kitWallet.getAccounts()
+  context.vars.account = accounts[accounts.length - 1]
   context.vars.externalAccount = normalizeAddressWith0x(context.vars.account)
   context.vars.dekPublicKey = compressedPubKey(hexToBuffer(context.vars.dek))
   context.vars.e164Number = "+40" + Math.floor(Math.random() * 1000000000)
   context.vars.blsBlindingClient = new WasmBlsBlindingClient(ODIS_PUB_KEYS[context.vars.$environment])
 
-  try {
-    const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
-    const signature = await context.vars.contractKit.signTypedData(
-      context.vars.externalAccount,
-      loginStruct
-    )
-    const serializedSignature = serializeSignature(signature)
-    requestParams.json = {
-      externalAccount: context.vars.externalAccount,
-      captchaResponseToken: captchaToken,
-      signature: serializedSignature
-    }
-    return next()
-  }catch(e) {
-    console.log(e)
-    return
+  const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
+  const signature = await context.vars.contractKit.signTypedData(
+    context.vars.externalAccount,
+    loginStruct
+  )
+  const serializedSignature = serializeSignature(signature)
+  requestParams.json = {
+    externalAccount: context.vars.externalAccount,
+    captchaResponseToken: captchaToken,
+    signature: serializedSignature
   }
-}
+})
 
-export async function prepareDeployWallet(requestParams, context, ee, next) {
+export const prepareDeployWallet = wrapped(async (requestParams, context, ee) => {
   const walletImplementationAddress = WALLET_IMPLEMENTATIONS[context.vars.$environment]['1.1.0.0-p3']
   requestParams.json = {
     implementationAddress: walletImplementationAddress
   }
-  return next() 
-}
+})
 
-export async function preparePepperRequest(requestParams, context, ee, next) {
+export const preparePepperRequest = wrapped(async (requestParams, context, ee, next) => {
   const blindedPhoneNumber = await getBlindedPhoneNumber(context.vars.e164Number, context.vars.blsBlindingClient)
 
   requestParams.json = {
     blindedPhoneNumber: blindedPhoneNumber, 
     clientVersion: "1.1.0.0-p3"
   }
-  return next() 
-}
+})
 
-export async function recordPepperAndIdentifier(requestParams, response, context, ee, next) {
+export const recordPepperAndIdentifier = wrapped(async (requestParams, response, context, ee) => {
   if(!response.body.combinedSignature) {
+    console.log(response.body)
     console.log("Out of quota")
     return
   }
@@ -112,19 +122,18 @@ export async function recordPepperAndIdentifier(requestParams, response, context
     identifier: phoneNumberHashDetails.phoneHash,
     pepper: phoneNumberHashDetails.pepper,
   })
-  return next()
-}
+})
 
-// For setAccount
-export async function prepareSetAccount(requestParams, context, ee, next) {
+export const prepareSetAccount = wrapped(async (requestParams, context, ee) => {
   const accounts = await context.vars.contractKit.contracts.getAccounts()
-  const proofOfPossession = await accounts.generateProofOfKeyPossession(
-    context.vars.metaTxWalletAddress.result,
-    context.vars.externalAccount
+  const proofOfPossession = await accounts.generateProofOfKeyPossessionLocally(
+    context.vars.metaTxWalletAddress,
+    context.vars.externalAccount,
+    context.vars.pkey
   )
 
   const tx = await accounts.setAccount('', context.vars.dekPublicKey, context.vars.externalAccount, proofOfPossession)
-  const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress.result)
+  const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress)
 
   const nonce = await wallet.nonce()
 
@@ -135,36 +144,24 @@ export async function prepareSetAccount(requestParams, context, ee, next) {
     destination: rawMetaTx.destination,
     data: rawMetaTx.data
   }
-  return next()
-}
+})
 
-export async function waitForWallet(requestParams, response, context, ee, next) {
-  context.vars.metaTxWalletAddress =
-  response.body.status === 'deployed'
-      ? Ok(response.body.walletAddress)
-      : await getAddressFromDeploy(context.vars.contractKit, context.vars.externalAccount, response.body.txHash)
-  
-  if (!context.vars.metaTxWalletAddress.ok) {
-    return context.vars.metaTxWalletAddress
+export const waitForWallet = wrapped(async (requestParams, response, context, ee, next) => {
+  if (response.body.status == 'deployed') {
+    context.vars.metaTxWalletAddress = response.body.walletAddress
+  } else {
+    const addressResp = await getAddressFromDeploy(context.vars.contractKit, context.vars.externalAccount, response.body.txHash)
+    if (addressResp.ok === true) {
+      context.vars.metaTxWalletAddress = addressResp.result
+    } else {
+      throw addressResp.error
+    }
   }
+})
 
-  const walletStatus = await verifyWallet(
-    context.vars.contractKit,
-    context.vars.metaTxWalletAddress.result,
-    [WALLET_IMPLEMENTATIONS[context.vars.$environment]['1.1.0.0-p3']], // pending to get from variable
-    context.vars.externalAccount
-  )
-
-  if (walletStatus.ok === false) {
-    return Err(new InvalidWallet(walletStatus.error))
-  }
-  return next() // MUST be called for the scenario to continue
-}
-
-export async function setRequestSubsidisedAttestationsBody(requestParams, context, ee, next) {
-
+export const prepareSubsidisedAttestations = wrapped(async (requestParams, context, ee) => {
   const attestations = await context.vars.contractKit.contracts.getAttestations()
-  const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress.result)
+  const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress)
   const nonce = await wallet.nonce()
 
   const attestationsRequested = 3
@@ -180,43 +177,41 @@ export async function setRequestSubsidisedAttestationsBody(requestParams, contex
   requestParams.json = {
     identifier: context.vars.identifier,
     attestationsRequested: attestationsRequested,
-    walletAddress: context.vars.metaTxWalletAddress.result,
+    walletAddress: context.vars.metaTxWalletAddress,
     requestTx: toRawTransaction(requestMetaTx.txo),
     approveTx: toRawTransaction(approveMetaTx.txo),
   }
-  return next() 
-}
+})
 
-export async function prepareSelectIssuers(requestParams, context, ee, next) {
-    const attestations = await context.vars.contractKit.contracts.getAttestations()
-    await attestations.waitForSelectingIssuers(context.vars.identifier, context.vars.metaTxWalletAddress.result)
-    const issuer = await attestations.selectIssuers(context.vars.identifier)
-    const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress.result)
-    const nonce = await wallet.nonce()
+export const prepareSelectIssuers = wrapped(async (requestParams, context, ee) => {
+  const attestations = await context.vars.contractKit.contracts.getAttestations()
+  await attestations.waitForSelectingIssuers(context.vars.identifier, context.vars.metaTxWalletAddress)
+  const issuer = await attestations.selectIssuers(context.vars.identifier)
+  const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress)
+  const nonce = await wallet.nonce()
 
-    const signature = await wallet.signMetaTransaction(issuer.txo, nonce)
-    const rawMetaTx = toRawTransaction(await wallet.executeMetaTransaction(issuer.txo, signature).txo)
+  const signature = await wallet.signMetaTransaction(issuer.txo, nonce)
+  const rawMetaTx = toRawTransaction(await wallet.executeMetaTransaction(issuer.txo, signature).txo)
 
-    requestParams.json = {
-      destination: rawMetaTx.destination,
-      data: rawMetaTx.data
-    }
-    return next()
-}
+  requestParams.json = {
+    destination: rawMetaTx.destination,
+    data: rawMetaTx.data
+  }
+})
 
 export function logHeaders(requestParams, response, context, ee, next) {
   console.log(response.body)
   return next() // MUST be called for the scenario to continue
 }
 
-export async function waitForTransaction(requestParams, response, context, ee, next) {
+export const waitForTransaction = wrapped(async (requestParams, response, context, ee) => {
   const receipt = await waitForReceipt(context.vars.contractKit, response.body.txHash)
-  if (receipt.ok === true && receipt.result.status === true) {
-    return next()
-  } else {
-    next(new Error("Transaction reverted"))
+  if (receipt.ok === false) {
+    console.log(response.body.txHash)
+    console.log(receipt)
+    throw receipt.error
   }
-}
+})
 
 let _wallet
 export async function getWallet(contractKit, address: string) {
