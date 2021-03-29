@@ -76,10 +76,13 @@ export class InviteRewardService {
           const tx = await this.contractKit.web3.eth.getTransaction(
             transactionHash
           )
+          const invitee = tx.to?.toLowerCase()
+          if (!invitee) {
+            continue
+          }
           if (!this.isKomenciSender(tx.from)) {
             continue
           }
-          const invitee = tx.to?.toLowerCase() ?? ''
           const conditions = await Promise.all([
             // TODO: Make sure that inviter is verfied
             this.addressIsConsideredVerified(invitee, identifier),
