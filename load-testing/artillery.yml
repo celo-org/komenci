@@ -6,10 +6,11 @@ config:
       rampTo: 1
       maxVusers: 10
       name: Warm up
-    - duration: 120
-      arrivalRate: 3
-      rampTo: 10
-      name: Ramp up load
+    # - duration: 120
+    #   arrivalRate: 3
+    #   rampTo: 5
+    #   maxVusers: 300
+    #   name: Ramp up load
     # - duration: 240
     #   arrivalRate: 10
     #   name: Sustained load
