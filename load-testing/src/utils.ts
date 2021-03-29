@@ -10,7 +10,7 @@ import {
 } from '@celo/komencikit/lib/errors'
 import { buildLoginTypedData } from '@celo/komencikit/lib/login'
 import { sleep } from '@celo/utils/lib/async'
-import { EventLog } from 'web3-core'
+import { EventLog, TransactionReceipt } from 'web3-core'
 
 
 interface ContractEventLog<T> extends EventLog {
@@ -69,11 +69,11 @@ export async function getAddressFromDeploy(contractKit, externalAccount,  txHash
   return Ok(deployWalletLog.returnValues.wallet)
 }
 
-export async function waitForReceipt(contractKit, txHash: string) {
-  let receipt: any | null = null
+export async function waitForReceipt(contractKit: ContractKit, txHash: string) {
+  let receipt: TransactionReceipt | null = null
   let waited = 0
   while (receipt == null && waited < 20000) {
-    receipt = await contractKit.web3.eth.getTransactionReceipt(txHash)
+    receipt = await contractKit.connection.getTransactionReceipt(txHash)
     if (receipt == null) {
       await sleep(100)
       waited += 100

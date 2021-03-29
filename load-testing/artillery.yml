@@ -4,15 +4,15 @@ config:
     - duration: 60
       arrivalRate: 1
       rampTo: 1
-      maxVusers: 50
+      maxVusers: 10
       name: Warm up
-    - duration: 120
-      arrivalRate: 3
-      rampTo: 20
-      name: Ramp up load
-    - duration: 240
-      arrivalRate: 10
-      name: Sustained load
+    # - duration: 120
+    #   arrivalRate: 3
+    #   rampTo: 20
+    #   name: Ramp up load
+    # - duration: 240
+    #   arrivalRate: 10
+    #   name: Sustained load
   processor: './lib/processor.js'
   environments:
     alfajores:
@@ -25,69 +25,65 @@ config:
       target: 'http://localhost:3000'
 scenarios:
   - flow:
-          # - log: 'Sent a request to the {{ $loopElement }}'
-          # - get:
-          #     url: '/health'
-          #     headers: {content-type: application/json}
-              # beforeRequest: "setUpEnvironment"
           - post: 
+              name: "Start session"
               url: '/startSession'
               headers: {content-type: application/json}
-              beforeRequest: "setStartSessionBody"
-              # afterResponse: "logHeaders"
+              beforeRequest: "prepareStartSession"
               capture:
                 json: "$.token"
                 as: "token"
               strict: false
-          # - log: "Start Session executed. Generated token {{ token }}"
-          - log: "External account: {{ account }}"
+          - log: "Session started for {{ account }} with {{ token }}"
+          - think: 0.2
           - get: 
+              name: "Check session"
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/checkSession'
-              # afterResponse: "logHeaders"
-          # - log: "Session checked"
+          - think: 0.2
           - post:
+              name: "Deploy wallet"
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/deployWallet'
-              beforeRequest: "setDeployWalletBody"
-              afterResponse: "waitTx"
-          #     capture:
-          #       json: "$.walletAddress"
-          #       as: "walletAddress" 
-          # - log: "Wallet deployed as {{ walletAddress }}"
+              beforeRequest: "prepareDeployWallet"
+              afterResponse: "waitForWallet"
           - post: 
+              name: "Get pepper"
               url: '/distributedBlindedPepper'
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
-              beforeRequest: "setDistributedBlindedPeppertBody"
-              # capture:
-              #   json: "$.identifier"
-              #   as: "identifier" 
-              afterResponse: "afterDistributedBlindedPepper"
+              beforeRequest: "preparePepperRequest"
+              afterResponse: "recordPepperAndIdentifier"
           - log: "Get identifier."
+          - think: 0.2
           - get: 
+              name: "Check session"
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/checkSession'
-              # afterResponse: "logHeaders"
-              # Set account
+          - think: 0.2
           - post: 
+              name: "Set Account"
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/submitMetaTransaction'
-              beforeRequest: "setSubmitMetatransactionBody"
-              afterResponse: "waitReceipt"
+              beforeRequest: "prepareSetAccount"
+              afterResponse: "waitForTransaction"
               capture:
                 json: "$.txHash"
                 as: "txHash" 
               strict: false
           - log: "Submitting MetaTransaction {{ txHash }}"
+          - think: 0.2
           - post: 
+              name: "Request Attestations"
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/requestSubsidisedAttestations'
               beforeRequest: "setRequestSubsidisedAttestationsBody"
-              afterResponse: "waitEvents"
+              afterResponse: "waitForTransaction"
           - log: "Request Subsidised Attestations"
-          # select issuer
+          - think: 0.2
           - post: 
+              name: "Select Issuers"
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/submitMetaTransaction'
-              beforeRequest: "selectIssuer"
-          - log: "Issuer selected"
+              beforeRequest: "prepareSelectIssuers"
+              afterResponse: "waitForTransaction"
+          - log: "Issuers selected"

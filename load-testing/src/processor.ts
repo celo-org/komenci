@@ -43,7 +43,7 @@ const ODIS_PUB_KEYS: Record<Network, string> = {
     'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
 }
 
-async function setStartSessionBody(requestParams, context, ee, next) {
+export async function prepareStartSession(requestParams, context, ee, next) {
   console.log(`Loading test cases for environment: ${context.vars.$environment}`)
 
   // Setting up variables for the scenario.
@@ -60,26 +60,25 @@ async function setStartSessionBody(requestParams, context, ee, next) {
   context.vars.blsBlindingClient = new WasmBlsBlindingClient(ODIS_PUB_KEYS[context.vars.$environment])
 
   try {
-  const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
-  const signature = await context.vars.contractKit.signTypedData(
-    context.vars.externalAccount,
-    loginStruct
-  )
-  const serializedSignature = serializeSignature(signature)
-  requestParams.json = {
-    externalAccount: context.vars.externalAccount,
-    captchaResponseToken: captchaToken,
-    signature: serializedSignature
-  }
-  return next()
-
+    const loginStruct = buildLoginTypedData(context.vars.externalAccount, captchaToken)
+    const signature = await context.vars.contractKit.signTypedData(
+      context.vars.externalAccount,
+      loginStruct
+    )
+    const serializedSignature = serializeSignature(signature)
+    requestParams.json = {
+      externalAccount: context.vars.externalAccount,
+      captchaResponseToken: captchaToken,
+      signature: serializedSignature
+    }
+    return next()
   }catch(e) {
     console.log(e)
     return
   }
 }
 
-async function setDeployWalletBody(requestParams, context, ee, next) {
+export async function prepareDeployWallet(requestParams, context, ee, next) {
   const walletImplementationAddress = WALLET_IMPLEMENTATIONS[context.vars.$environment]['1.1.0.0-p3']
   requestParams.json = {
     implementationAddress: walletImplementationAddress
@@ -87,7 +86,7 @@ async function setDeployWalletBody(requestParams, context, ee, next) {
   return next() 
 }
 
-async function setDistributedBlindedPeppertBody(requestParams, context, ee, next) {
+export async function preparePepperRequest(requestParams, context, ee, next) {
   const blindedPhoneNumber = await getBlindedPhoneNumber(context.vars.e164Number, context.vars.blsBlindingClient)
 
   requestParams.json = {
@@ -97,9 +96,7 @@ async function setDistributedBlindedPeppertBody(requestParams, context, ee, next
   return next() 
 }
 
-
-
-async function afterDistributedBlindedPepper(requestParams, response, context, ee, next) {
+export async function recordPepperAndIdentifier(requestParams, response, context, ee, next) {
   if(!response.body.combinedSignature) {
     console.log("Out of quota")
     return
@@ -119,7 +116,7 @@ async function afterDistributedBlindedPepper(requestParams, response, context, e
 }
 
 // For setAccount
-async function setSubmitMetatransactionBody(requestParams, context, ee, next) {
+export async function prepareSetAccount(requestParams, context, ee, next) {
   const accounts = await context.vars.contractKit.contracts.getAccounts()
   const proofOfPossession = await accounts.generateProofOfKeyPossession(
     context.vars.metaTxWalletAddress.result,
@@ -141,7 +138,7 @@ async function setSubmitMetatransactionBody(requestParams, context, ee, next) {
   return next()
 }
 
-async function waitTx(requestParams, response, context, ee, next) {
+export async function waitForWallet(requestParams, response, context, ee, next) {
   context.vars.metaTxWalletAddress =
   response.body.status === 'deployed'
       ? Ok(response.body.walletAddress)
@@ -164,7 +161,7 @@ async function waitTx(requestParams, response, context, ee, next) {
   return next() // MUST be called for the scenario to continue
 }
 
-async function setRequestSubsidisedAttestationsBody(requestParams, context, ee, next) {
+export async function setRequestSubsidisedAttestationsBody(requestParams, context, ee, next) {
 
   const attestations = await context.vars.contractKit.contracts.getAttestations()
   const wallet = await getWallet(context.vars.contractKit, context.vars.metaTxWalletAddress.result)
@@ -190,7 +187,7 @@ async function setRequestSubsidisedAttestationsBody(requestParams, context, ee, 
   return next() 
 }
 
-async function selectIssuer(requestParams, context, ee, next) {
+export async function selectIssuer(requestParams, context, ee, next) {
     const attestations = await context.vars.contractKit.contracts.getAttestations()
     await attestations.waitForSelectingIssuers(context.vars.identifier, context.vars.metaTxWalletAddress.result)
     const issuer = await attestations.selectIssuers(context.vars.identifier)
@@ -207,32 +204,24 @@ async function selectIssuer(requestParams, context, ee, next) {
     return next()
 }
 
-function logHeaders(requestParams, response, context, ee, next) {
+export function logHeaders(requestParams, response, context, ee, next) {
   console.log(response.body)
   return next() // MUST be called for the scenario to continue
 }
 
-async function waitEvents(requestParams, response, context, ee, next) {
-  const tx = await waitForReceipt(context.vars.contractKit,response.body.txHash)
-  if (tx.ok === true) {
+export async function waitForTransaction(requestParams, response, context, ee, next) {
+  const receipt = await waitForReceipt(context.vars.contractKit, response.body.txHash)
+  if (receipt.ok === true && receipt.result.status === true) {
     return next()
   } else {
-    next(tx.error)
+    next(new Error("Transaction reverted"))
   }
 }
 
-async function waitReceipt(requestParams, response, context, ee, next) {
-  await waitForReceipt(context.vars.contractKit, response.body.txHash)
-  return next()
-}
-
-
 let _wallet
-async function getWallet(contractKit, address: string) {
+export async function getWallet(contractKit, address: string) {
   if (_wallet?.address !== address) {
     _wallet = await contractKit.contracts.getMetaTransactionWallet(address)
   }
   return _wallet
 }
-
-module.exports = { logHeaders, setStartSessionBody, setDeployWalletBody, waitTx, setDistributedBlindedPeppertBody , afterDistributedBlindedPepper, setRequestSubsidisedAttestationsBody, setSubmitMetatransactionBody, waitReceipt, selectIssuer, waitEvents }
