@@ -243,7 +243,11 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, 2, undefined)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, {
+          expireIn: 2000,
+          gasPrice: "1000000000",
+          nonce: 2
+        })
 
         // Ensure the checkTransactions method is called
         jest.runOnlyPendingTimers()
@@ -281,12 +285,23 @@ describe('TransactionService', () => {
       it('gets dead lettered when it is expired', async () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
-        const result: any = {
+
+        const deadLetterTx = txFixture()
+        const deadLetterReceipt = receiptFixture(deadLetterTx)
+
+        const txResult = Promise.resolve({
           getHash: () => Promise.resolve(tx.hash),
           waitReceipt: () => Promise.resolve(receipt)
-        }
-        const resultPromise = Promise.resolve(result)
-        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockReturnValue(resultPromise)
+        })
+
+        const deadLetterResult = Promise.resolve({
+          getHash: () => Promise.resolve(deadLetterTx.hash),
+          waitReceipt: () => Promise.resolve(deadLetterReceipt)
+        })
+
+        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction')
+          .mockReturnValueOnce(txResult as any)
+          .mockResolvedValueOnce(deadLetterResult as any)
         // @ts-ignore
         const watchTransaction = jest.spyOn(service, 'watchTransaction')
         // @ts-ignore
@@ -319,20 +334,37 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, 2, undefined)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
         jest.runOnlyPendingTimers()
         expect(checkTransactions).toHaveBeenCalled()
         expect(finalizeTransaction).not.toHaveBeenCalled()
         await txPromise
-        await resultPromise
-        await result.getHash()
+        await(await txResult).getHash()
+        await(await deadLetterResult).getHash()
         await Promise.resolve()
         jest.runOnlyPendingTimers()
         await Promise.resolve()
         expect(deadLetter).toHaveBeenCalledWith(tx.hash)
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          1,
+          tx.hash, 
+          {
+            expireIn: 2000,
+            gasPrice: "1000000000",
+            nonce: 2
+          }
+        )
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          2,
+          deadLetterTx.hash, 
+          expect.objectContaining({
+            expireIn: 4000,
+            gasPrice: "2000000000",
+            nonce: 2
+          })
+        )
         expect(watchTransaction.mock.calls.length).toBe(2)
       })
     })
