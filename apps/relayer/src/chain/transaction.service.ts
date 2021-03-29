@@ -211,7 +211,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         nonce: nonce
       }, ctx)
     } catch (e) {
-      const err = new TxDeadletterError(e, tx.hash)
+      const err = new TxDeadletterError(e, txHash)
       this.logger.errorWithContext(err, ctx)
     }
   }
