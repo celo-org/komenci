@@ -136,6 +136,10 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
       return Ok(txHash)
     } catch (e) {
+      if (e.message.match(/gasprice is less than gas price minimum/)) {
+        this.logger.debug(`GasPrice: ${this.gasPrice}`)
+        await this.updateGasPrice()
+      }
       return Err(new TxSubmitError(e, tx))
     }
   }
@@ -202,9 +206,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    */
   private async deadLetter(txHash: string, tx?: Transaction) {
     const cachedTxData = this.transactions.get(txHash)
+    const gasPrice = new BigNumber(cachedTxData.gasPrice, 10).times(2).toFixed()
 
     try {
-      const gasPrice = new BigNumber(cachedTxData.gasPrice, 10).times(2).toFixed()
       const result = await this.kit.sendTransaction({
         to: this.walletCfg.address,
         from: this.walletCfg.address,
@@ -234,6 +238,14 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     } catch (e) {
       const err = new TxDeadletterError(e, txHash)
       this.logger.errorWithContext(err, cachedTxData.traceContext)
+      if (e.message.match(/nonce too low/)) {
+        // The transaction was actually included in the block
+        // before we were able to deadletter.
+        this.unwatchTransaction(txHash)
+      }
+      if (e.message.match(/gasprice is less than gas price minimum/)) {
+        this.logger.debug(`GasPrice: ${gasPrice}`)
+      }
     }
   }
 
