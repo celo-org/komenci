@@ -17,9 +17,10 @@ import {
   OnModuleInit
 } from '@nestjs/common'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
-import { GasPriceFetchError, TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
+import { GasPriceFetchError, TxDeadletterError, TxNotFoundError, TxSubmitError } from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
+import { Mutex } from 'async-mutex'
 import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 import { Transaction } from 'web3-core'
@@ -33,10 +34,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private watchedTransactions: Set<string>
   private transactionCtx: Map<string, RelayerTraceContext>
   private transactionSeenAt: Map<string, number>
+  private transactionNonce: Map<string, number>
   private checksumWalletAddress: string
   private txTimer: NodeJS.Timeout
   private gasPriceTimer: NodeJS.Timeout
   private gasPrice: string = ""
+  private mutex: Mutex
 
   constructor(
     private readonly kit: ContractKit,
@@ -48,21 +51,23 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   ) {
     this.watchedTransactions = new Set()
     this.transactionSeenAt = new Map()
+    this.transactionNonce = new Map()
     this.transactionCtx = new Map()
     this.checksumWalletAddress = Web3.utils.toChecksumAddress(walletCfg.address)
+    this.mutex = new Mutex()
   }
 
   async onModuleInit() {
     // Fetch the initial gas price
     await this.updateGasPrice()
     // Find pending txs and add to the watch list
-    const pendingTxs = await this.getPendingTransactionHashes()
-    pendingTxs.forEach(txHash =>
-      this.watchTransaction(txHash)
+    const pendingTxs = await this.getPendingTransactions()
+    pendingTxs.forEach(({hash, nonce}) =>
+      this.watchTransaction(hash, nonce)
     )
     // Monitor the watched transactions for finality
     this.txTimer = setInterval(
-      () => this.checkTransactions(),
+      async () => this.checkTransactions(),
       this.appCfg.transactionCheckIntervalMs
     )
     // Periodically update gasPrice
@@ -85,27 +90,35 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     ctx?: RelayerTraceContext
   ): Promise<Result<string, TxSubmitError>> {
     try {
-      const result = await this.kit.sendTransaction({
-        to: tx.destination,
-        value: tx.value,
-        data: tx.data,
-        from: this.walletCfg.address,
-        gas: this.appCfg.transactionMaxGas,
-        gasPrice: this.gasPrice
+      const [txHash, nonce] = await this.mutex.runExclusive<[string, number]>(async () => {
+        const currentNonce = await this.kit.connection.nonce(this.walletCfg.address)
+        const result = await this.kit.sendTransaction({
+          to: tx.destination,
+          value: tx.value,
+          data: tx.data,
+          from: this.walletCfg.address,
+          gas: this.appCfg.transactionMaxGas,
+          gasPrice: this.gasPrice,
+          nonce: currentNonce
+        })
+
+        // If we don't do this explicitly it results in
+        // an unhandled exception being logged if the
+        // tx reverts.
+        // tslint:disable-next-line:no-empty
+        result.waitReceipt().then().catch(() => {})
+
+        return [
+          await result.getHash(),
+          currentNonce
+        ]
       })
 
-      // If we don't do this explicitly it results in
-      // an unhandled exception being logged if the
-      // tx reverts.
-      // tslint:disable-next-line:no-empty
-      result.waitReceipt().then().catch(() => {})
-
-      const txHash = await result.getHash()
-      this.watchTransaction(txHash, ctx)
-
+      this.watchTransaction(txHash, nonce, ctx)
 
       this.logger.event(EventType.TxSubmitted, {
         txHash: txHash,
+        nonce: nonce,
         destination: tx.destination
       }, ctx)
 
@@ -123,24 +136,28 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async checkTransactions() {
-    const txs = await Promise.all(
-      [...this.watchedTransactions].map(txHash =>
-        this.kit.web3.eth.getTransaction(txHash)
+    const txs: Array<{hash: string, data: Transaction | null}> = await Promise.all(
+      [...this.watchedTransactions].map(async (txHash) => {
+        const transaction = await this.kit.web3.eth.getTransaction(txHash)
+        if (transaction === null || transaction === undefined) {
+          this.logger.warn(`Transaction ${txHash} not found in node`)
+        }
+        return { hash: txHash, data: transaction }
+      }
       )
     )
 
-
-    const completed = txs.filter(tx => tx.blockHash !== null)
+    const completed = txs.filter(tx => tx.data && tx.data.blockHash !== null)
     if (completed.length > 0) {
       await this.balanceService.logBalance()
     }
 
     const expired = txs.filter(
-      tx => tx.blockHash == null && this.isExpired(tx.hash)
+      tx => (this.isExpired(tx.hash, tx.data))
     )
 
-    await Promise.all(expired.map(tx => this.deadLetter(tx)))
-    await Promise.all(completed.map(tx => this.finalizeTransaction(tx)))
+    await Promise.all(expired.map(tx => this.deadLetter(tx.hash)))
+    await Promise.all(completed.map(tx => this.finalizeTransaction(tx.data)))
   }
 
   /**
@@ -158,6 +175,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     this.logger.event(EventType.TxConfirmed, {
       status: txReceipt.status === false ? "Reverted" : "Ok",
       txHash: tx.hash,
+      nonce: tx.nonce,
       gasUsed: txReceipt.gasUsed,
       gasPrice: gasPrice,
       gasCost: gasPrice * txReceipt.gasUsed,
@@ -170,25 +188,27 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    * Replace expired transaction with a dummy transaction
    * @param tx Expired tx
    */
-  private async deadLetter(tx: Transaction) {
-    const ctx = this.transactionCtx.get(tx.hash)
+  private async deadLetter(txHash: string, tx?: Transaction) {
+    const ctx = this.transactionCtx.get(txHash)
+    const nonce = this.transactionNonce.get(txHash)
+
     try {
       const result = await this.kit.sendTransaction({
         to: this.walletCfg.address,
         from: this.walletCfg.address,
         value: '0',
-        nonce: tx.nonce,
-        gasPrice: new BigNumber(tx.gasPrice, 16).times(1.5).toFixed()
+        nonce: nonce,
+        gasPrice: new BigNumber(this.gasPrice, 16).times(2).toFixed()
       })
       const deadLetterHash = await result.getHash()
-      this.unwatchTransaction(tx.hash)
-      this.watchTransaction(deadLetterHash, ctx)
+      this.unwatchTransaction(txHash)
+      this.watchTransaction(deadLetterHash, nonce, ctx)
 
       this.logger.event(EventType.TxTimeout, {
-        destination: tx.to,
-        txHash: tx.hash,
+        destination: tx ? tx.to : "n/a",
+        txHash: txHash,
         deadLetterHash,
-        nonce: tx.nonce
+        nonce: nonce
       }, ctx)
     } catch (e) {
       const err = new TxDeadletterError(e, tx.hash)
@@ -198,10 +218,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
   private watchTransaction(
     txHash: string,
+    nonce: number,
     ctx?: RelayerTraceContext
   ) {
     this.watchedTransactions.add(txHash)
     this.transactionSeenAt.set(txHash, Date.now())
+    this.transactionNonce.set(txHash, nonce)
     if (ctx) {
       this.transactionCtx.set(txHash, ctx)
     }
@@ -210,10 +232,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private unwatchTransaction(txHash: string) {
     this.watchedTransactions.delete(txHash)
     this.transactionSeenAt.delete(txHash)
+    this.transactionNonce.delete(txHash)
     this.transactionCtx.delete(txHash)
   }
 
-  private isExpired(txHash: string): boolean {
+  private isExpired(txHash: string, tx?: Transaction): boolean {
+    if (tx && tx.blockHash !== null) { return false }
     if (this.transactionSeenAt.has(txHash)) {
       return (
         Date.now() - this.transactionSeenAt.get(txHash) >
@@ -230,7 +254,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async getPendingTransactionHashes(): Promise<string[]> {
+  private async getPendingTransactions(): Promise<Array<{hash: string, nonce: number}>> {
     const txPoolRes = await this.blockchainService.getPendingTxPool()
     if (txPoolRes.ok === false) {
       if (txPoolRes.error.errorType === 'RPC') {
@@ -245,7 +269,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       const txPool = txPoolRes.result
       if (this.checksumWalletAddress in txPool.pending) {
         return Object.values(txPool.pending[this.checksumWalletAddress]).map(
-          tx => tx.hash
+          tx => ({hash: tx.hash, nonce: tx.nonce})
         )
       } else {
         this.logger.log('No pending transactions found for relayer')

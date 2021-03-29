@@ -94,7 +94,8 @@ export type RelayerEvent = {
 
 export type TxEvent = {
   destination: Address,
-  txHash: string
+  txHash: string,
+  nonce: number
 }
 
 export type SessionTxEvent = SessionEvent & {

@@ -1,6 +1,7 @@
 import { BlockchainService, NodeRPCError, TxPool } from '@app/blockchain/blockchain.service'
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
 import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
+import { sleep } from '@celo/base'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
@@ -28,6 +29,11 @@ describe('TransactionService', () => {
       getTransactionReceipt: jest.fn()
     }
   }
+  // @ts-ignore
+  contractKit.connection = {
+    nonce: jest.fn()
+  }
+  
 
   const buildModule = async (
     testAppConfig: Partial<AppConfig>,
@@ -191,7 +197,7 @@ describe('TransactionService', () => {
       const balanceService = module.get(BalanceService)
 
       // @ts-ignore
-      jest.spyOn(service, 'getPendingTransactionHashes').mockResolvedValue([])
+      jest.spyOn(service, 'getPendingTransactions').mockResolvedValue([])
       jest.spyOn(balanceService, 'logBalance').mockResolvedValue(null)
       await service.onModuleInit()
     })
@@ -217,6 +223,7 @@ describe('TransactionService', () => {
         const checkTransactions = jest.spyOn(service, 'checkTransactions')
         // Simulate pending tx
         const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction')
+        const nonce = jest.spyOn(contractKit.connection, 'nonce').mockResolvedValue(2)
         const txPromise = Promise.resolve(tx)
         getTransaction.mockReturnValue(txPromise)
 
@@ -228,6 +235,7 @@ describe('TransactionService', () => {
 
         const hash = await service.submitTransaction(rawTx)
 
+        expect(nonce).toHaveBeenCalled()
         expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
           to: rawTx.destination,
           data: rawTx.data,
@@ -235,7 +243,7 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, undefined)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, 2, undefined)
 
         // Ensure the checkTransactions method is called
         jest.runOnlyPendingTimers()
@@ -264,6 +272,7 @@ describe('TransactionService', () => {
         await completedTxPromise
         await txReceiptPromise
         await relayerBalancePromise
+        await Promise.resolve()
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
       })
     })
@@ -292,6 +301,7 @@ describe('TransactionService', () => {
         const finalizeTransaction = jest.spyOn(service, 'finalizeTransaction')
         // @ts-ignore
         const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(true)
+        const nonce = jest.spyOn(contractKit.connection, 'nonce').mockResolvedValue(2)
 
         const rawTx = {
           destination: tx.to,
@@ -301,6 +311,7 @@ describe('TransactionService', () => {
 
         const hash = await service.submitTransaction(rawTx)
 
+        expect(nonce).toHaveBeenCalled()
         expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
           to: rawTx.destination,
           data: rawTx.data,
@@ -308,7 +319,7 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, undefined)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, 2, undefined)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
         jest.runOnlyPendingTimers()
@@ -317,8 +328,10 @@ describe('TransactionService', () => {
         await txPromise
         await resultPromise
         await result.getHash()
+        await Promise.resolve()
         jest.runOnlyPendingTimers()
-        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
+        await Promise.resolve()
+        expect(deadLetter).toHaveBeenCalledWith(tx.hash)
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         expect(watchTransaction.mock.calls.length).toBe(2)
       })

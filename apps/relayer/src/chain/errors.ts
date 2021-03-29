@@ -4,6 +4,7 @@ import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWa
 
 export enum ChainErrorTypes {
   TxSubmitError = "TxSubmitError",
+  TxNotFoundError = "TxNotFoundError",
   TxDeadletterError = "TxDeadletterError",
   GasPriceFetchError = "GasPriceFetchError"
 }
@@ -30,5 +31,14 @@ export class GasPriceFetchError extends RootError<ChainErrorTypes.GasPriceFetchE
   constructor(readonly err: Error) {
     super(ChainErrorTypes.GasPriceFetchError)
     this.message = `GasPriceFetchError: ${err.message}`
+  }
+}
+
+export class TxNotFoundError extends RootError<ChainErrorTypes.TxNotFoundError> {
+  metadataProps = ['txHash']
+
+  constructor(readonly txHash: string) {
+    super(ChainErrorTypes.TxNotFoundError)
+    this.message = `TxNotFoundError: Error tx ${txHash} not found in node`
   }
 }
