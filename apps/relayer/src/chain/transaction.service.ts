@@ -198,7 +198,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         from: this.walletCfg.address,
         value: '0',
         nonce: nonce,
-        gasPrice: new BigNumber(this.gasPrice, 16).times(2).toFixed()
+        gasPrice: new BigNumber(this.gasPrice, 10).times(2).toFixed()
       })
       const deadLetterHash = await result.getHash()
       this.unwatchTransaction(txHash)
