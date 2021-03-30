@@ -14,8 +14,11 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { Attestation } from '../attestation/attestation.entity'
+import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
+import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
 import { partialEventLog, partialTransaction } from '../utils/testing'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
@@ -26,10 +29,12 @@ const inviterAddress = '0x002'
 const komenciAddress = '0x003'
 const inviteTxHash = '0x004'
 const cUsdTokenAddress = '0x005'
+const inviteeIdentifier = '0x006'
 
 describe('InviteRewardService', () => {
   let service: InviteRewardService
   let repository: InviteRewardRepository
+  let attestationRepository: AttestationRepository
   let notifiedBlockRepository: NotifiedBlockRepository
   let contractKit: ContractKit
   let escrow: EscrowWrapper
@@ -53,8 +58,13 @@ describe('InviteRewardService', () => {
       ],
       providers: [
         InviteRewardService,
+        NotifiedBlockService,
         {
           provide: getRepositoryToken(InviteReward),
+          useClass: Repository
+        },
+        {
+          provide: getRepositoryToken(Attestation),
           useClass: Repository
         },
         {
@@ -80,6 +90,9 @@ describe('InviteRewardService', () => {
 
     repository = module.get<Repository<InviteReward>>(
       getRepositoryToken(InviteReward)
+    )
+    attestationRepository = module.get<Repository<Attestation>>(
+      getRepositoryToken(Attestation)
     )
     notifiedBlockRepository = module.get<Repository<NotifiedBlock>>(
       getRepositoryToken(NotifiedBlockRepository)
@@ -117,7 +130,7 @@ describe('InviteRewardService', () => {
             transactionHash: metadata.txHash,
             blockNumber: metadata.blockNumber,
             returnValues: {
-              identifier: 'qwerty',
+              identifier: inviteeIdentifier,
               token: metadata.token ?? cUsdTokenAddress,
               to: metadata.inviter
             }
@@ -170,6 +183,26 @@ describe('InviteRewardService', () => {
       )
   }
 
+  const mockAttestationRepository = (addressIdentifiers: {
+    [address: string]: string[] | undefined
+  }) => {
+    const getRawManyFn = (address: string) => ({
+      getRawMany: () =>
+        Promise.resolve(
+          addressIdentifiers[address]?.map(identifier => ({
+            identifier
+          })) ?? []
+        )
+    })
+    const whereFn: any = {
+      where: ({ address }) => getRawManyFn(address)
+    }
+    const selectFn: any = { select: () => whereFn }
+    jest
+      .spyOn(attestationRepository, 'createQueryBuilder')
+      .mockImplementation(() => selectFn)
+  }
+
   const mockInviterCount = (invitersCount: { [inviter: string]: number }) => {
     jest
       .spyOn(repository, 'findAndCount')
@@ -189,14 +222,14 @@ describe('InviteRewardService', () => {
   }
 
   describe('#sendInviteRewards', () => {
-    const saveBlockMock = jest.fn()
+    const updateBlockMock = jest.fn()
     const saveInviteRewardMock = jest.fn()
     let notifiedBlockId
 
     beforeEach(() => {
       notifiedBlockId = uuidv4()
       mockFindBlock(notifiedBlockId, 10)
-      notifiedBlockRepository.save = saveBlockMock
+      notifiedBlockRepository.update = updateBlockMock
       mockCusdTokenAddress(cUsdTokenAddress)
       mockEscrowEvents([
         {
@@ -212,6 +245,9 @@ describe('InviteRewardService', () => {
         [inviterAddress]: { completed: 3, total: 3 },
         [inviteeAddress]: { completed: 3, total: 3 }
       })
+      mockAttestationRepository({
+        [inviterAddress]: ['inviterIdentifier']
+      })
       mockInviterCount({ [inviterAddress]: 0 })
       mockFindInviteeReward({ [inviteeAddress]: undefined })
       repository.save = saveInviteRewardMock
@@ -225,15 +261,16 @@ describe('InviteRewardService', () => {
           expect.objectContaining({
             inviter: inviterAddress,
             invitee: inviteeAddress,
+            inviteeIdentifier: inviteeIdentifier,
             state: RewardStatus.Created
           })
         )
-        expect(saveBlockMock).toHaveBeenCalledWith(
-          NotifiedBlock.of({
+        expect(updateBlockMock).toHaveBeenCalledWith(
+          expect.objectContaining({
             id: notifiedBlockId,
-            key: 'inviteReward',
-            blockNumber: 20
-          })
+            key: 'inviteReward'
+          }),
+          { blockNumber: 20 }
         )
       })
     })
@@ -257,12 +294,12 @@ describe('InviteRewardService', () => {
         await service.sendInviteRewards()
 
         expect(saveInviteRewardMock).not.toHaveBeenCalled()
-        expect(saveBlockMock).toHaveBeenCalledWith(
-          NotifiedBlock.of({
+        expect(updateBlockMock).toHaveBeenCalledWith(
+          expect.objectContaining({
             id: notifiedBlockId,
-            key: 'inviteReward',
-            blockNumber: 20
-          })
+            key: 'inviteReward'
+          }),
+          { blockNumber: 20 }
         )
       })
     })
@@ -279,12 +316,12 @@ describe('InviteRewardService', () => {
         await service.sendInviteRewards()
 
         expect(saveInviteRewardMock).not.toHaveBeenCalled()
-        expect(saveBlockMock).toHaveBeenCalledWith(
-          NotifiedBlock.of({
+        expect(updateBlockMock).toHaveBeenCalledWith(
+          expect.objectContaining({
             id: notifiedBlockId,
-            key: 'inviteReward',
-            blockNumber: 20
-          })
+            key: 'inviteReward'
+          }),
+          { blockNumber: 20 }
         )
       })
     })
@@ -300,12 +337,12 @@ describe('InviteRewardService', () => {
         await service.sendInviteRewards()
 
         expect(saveInviteRewardMock).not.toHaveBeenCalled()
-        expect(saveBlockMock).toHaveBeenCalledWith(
-          NotifiedBlock.of({
+        expect(updateBlockMock).toHaveBeenCalledWith(
+          expect.objectContaining({
             id: notifiedBlockId,
-            key: 'inviteReward',
-            blockNumber: 20
-          })
+            key: 'inviteReward'
+          }),
+          { blockNumber: 20 }
         )
       })
     })
@@ -319,12 +356,12 @@ describe('InviteRewardService', () => {
         await service.sendInviteRewards()
 
         expect(saveInviteRewardMock).not.toHaveBeenCalled()
-        expect(saveBlockMock).toHaveBeenCalledWith(
-          NotifiedBlock.of({
+        expect(updateBlockMock).toHaveBeenCalledWith(
+          expect.objectContaining({
             id: notifiedBlockId,
-            key: 'inviteReward',
-            blockNumber: 20
-          })
+            key: 'inviteReward'
+          }),
+          { blockNumber: 20 }
         )
       })
     })
@@ -345,12 +382,12 @@ describe('InviteRewardService', () => {
         await service.sendInviteRewards()
 
         expect(saveInviteRewardMock).not.toHaveBeenCalled()
-        expect(saveBlockMock).toHaveBeenCalledWith(
-          NotifiedBlock.of({
+        expect(updateBlockMock).toHaveBeenCalledWith(
+          expect.objectContaining({
             id: notifiedBlockId,
-            key: 'inviteReward',
-            blockNumber: 20
-          })
+            key: 'inviteReward'
+          }),
+          { blockNumber: 20 }
         )
       })
     })
