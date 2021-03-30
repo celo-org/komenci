@@ -23,6 +23,9 @@ export class InviteReward {
   @Column({ unique: true })
   invitee: string
 
+  @Column({ unique: true })
+  inviteeIdentifier: string
+
   @Column()
   state: RewardStatus
 
