@@ -11,7 +11,7 @@ export const buildMockWeb3Provider = (
     callback: (error: Error | null, result?: JsonRpcResponse) => void
   ) => {
     const [err, result] = payload.params[0].to === '0x000000000000000000000000000000000000ce10'
-      ? [null, Web3.utils.randomHex(32)]
+      ? [null,  Web3.utils.padLeft(Web3.utils.randomHex(20), 64)]
       : resultForPayload(payload)
 
     callback(err, {

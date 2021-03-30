@@ -1,6 +1,6 @@
+import { WasmBlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
+import { getBlindedPhoneNumber } from '@celo/identity/lib/odis/phone-number-identifier'
 
-import { WasmBlsBlindingClient } from '@celo/contractkit/lib/identity/odis/bls-blinding-client'
-import { getBlindedPhoneNumber } from '@celo/contractkit/lib/identity/odis/phone-number-identifier'
 import {
   normalizeAddressWith0x,
   privateKeyToAddress

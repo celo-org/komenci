@@ -1,6 +1,6 @@
 # compiled output
 /dist
-/node_modules
+node_modules
 
 # Logs
 logs
@@ -49,3 +49,11 @@ apps/rewards/.env
 
 # Encrypted file
 .env.mnemonic.deployer
+
+# Load testing
+load-testing/node_modules
+load-testing/rerport
+load-testing/lib/
+load-testing/*.log
+load-testing/logs/
+load-testing/reports/

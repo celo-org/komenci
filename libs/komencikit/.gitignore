@@ -1,0 +1,8 @@
+src/generated
+lib/
+.devchain/
+.devchain.tar.gz
+tmp/
+.tmp/
+.env
+tsconfig.tsbuildinfo
