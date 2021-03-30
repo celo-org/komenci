@@ -245,6 +245,7 @@ describe('InviteRewardService', () => {
             id: 'any',
             invitee: inviteeAddress,
             inviter: 'any',
+            inviteeIdentifier: 'identifier',
             state: RewardStatus.Created,
             rewardTxHash: undefined,
             createdAt: new Date(Date.now()).toISOString()
