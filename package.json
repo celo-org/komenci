@@ -6,7 +6,8 @@
   "private": true,
   "license": "UNLICENSED",
   "workspaces": [
-    "libs/komencikit"
+    "libs/komencikit",
+    "load-testing"
   ],
   "scripts": {
     "build": "nest build",
