@@ -31,7 +31,7 @@ describe('TransactionService', () => {
   }
   // @ts-ignore
   contractKit.connection = {
-    nonce: jest.fn()
+    nonce:  () => Promise.resolve(2)
   }
   
 
@@ -223,7 +223,6 @@ describe('TransactionService', () => {
         const checkTransactions = jest.spyOn(service, 'checkTransactions')
         // Simulate pending tx
         const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction')
-        const nonce = jest.spyOn(contractKit.connection, 'nonce').mockResolvedValue(2)
         const txPromise = Promise.resolve(tx)
         getTransaction.mockReturnValue(txPromise)
 
@@ -235,7 +234,6 @@ describe('TransactionService', () => {
 
         const hash = await service.submitTransaction(rawTx)
 
-        expect(nonce).toHaveBeenCalled()
         expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
           to: rawTx.destination,
           data: rawTx.data,
@@ -317,7 +315,6 @@ describe('TransactionService', () => {
         const finalizeTransaction = jest.spyOn(service, 'finalizeTransaction')
         // @ts-ignore
         const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(true)
-        const nonce = jest.spyOn(contractKit.connection, 'nonce').mockResolvedValue(2)
 
         const rawTx = {
           destination: tx.to,
@@ -327,7 +324,6 @@ describe('TransactionService', () => {
 
         const hash = await service.submitTransaction(rawTx)
 
-        expect(nonce).toHaveBeenCalled()
         expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
           to: rawTx.destination,
           data: rawTx.data,
