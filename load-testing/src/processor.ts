@@ -44,6 +44,7 @@ const wrapped = (fn: (...args: any[]) => Promise<void>) => {
   return async (...args: any[]) => {
     const next = args[args.length -1]
     try {
+      // @ts-ignore
       await fn(...args)
       next()
     } catch (e) {

@@ -72,7 +72,7 @@ export async function getAddressFromDeploy(contractKit, externalAccount,  txHash
 export async function waitForReceipt(contractKit: ContractKit, txHash: string) {
   let receipt: TransactionReceipt | null = null
   let waited = 0
-  while (receipt == null && waited < 20000) {
+  while (receipt == null && waited < 30000) {
     receipt = await contractKit.connection.getTransactionReceipt(txHash)
     if (receipt == null) {
       await sleep(100)
