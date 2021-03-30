@@ -207,7 +207,7 @@ describe('TransactionService', () => {
     })
 
     describe('when the transaction result resolves', () => {
-      it.only('submits the transaction to the chain, watched then unwatches', async () => {
+      it('submits the transaction to the chain, watched then unwatches', async () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
         const result: any = {
