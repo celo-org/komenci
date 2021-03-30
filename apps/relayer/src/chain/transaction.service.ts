@@ -36,6 +36,7 @@ interface TxCachedData {
   expireIn: number, // ms until tx gets expired
   traceContext?: RelayerTraceContext,
 }
+
 @Injectable()
 export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private watchedTransactions: Set<string>
@@ -97,7 +98,14 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     ctx?: RelayerTraceContext
   ): Promise<Result<string, TxSubmitError>> {
     try {
+      const startedAcquireLock = Date.now()
+      let endedAcquireLock: number | null
+      let startedSend: number | null
+      let endedSend: number | null
+
       const [txHash, nonce] = await this.mutex.runExclusive<[string, number]>(async () => {
+        endedAcquireLock = Date.now()
+        startedSend = Date.now()
         const currentNonce = await this.kit.connection.nonce(this.walletCfg.address)
         const result = await this.kit.sendTransaction({
           to: tx.destination,
@@ -108,6 +116,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           gasPrice: this.gasPrice,
           nonce: currentNonce
         })
+        endedSend = Date.now()
 
         // If we don't do this explicitly it results in
         // an unhandled exception being logged if the
@@ -129,6 +138,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       })
 
       this.logger.event(EventType.TxSubmitted, {
+        lockAcquiredDuration: endedAcquireLock - startedAcquireLock,
+        sendDuration: endedSend - startedSend,
         txHash: txHash,
         nonce: nonce,
         destination: tx.destination
@@ -137,7 +148,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       return Ok(txHash)
     } catch (e) {
       if (e.message.match(/gasprice is less than gas price minimum/)) {
-        this.logger.debug(`GasPrice: ${this.gasPrice}`)
+        this.logger.log(`GasPrice: ${this.gasPrice}`)
         await this.updateGasPrice()
       }
       return Err(new TxSubmitError(e, tx))
@@ -183,11 +194,16 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    */
   private async finalizeTransaction(tx: Transaction) {
     const ctx = this.transactions.get(tx.hash)?.traceContext
-    this.unwatchTransaction(tx.hash)
-
     const txReceipt = await this.kit.web3.eth.getTransactionReceipt(tx.hash)
-    const gasPrice = parseInt(tx.gasPrice, 10)
 
+    // XXX: receipt can be null in which case we wait for the next cycle to finalize
+    if (txReceipt === null) {
+      this.logger.warn(`Receipt null when trying to finalize transaction ${tx.hash}`)
+      return
+    }
+
+    const gasPrice = parseInt(tx.gasPrice, 10)
+    this.unwatchTransaction(tx.hash)
     this.logger.event(EventType.TxConfirmed, {
       status: txReceipt.status === false ? "Reverted" : "Ok",
       txHash: tx.hash,
@@ -236,15 +252,16 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         nonce: cachedTxData.nonce
       }, cachedTxData.traceContext)
     } catch (e) {
-      const err = new TxDeadletterError(e, txHash)
-      this.logger.errorWithContext(err, cachedTxData.traceContext)
       if (e.message.match(/nonce too low/)) {
-        // The transaction was actually included in the block
-        // before we were able to deadletter.
+        e.logger.warn(`Trying to deadletter a tx that probably when through: ${txHash}`)
         this.unwatchTransaction(txHash)
-      }
-      if (e.message.match(/gasprice is less than gas price minimum/)) {
-        this.logger.debug(`GasPrice: ${gasPrice}`)
+      } else {
+        const err = new TxDeadletterError(e, txHash)
+        this.logger.errorWithContext(err, cachedTxData.traceContext)
+
+        if (e.message.match(/gasprice is less than gas price minimum/)) {
+          this.logger.log(`GasPrice: ${gasPrice}`)
+        }
       }
     }
   }

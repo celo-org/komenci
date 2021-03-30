@@ -59,7 +59,10 @@ export type EventPayload = {
   [EventType.RelayerMTWInit]: {
     mtwAddress: string
   }
-  [EventType.TxSubmitted]: TxEvent
+  [EventType.TxSubmitted]: TxEvent & {
+    lockAcquiredDuration: number,
+    sendDuration: number,
+  }
   [EventType.TxConfirmed]: TxEvent & {
     status: string
     gasPrice: number
