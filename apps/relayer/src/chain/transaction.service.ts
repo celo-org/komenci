@@ -45,7 +45,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private txTimer: NodeJS.Timeout
   private gasPriceTimer: NodeJS.Timeout
   private gasPrice: string = ""
-  private mutex: Mutex
+  private nonceLock: Mutex
+  private nonce: number
 
   constructor(
     private readonly kit: ContractKit,
@@ -58,12 +59,14 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     this.watchedTransactions = new Set()
     this.transactions = new Map()
     this.checksumWalletAddress = Web3.utils.toChecksumAddress(walletCfg.address)
-    this.mutex = new Mutex()
+    this.nonceLock = new Mutex()
   }
 
   async onModuleInit() {
     // Fetch the initial gas price
     await this.updateGasPrice()
+    // Fetch the initial nonce
+    await this.updateNonce()
     // Find pending txs and add to the watch list
     const pendingTxs = await this.getPendingTransactions()
     pendingTxs.forEach(({hash, nonce, gasPrice}) =>
@@ -90,23 +93,24 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.gasPriceTimer)
   }
 
-  @retry<[RawTransactionDto, RelayerTraceContext], TxSubmitError | GasPriceBellowMinimum>({
+  @retry<[RawTransactionDto, RelayerTraceContext], TxSubmitError | GasPriceBellowMinimum | NonceTooLow>({
       tries: 3
   })
   async submitTransaction(
     tx: RawTransactionDto,
     ctx?: RelayerTraceContext
-  ): Promise<Result<string, TxSubmitError | GasPriceBellowMinimum>> {
+  ): Promise<
+    Result<string, TxSubmitError | GasPriceBellowMinimum | NonceTooLow>
+  > {
     try {
       const startedAcquireLock = Date.now()
       let endedAcquireLock: number | null
       let startedSend: number | null
       let endedSend: number | null
 
-      const [txHash, nonce] = await this.mutex.runExclusive<[string, number]>(async () => {
+      const [txHash, nonce] = await this.nonceLock.runExclusive<[string, number]>(async () => {
         endedAcquireLock = Date.now()
         startedSend = Date.now()
-        const currentNonce = await this.kit.connection.nonce(this.walletCfg.address)
         const result = await this.kit.sendTransaction({
           to: tx.destination,
           value: tx.value,
@@ -114,8 +118,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           from: this.walletCfg.address,
           gas: this.appCfg.transactionMaxGas,
           gasPrice: this.gasPrice,
-          nonce: currentNonce
+          nonce: this.nonce
         })
+        const _txHash = await result.getHash()
         endedSend = Date.now()
 
         // If we don't do this explicitly it results in
@@ -125,8 +130,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         result.waitReceipt().then().catch(() => {})
 
         return [
-          await result.getHash(),
-          currentNonce
+          _txHash,
+          this.nonce++,
         ]
       })
 
@@ -152,6 +157,10 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         this.logger.warn(err)
         await this.updateGasPrice()
         return Err(err)
+      } else if (e.message.match(/nonce too low/)) {
+        this.logger.warn(`Nonce might be out of sync -- force an update`)
+        await this.updateNonce()
+        return Err(new NonceTooLow())
       } else {
         return Err(new TxSubmitError(e, tx))
       }
@@ -161,7 +170,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   async submitTransactionObject(
     txo: CeloTxObject<any>,
     ctx?: RelayerTraceContext
-  ): Promise<Result<string, TxSubmitError | GasPriceBellowMinimum>> {
+  ): Promise<Result<string, TxSubmitError | GasPriceBellowMinimum | NonceTooLow>> {
     return this.submitTransaction(toRawTransaction(txo), ctx)
   }
 
@@ -335,6 +344,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         return []
       }
     }
+  }
+
+  private async updateNonce() {
+    return this.nonceLock.runExclusive<void>(async () => {
+      this.nonce = await this.kit.connection.nonce(this.walletCfg.address)
+    })
   }
 
   private async updateGasPrice() {
