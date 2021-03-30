@@ -17,7 +17,7 @@ import {
   OnModuleInit
 } from '@nestjs/common'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
-import { GasPriceFetchError, TxDeadletterError, TxNotFoundError, TxSubmitError } from 'apps/relayer/src/chain/errors'
+import { ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, NonceTooLow, TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
 import { Mutex } from 'async-mutex'
@@ -90,13 +90,13 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.gasPriceTimer)
   }
 
-  @retry<[RawTransactionDto, RelayerTraceContext], TxSubmitError>({
+  @retry<[RawTransactionDto, RelayerTraceContext], TxSubmitError | GasPriceBellowMinimum>({
       tries: 3
   })
   async submitTransaction(
     tx: RawTransactionDto,
     ctx?: RelayerTraceContext
-  ): Promise<Result<string, TxSubmitError>> {
+  ): Promise<Result<string, TxSubmitError | GasPriceBellowMinimum>> {
     try {
       const startedAcquireLock = Date.now()
       let endedAcquireLock: number | null
@@ -148,17 +148,20 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       return Ok(txHash)
     } catch (e) {
       if (e.message.match(/gasprice is less than gas price minimum/)) {
-        this.logger.log(`GasPrice: ${this.gasPrice}`)
+        const err = new GasPriceBellowMinimum(this.gasPrice)
+        this.logger.warn(err)
         await this.updateGasPrice()
+        return Err(err)
+      } else {
+        return Err(new TxSubmitError(e, tx))
       }
-      return Err(new TxSubmitError(e, tx))
     }
   }
 
   async submitTransactionObject(
     txo: CeloTxObject<any>,
     ctx?: RelayerTraceContext
-  ): Promise<Result<string, TxSubmitError>> {
+  ): Promise<Result<string, TxSubmitError | GasPriceBellowMinimum>> {
     return this.submitTransaction(toRawTransaction(txo), ctx)
   }
 
@@ -220,7 +223,13 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    * Replace expired transaction with a dummy transaction
    * @param tx Expired tx
    */
-  private async deadLetter(txHash: string, tx?: Transaction) {
+  @retry<[string], TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>({
+      tries: 3,
+      bailOnErrorTypes: [ChainErrorTypes.NonceTooLow]
+  })
+  private async deadLetter(txHash: string, tx?: Transaction): Promise<
+    Result<true, TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>
+  > {
     const cachedTxData = this.transactions.get(txHash)
     const gasPrice = new BigNumber(cachedTxData.gasPrice, 10).times(2).toFixed()
 
@@ -251,17 +260,21 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         deadLetterHash,
         nonce: cachedTxData.nonce
       }, cachedTxData.traceContext)
+
+      return Ok(true)
     } catch (e) {
       if (e.message.match(/nonce too low/)) {
         this.logger.warn(`Trying to deadletter a tx that probably when through: ${txHash}`)
         this.unwatchTransaction(txHash)
+        return Err(new NonceTooLow())
+      } else if (e.message.match(/gasprice is less than gas price minimum/)) {
+        this.logger.warn(`GasPrice ${gasPrice} bellow minimum - triggering update`)
+        await this.updateGasPrice()
+        return Err(new GasPriceBellowMinimum(gasPrice))
       } else {
         const err = new TxDeadletterError(e, txHash)
         this.logger.errorWithContext(err, cachedTxData.traceContext)
-
-        if (e.message.match(/gasprice is less than gas price minimum/)) {
-          this.logger.log(`GasPrice: ${gasPrice}`)
-        }
+        return Err(err)
       }
     }
   }

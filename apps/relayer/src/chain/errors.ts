@@ -7,6 +7,8 @@ export enum ChainErrorTypes {
   TxNotFoundError = "TxNotFoundError",
   TxDeadletterError = "TxDeadletterError",
   GasPriceFetchError = "GasPriceFetchError"
+  NonceTooLow = "NonceTooLow",
+  GasPriceBellowMinimum = "GasPriceBellowMinimum"
 }
 
 export class TxSubmitError extends MetadataError<ChainErrorTypes.TxSubmitError> {
@@ -40,5 +42,20 @@ export class TxNotFoundError extends RootError<ChainErrorTypes.TxNotFoundError> 
   constructor(readonly txHash: string) {
     super(ChainErrorTypes.TxNotFoundError)
     this.message = `TxNotFoundError: Error tx ${txHash} not found in node`
+  }
+}
+
+export class NonceTooLow extends RootError<ChainErrorTypes.NonceTooLow> {
+  constructor() {
+    super(ChainErrorTypes.NonceTooLow)
+    this.message = "Nonce too low"
+  }
+}
+
+export class GasPriceBellowMinimum extends RootError<ChainErrorTypes.GasPriceBellowMinimum> {
+  metadataProps = ['gasPrice']
+  constructor(readonly gasPrice: string) {
+    super(ChainErrorTypes.GasPriceBellowMinimum)
+    this.message = `Gas price bellow minium: ${gasPrice}`
   }
 }
