@@ -24,6 +24,12 @@ export class CreateInviteReward1616435724783 implements MigrationInterface {
             isUnique: true
           },
           {
+            name: 'inviteeIdentifier',
+            type: 'varchar',
+            isNullable: false,
+            isUnique: true
+          },
+          {
             name: 'state',
             type: 'varchar',
             isNullable: false

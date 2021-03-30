@@ -94,7 +94,11 @@ export class InviteRewardService {
             this.logger.log(
               `Starting to send reward to ${inviter} for inviting ${invitee}`
             )
-            const inviteReward = await this.createInviteReward(inviter, invitee)
+            const inviteReward = await this.createInviteReward(
+              inviter,
+              invitee,
+              identifier
+            )
             if (inviteReward) {
               this.sendInviteReward(inviteReward)
             }
@@ -169,12 +173,17 @@ export class InviteRewardService {
     return !reward
   }
 
-  async createInviteReward(inviter: string, invitee: string) {
+  async createInviteReward(
+    inviter: string,
+    invitee: string,
+    inviteeIdentifier: string
+  ) {
     try {
       const inviteReward = InviteReward.of({
         id: uuidv4(),
         inviter,
         invitee,
+        inviteeIdentifier,
         state: RewardStatus.Created,
         createdAt: new Date(Date.now()).toISOString()
       })
