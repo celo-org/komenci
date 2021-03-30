@@ -11,6 +11,9 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { InviteRewardModule } from 'apps/rewards/src/invite/inviteReward.module'
 import { InviteRewardService } from 'apps/rewards/src/invite/inviteReward.service'
+import { AttestationModule } from './attestation/attestation.module'
+import { AttestationService } from './attestation/attestation.service'
+import { NotifiedBlockService } from './blocks/notifiedBlock.service'
 import { appConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
 
@@ -18,6 +21,7 @@ import { DatabaseConfig, databaseConfig } from './config/database.config'
   controllers: [],
   imports: [
     InviteRewardModule,
+    AttestationModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -50,6 +54,8 @@ import { DatabaseConfig, databaseConfig } from './config/database.config'
   ],
   providers: [
     InviteRewardService,
+    AttestationService,
+    NotifiedBlockService,
     {
       provide: APP_FILTER,
       useClass: ApiErrorFilter

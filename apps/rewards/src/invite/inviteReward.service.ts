@@ -6,9 +6,9 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
-import { EventLog } from 'web3-core'
-import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
-import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
+import { AttestationRepository } from '../attestation/attestation.repository'
+import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
+import { fetchEvents } from '../utils/fetchEvents'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 
@@ -23,7 +23,8 @@ export class InviteRewardService {
 
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
-    private readonly notifiedBlockRepository: NotifiedBlockRepository,
+    private readonly attestationRepository: AttestationRepository,
+    private readonly notifiedBlockService: NotifiedBlockService,
     private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
@@ -84,8 +85,8 @@ export class InviteRewardService {
             continue
           }
           const conditions = await Promise.all([
-            // TODO: Make sure that inviter is verfied
-            this.addressIsConsideredVerified(invitee, identifier),
+            this.isAddressVerified(inviter),
+            this.isAddressVerifiedWithIdentifier(invitee, identifier),
             this.inviterHasNotReachedWeeklyLimit(inviter),
             this.inviteeRewardNotInProgress(invitee)
           ])
@@ -109,55 +110,41 @@ export class InviteRewardService {
   async usingLastNotifiedBlock(
     inviteRewardsSenderFn: (blockNumber: number) => Promise<number>
   ) {
-    try {
-      let lastNotifiedBlock = await this.notifiedBlockRepository.findOne({
-        key: NOTIFIED_BLOCK_KEY
-      })
-      if (!lastNotifiedBlock) {
-        const blockNumber = await this.contractKit.web3.eth.getBlockNumber()
-        lastNotifiedBlock = {
-          id: uuidv4(),
-          key: NOTIFIED_BLOCK_KEY,
-          blockNumber
-        }
-      }
-      const fromBlock = lastNotifiedBlock.blockNumber + 1
-      const lastBlock = await inviteRewardsSenderFn(fromBlock)
-      if (lastBlock > fromBlock) {
-        await this.notifiedBlockRepository.save(
-          NotifiedBlock.of({
-            id: lastNotifiedBlock.id,
-            key: lastNotifiedBlock.key,
-            blockNumber: lastBlock
-          })
-        )
-      }
-    } catch (error) {
-      this.logger.error(`Error while calculating invite rewards: ${error}`)
-    }
+    await this.notifiedBlockService.runUsingLastNotifiedBlock(
+      NOTIFIED_BLOCK_KEY,
+      () => this.contractKit.web3.eth.getBlockNumber(),
+      inviteRewardsSenderFn
+    )
   }
 
   async fetchWithdrawalEvents(fromBlock: number) {
     const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
     const escrow = await this.contractKit.contracts.getEscrow()
-    const withdrawalEvents: EventLog[] = []
-    let currentFromBlock = fromBlock
-    while (currentFromBlock < lastBlock) {
-      const events = await escrow.getPastEvents('Withdrawal', {
-        fromBlock: currentFromBlock,
-        toBlock: currentFromBlock + EVENTS_BATCH_SIZE
-      })
-      withdrawalEvents.push(...events)
-      currentFromBlock += EVENTS_BATCH_SIZE + 1
-    }
-    return withdrawalEvents
+    return fetchEvents(escrow, 'Withdrawal', fromBlock, lastBlock)
   }
 
   isKomenciSender(address: string) {
     return this.komenciAddresses.includes(address.toLowerCase())
   }
 
-  async addressIsConsideredVerified(address: string, identifier: string) {
+  async isAddressVerified(address: string) {
+    const identifierResult = await this.attestationRepository
+      .createQueryBuilder()
+      .select('DISTINCT identifier')
+      .where({ address })
+      .getRawMany()
+    const identifiers = identifierResult.map(
+      identifierContainer => identifierContainer.identifier
+    )
+    for (const identifier of identifiers) {
+      if (await this.isAddressVerifiedWithIdentifier(address, identifier)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  async isAddressVerifiedWithIdentifier(address: string, identifier: string) {
     const attestations = await this.contractKit.contracts.getAttestations()
     const attestationStat = await attestations.getAttestationStat(
       identifier,

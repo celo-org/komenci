@@ -9,7 +9,8 @@ export class CreateNotifiedBlock1616435756861 implements MigrationInterface {
           {
             name: 'id',
             type: 'uuid',
-            isNullable: false
+            isNullable: false,
+            isPrimary: true
           },
           {
             name: 'key',
