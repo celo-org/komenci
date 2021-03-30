@@ -147,7 +147,7 @@ export const prepareSetAccount = wrapped(async (requestParams, context, ee) => {
 })
 
 export const waitForWallet = wrapped(async (requestParams, response, context, ee, next) => {
-  if (response.body.status == 'deployed') {
+  if (response.body.status === 'deployed') {
     context.vars.metaTxWalletAddress = response.body.walletAddress
   } else {
     const addressResp = await getAddressFromDeploy(context.vars.contractKit, context.vars.externalAccount, response.body.txHash)
