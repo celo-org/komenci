@@ -1,0 +1,83 @@
+config:
+  target: 'http://localhost:4000'
+  phases:
+    - duration: 60
+      arrivalCount: 40
+      name: Warm up
+    - duration: 150
+      arrivalCount: 300
+      name: Ramp up load
+  processor: './lib/processor.js'
+  environments:
+    alfajores:
+      target: https://staging-komenci.azurefd.net/v1
+      # target: 'https://weu.komenci.alfajores.celo-testnet.org/v1'
+      # target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
+    baklava:
+      target: 'http://localhost:3000'
+    mainnet:
+      target: 'http://localhost:3000'
+scenarios:
+  - flow:
+          - post: 
+              name: "Start session"
+              url: '/startSession'
+              headers: {content-type: application/json}
+              beforeRequest: "prepareStartSession"
+              capture:
+                json: "$.token"
+                as: "token"
+              strict: false
+          - log: "Session started for {{ account }} with {{ token }}"
+          - think: 0.2
+          - get: 
+              name: "Check session"
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/checkSession'
+          - think: 0.2
+          - post:
+              name: "Deploy wallet"
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/deployWallet'
+              beforeRequest: "prepareDeployWallet"
+              afterResponse: "waitForWallet"
+          - post: 
+              name: "Get pepper"
+              url: '/distributedBlindedPepper'
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              beforeRequest: "preparePepperRequest"
+              afterResponse: "recordPepperAndIdentifier"
+          - log: "Get identifier."
+          - think: 0.2
+          - get: 
+              name: "Check session"
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/checkSession'
+          - think: 0.2
+          - post: 
+              name: "Set Account"
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/submitMetaTransaction'
+              beforeRequest: "prepareSetAccount"
+              afterResponse: "waitForTransaction"
+              capture:
+                json: "$.txHash"
+                as: "txHash" 
+              strict: false
+          - log: "Submitting MetaTransaction {{ txHash }}"
+          - think: 0.2
+          - post: 
+              name: "Request Attestations"
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/requestSubsidisedAttestations'
+              beforeRequest: "prepareSubsidisedAttestations"
+              afterResponse: "waitForTransaction"
+          - log: "Request Subsidised Attestations"
+          - think: 0.2
+          - post: 
+              name: "Select Issuers"
+              headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
+              url: '/submitMetaTransaction'
+              beforeRequest: "prepareSelectIssuers"
+              afterResponse: "waitForTransaction"
+          - log: "Issuers selected"
