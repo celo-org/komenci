@@ -6,7 +6,7 @@ export enum ChainErrorTypes {
   TxSubmitError = "TxSubmitError",
   TxNotFoundError = "TxNotFoundError",
   TxDeadletterError = "TxDeadletterError",
-  GasPriceFetchError = "GasPriceFetchError"
+  GasPriceFetchError = "GasPriceFetchError",
   NonceTooLow = "NonceTooLow",
   GasPriceBellowMinimum = "GasPriceBellowMinimum"
 }
