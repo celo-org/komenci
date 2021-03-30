@@ -27,7 +27,7 @@ export class NotifiedBlockService {
           key: notifiedBlockKey,
           blockNumber
         }
-        this.notifiedBlockRepository.insert(lastNotifiedBlock)
+        await this.notifiedBlockRepository.insert(lastNotifiedBlock)
       }
       const fromBlock = lastNotifiedBlock.blockNumber + 1
       const lastBlock = await handleBlockFn(fromBlock)
