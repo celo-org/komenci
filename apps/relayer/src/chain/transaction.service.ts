@@ -253,7 +253,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       }, cachedTxData.traceContext)
     } catch (e) {
       if (e.message.match(/nonce too low/)) {
-        e.logger.warn(`Trying to deadletter a tx that probably when through: ${txHash}`)
+        this.logger.warn(`Trying to deadletter a tx that probably when through: ${txHash}`)
         this.unwatchTransaction(txHash)
       } else {
         const err = new TxDeadletterError(e, txHash)
