@@ -147,6 +147,11 @@ export const prepareSetAccount = wrapped(async (requestParams, context, ee) => {
   }
 })
 
+export const resetRetryCounter = (context, events, done) => {
+  context.vars._retryCounter = 0
+  return done();
+}
+
 export const waitForWallet = wrapped(async (requestParams, response, context, ee, next) => {
   if (response.body.status === 'deployed') {
     context.vars.metaTxWalletAddress = response.body.walletAddress
@@ -155,7 +160,8 @@ export const waitForWallet = wrapped(async (requestParams, response, context, ee
     if (addressResp.ok === true) {
       context.vars.metaTxWalletAddress = addressResp.result
     } else {
-      throw addressResp.error
+      context.vars._walletError = addressResp.error
+      context.vars.metaTxWalletAddress = undefined
     }
   }
 })
@@ -208,9 +214,10 @@ export function logHeaders(requestParams, response, context, ee, next) {
 export const waitForTransaction = wrapped(async (requestParams, response, context, ee) => {
   const receipt = await waitForReceipt(context.vars.contractKit, response.body.txHash)
   if (receipt.ok === false) {
-    console.log(response.body.txHash)
-    console.log(receipt)
-    throw receipt.error
+    context.vars.latestTxConfirmed = false
+    context.vars._latestTxError = receipt.error
+  } else {
+    context.vars.latestTxConfirmed = true
   }
 })
 
@@ -220,4 +227,20 @@ export async function getWallet(contractKit, address: string) {
     _wallet = await contractKit.contracts.getMetaTransactionWallet(address)
   }
   return _wallet
+}
+
+export function walletNotDeployed(context, next) {
+  context.vars._retryCounter += 1
+  if (context.vars._retryCounter > 5) {
+    throw context.vars._walletError
+  }
+  return next(typeof context.vars.metaTxWalletAddress !== 'string')
+}
+
+export function latestTxNotConfirmed(context, next) {
+  context.vars._retryCounter += 1
+  if (context.vars._retryCounter > 5) {
+    throw context.vars._latestTxError
+  }
+  return next(context.vars.latestTxConfirmed === false)
 }
