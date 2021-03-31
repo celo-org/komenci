@@ -43,6 +43,11 @@ interface TxSummary {
   tx?: Transaction,
 }
 
+enum TxDeadletterReason {
+  GasTooLow = "GasTooLow",
+  Expired = "Expired"
+}
+
 @Injectable()
 export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private watchedTransactions: Set<string>
@@ -184,8 +189,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       item => (this.isExpired(item))
     )
 
-    await Promise.all(gasTooLow.map(item => this.deadLetter(item)))
-    await Promise.all(expired.map(item => this.deadLetter(item)))
+    await Promise.all(gasTooLow.map(item => this.deadLetter(item, TxDeadletterReason.GasTooLow)))
+    await Promise.all(expired.map(item => this.deadLetter(item, TxDeadletterReason.Expired)))
     await Promise.all(completed.map(item => this.finalizeTransaction(item)))
   }
 
@@ -239,11 +244,11 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    * Replace expired transaction with a dummy transaction
    * @param tx Expired tx
    */
-  @retry<[TxSummary], TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>({
+  @retry<[TxSummary, TxDeadletterReason], TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>({
       tries: 3,
       bailOnErrorTypes: [ChainErrorTypes.NonceTooLow]
   })
-  private async deadLetter(txs: TxSummary): Promise<
+  private async deadLetter(txs: TxSummary, reason: TxDeadletterReason): Promise<
     Result<true, TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>
   > {
     const gasPrice = BigNumber.max(
@@ -272,7 +277,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         }
       )
 
-      this.logger.event(EventType.TxTimeout, {
+      this.logger.event(EventType.TxDeadletter, {
+        reason,
         destination: txs.tx ? txs.tx.to : "n/a",
         txHash: txs.hash,
         deadLetterHash,

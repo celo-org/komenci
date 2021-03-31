@@ -15,7 +15,7 @@ export enum EventType {
   RelayerMTWInit = 'RelayerMTWInit',
   TxSubmitted = 'TxSubmitted',
   TxConfirmed = 'TxConfirmed',
-  TxTimeout = 'TxTimeout',
+  TxDeadletter = 'TxDeadletter',
   TxSpeedUp = 'TxSpeedUp',
   RuleVerified = 'RuleVerified',
   RelayerBalance = 'RelayerBalance',
@@ -75,7 +75,8 @@ export type EventPayload = {
     cUSD: number
     celo: number
   }
-  [EventType.TxTimeout]: TxEvent & {
+  [EventType.TxDeadletter]: TxEvent & {
+    reason: string,
     deadLetterHash: string,
   },
   [EventType.TxSpeedUp]: TxEvent & {

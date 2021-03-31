@@ -341,7 +341,7 @@ describe('TransactionService', () => {
         // @ts-ignore
         await service.checkTransactions()
         expect(finalizeTransaction).not.toHaveBeenCalled()
-        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}))
+        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}), 'Expired')
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         expect(watchTransaction).toHaveBeenNthCalledWith(
           1,
@@ -425,7 +425,7 @@ describe('TransactionService', () => {
         // @ts-ignore
         await service.checkTransactions()
         expect(finalizeTransaction).not.toHaveBeenCalled()
-        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}))
+        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}), 'GasTooLow')
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         expect(watchTransaction).toHaveBeenNthCalledWith(
           1,
