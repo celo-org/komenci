@@ -358,7 +358,7 @@ describe('TransactionService', () => {
           deadLetterTx.hash, 
           expect.objectContaining({
             expireIn: 4000,
-            gasPrice: "2000000000",
+            gasPrice: "1500000000",
             nonce: 2
           })
         )
