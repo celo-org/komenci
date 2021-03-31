@@ -247,6 +247,7 @@ export function latestTxNotConfirmed(context, next) {
 
 const countTry = (event: string) => (_c, events, done) => {
   events.emit('counter', event, 1)
+  return done()
 }
 
 export const countWalletTry = countTry('walletDeploy')
