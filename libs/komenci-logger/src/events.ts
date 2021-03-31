@@ -75,7 +75,6 @@ export type EventPayload = {
   }
   [EventType.TxTimeout]: TxEvent & {
     deadLetterHash: string,
-    nonce: number
   },
   [EventType.GasPriceUpdate]: {
     gasPriceGwei: number

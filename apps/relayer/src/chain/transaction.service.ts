@@ -17,7 +17,7 @@ import {
   OnModuleInit
 } from '@nestjs/common'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
-import { ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, NonceTooLow, TxDeadletterError, TxSubmitError } from 'apps/relayer/src/chain/errors'
+import { ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, NonceTooLow, TxDeadletterError, TxNotInCache, TxSubmitError } from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
 import { Mutex } from 'async-mutex'
@@ -240,7 +240,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     Result<true, TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>
   > {
     const cachedTxData = this.transactions.get(txHash)
-    const gasPrice = new BigNumber(cachedTxData.gasPrice, 10).times(2).toFixed()
+    const gasPrice = new BigNumber(cachedTxData.gasPrice, 10).times(1.5).toFixed()
 
     try {
       const result = await this.kit.sendTransaction({
@@ -293,10 +293,11 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     cachedTx: Omit<TxCachedData, 'seenAt'>
   ) {
     this.watchedTransactions.add(hash)
-    this.transactions.set(hash, {
+    const payload: TxCachedData = {
       ...cachedTx,
       seenAt: Date.now()
-    })
+    }
+    this.transactions.set(hash, payload)
   }
 
   private unwatchTransaction(txHash: string) {
@@ -312,12 +313,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         Date.now() - cachedTxData.seenAt > cachedTxData.expireIn
       )
     } else {
-      // This should never happen
-      this.logger.error(
-        'Transaction not in set',
-        '',
-        { txHash }
-      )
+      // XXX: This should never happen
+      this.logger.error(new TxNotInCache(txHash))
       return true
     }
   }

@@ -8,7 +8,8 @@ export enum ChainErrorTypes {
   TxDeadletterError = "TxDeadletterError",
   GasPriceFetchError = "GasPriceFetchError",
   NonceTooLow = "NonceTooLow",
-  GasPriceBellowMinimum = "GasPriceBellowMinimum"
+  GasPriceBellowMinimum = "GasPriceBellowMinimum",
+  TxNotInCache = "TxNotInCache"
 }
 
 export class TxSubmitError extends MetadataError<ChainErrorTypes.TxSubmitError> {
@@ -57,5 +58,14 @@ export class GasPriceBellowMinimum extends RootError<ChainErrorTypes.GasPriceBel
   constructor(readonly gasPrice: string) {
     super(ChainErrorTypes.GasPriceBellowMinimum)
     this.message = `Gas price bellow minium: ${gasPrice}`
+  }
+}
+
+export class TxNotInCache extends RootError<ChainErrorTypes.TxNotInCache> {
+  metadataProps = ['txHash']
+
+  constructor(readonly txHash: string) {
+    super(ChainErrorTypes.TxNotInCache)
+    this.message = `TxNotInCache: ${txHash} not found in cache`
   }
 }
