@@ -7,7 +7,6 @@ export enum ChainErrorTypes {
   TxNotFoundError = "TxNotFoundError",
   ReceiptNotFoundError = "ReceiptNotFoundError",
   TxDeadletterError = "TxDeadletterError",
-  TxSpeedUpError = "TxSpeedUpError",
   GasPriceFetchError = "GasPriceFetchError",
   NonceTooLow = "NonceTooLow",
   GasPriceBellowMinimum = "GasPriceBellowMinimum",
@@ -29,15 +28,6 @@ export class TxDeadletterError extends MetadataError<ChainErrorTypes.TxDeadlette
   constructor(readonly err: Error, readonly txHash: string) {
     super(ChainErrorTypes.TxDeadletterError)
     this.message = `TxDeadletterError: ${err.message}`
-  }
-}
-
-export class TxSpeedUpError extends MetadataError<ChainErrorTypes.TxSpeedUpError> {
-  metadataProps = ['txHash']
-
-  constructor(readonly err: Error, readonly txHash: string) {
-    super(ChainErrorTypes.TxSpeedUpError)
-    this.message = `TxSpeedUpError: ${err.message}`
   }
 }
 
