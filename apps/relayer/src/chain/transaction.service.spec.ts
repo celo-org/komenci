@@ -243,8 +243,14 @@ describe('TransactionService', () => {
 
         expect(watchTransaction).toHaveBeenCalledWith(tx.hash, {
           expireIn: 2000,
-          gasPrice: "1000000000",
-          nonce: 2
+          gasPrice: new BigNumber("1000000000"),
+          nonce: 2,
+          raw: {
+            data: tx.input,
+            destination: tx.to,
+            value: tx.value
+          },
+          traceContext: undefined
         })
 
         // Ensure the checkTransactions method is called
@@ -253,7 +259,9 @@ describe('TransactionService', () => {
         expect(checkTransactions).toHaveBeenCalled()
 
         // Shouldn't remove it from the unwatch list until it's finalized
-        expect(unwatchTransaction).not.toHaveBeenCalledWith(tx.hash)
+        expect(unwatchTransaction).not.toHaveBeenCalledWith(expect.objectContaining({
+          hash: tx.hash
+        }))
 
         // Simulate being included in a block and ensure it's unwatched
         const completedTx = txFixture()
@@ -270,13 +278,15 @@ describe('TransactionService', () => {
         const relayerBalancePromise = Promise.resolve(relayerBalanceFixture())
         getTotalBalance.mockReturnValue(relayerBalancePromise)
 
-        jest.runOnlyPendingTimers()
-        await Promise.resolve()
         await completedTxPromise
         await txReceiptPromise
         await relayerBalancePromise
-        await Promise.resolve()
+        // @ts-ignore
+        await service.checkTransactions()
+        // @ts-ignore
+        await service.checkTransactions()
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(unwatchTransaction).toHaveBeenCalledTimes(1)
       })
     })
 
@@ -333,33 +343,121 @@ describe('TransactionService', () => {
 
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
-        jest.runOnlyPendingTimers()
-        expect(checkTransactions).toHaveBeenCalled()
+        // @ts-ignore
+        await service.checkTransactions()
         expect(finalizeTransaction).not.toHaveBeenCalled()
-        await txPromise
-        await(await txResult).getHash()
-        await(await deadLetterResult).getHash()
-        await Promise.resolve()
-        jest.runOnlyPendingTimers()
-        await Promise.resolve()
-        expect(deadLetter).toHaveBeenCalledWith(tx.hash)
+        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}))
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         expect(watchTransaction).toHaveBeenNthCalledWith(
           1,
           tx.hash, 
-          {
+          expect.objectContaining({
             expireIn: 2000,
-            gasPrice: "1000000000",
-            nonce: 2
-          }
+            gasPrice: new BigNumber("1000000000"),
+            nonce: 2,
+            raw: expect.objectContaining({
+              data: "0x0"
+            }),
+            traceContext: undefined
+          })
         )
         expect(watchTransaction).toHaveBeenNthCalledWith(
           2,
           deadLetterTx.hash, 
           expect.objectContaining({
             expireIn: 4000,
-            gasPrice: "1500000000",
-            nonce: 2
+            gasPrice: new BigNumber("1250000000"),
+            nonce: 2,
+            raw: expect.objectContaining({
+              destination: relayerAddress,
+              data: "0x0",
+              value: "0"
+            }),
+            traceContext: undefined
+          })
+        )
+        expect(watchTransaction.mock.calls.length).toBe(2)
+      })
+    })
+
+    describe('when the transaction has gas too low', () => {
+      it('gets speed up', async () => {
+        const tx = txFixture()
+        const receipt = receiptFixture(tx)
+
+        const speedUpTx = txFixture()
+        const deadLetterReceipt = receiptFixture(speedUpTx)
+
+        const txResult = Promise.resolve({
+          getHash: () => Promise.resolve(tx.hash),
+          waitReceipt: () => Promise.resolve(receipt)
+        })
+
+        const speedUpResult = Promise.resolve({
+          getHash: () => Promise.resolve(speedUpTx.hash),
+          waitReceipt: () => Promise.resolve(deadLetterReceipt)
+        })
+
+        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction')
+          .mockReturnValueOnce(txResult as any)
+          .mockResolvedValueOnce(speedUpResult as any)
+        // @ts-ignore
+        const watchTransaction = jest.spyOn(service, 'watchTransaction')
+        // @ts-ignore
+        const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
+        const txPromise = Promise.resolve(tx)
+        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
+        // @ts-ignore
+        const speedUp = jest.spyOn(service, 'speedUp')
+        // @ts-ignore
+        const checkTransactions = jest.spyOn(service, 'checkTransactions')
+        // @ts-ignore
+        const finalizeTransaction = jest.spyOn(service, 'finalizeTransaction')
+        // @ts-ignore
+        const hasGasTooLow = jest.spyOn(service, 'hasGasTooLow').mockReturnValue(true)
+
+        const rawTx = {
+          destination: tx.to,
+          data: tx.input,
+          value: tx.value
+        }
+
+        const hash = await service.submitTransaction(rawTx)
+
+        expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
+          to: rawTx.destination,
+          data: rawTx.data,
+          value: rawTx.value,
+          from: relayerAddress
+        }))
+
+        expect(unwatchTransaction).not.toHaveBeenCalled()
+
+        // @ts-ignore
+        await service.checkTransactions()
+        expect(finalizeTransaction).not.toHaveBeenCalled()
+        expect(speedUp).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}))
+        expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          1,
+          tx.hash, 
+          expect.objectContaining({
+            expireIn: 2000,
+            gasPrice: new BigNumber("1000000000"),
+            nonce: 2,
+            raw: expect.objectContaining(rawTx),
+            traceContext: undefined
+          })
+        )
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          2,
+          speedUpTx.hash, 
+          expect.objectContaining({
+            expireIn: 2000,
+            gasPrice: new BigNumber("1250000000"),
+            nonce: 2,
+            raw: expect.objectContaining(rawTx),
+            traceContext: undefined
           })
         )
         expect(watchTransaction.mock.calls.length).toBe(2)

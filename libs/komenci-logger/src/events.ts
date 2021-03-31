@@ -16,6 +16,7 @@ export enum EventType {
   TxSubmitted = 'TxSubmitted',
   TxConfirmed = 'TxConfirmed',
   TxTimeout = 'TxTimeout',
+  TxSpeedUp = 'TxSpeedUp',
   RuleVerified = 'RuleVerified',
   RelayerBalance = 'RelayerBalance',
   GasPriceUpdate = 'GasPriceUpdate',
@@ -60,6 +61,7 @@ export type EventPayload = {
     mtwAddress: string
   }
   [EventType.TxSubmitted]: TxEvent & {
+    gasPrice: string,
     lockAcquiredDuration: number,
     sendDuration: number,
   }
@@ -75,6 +77,9 @@ export type EventPayload = {
   }
   [EventType.TxTimeout]: TxEvent & {
     deadLetterHash: string,
+  },
+  [EventType.TxSpeedUp]: TxEvent & {
+    prevTxHash: string,
   },
   [EventType.GasPriceUpdate]: {
     gasPriceGwei: number
