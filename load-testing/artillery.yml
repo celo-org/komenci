@@ -35,8 +35,10 @@ scenarios:
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/checkSession'
           - think: 0.2
+          - function: resetRetryCounter
           - loop:
               - think: 0.1
+              - function: countWalletTry
               - post:
                   name: "Deploy wallet"
                   headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
@@ -58,8 +60,10 @@ scenarios:
               headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
               url: '/checkSession'
           - think: 0.2
+          - function: resetRetryCounter
           - loop:
               - think: 0.1
+              - function: countSetAccountTry
               - post: 
                   name: "Set Account"
                   headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
@@ -73,7 +77,9 @@ scenarios:
             whileTrue: "latestTxNotConfirmed"
           - log: "Submitting MetaTransaction {{ txHash }}"
           - think: 0.2
+          - function: resetRetryCounter
           - loop:
+              - function: countRequestAttestationTry
               - post: 
                   name: "Request Attestations"
                   headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}
@@ -83,7 +89,9 @@ scenarios:
             whileTrue: "latestTxNotConfirmed"
           - log: "Request Subsidised Attestations"
           - think: 0.2
+          - function: resetRetryCounter
           - loop:
+              - function: countSelectIssuersTry
               - post: 
                   name: "Select Issuers"
                   headers: {"Content-type": "application/json", "Authorization": "Bearer {{ token }}"}

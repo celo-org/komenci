@@ -244,3 +244,12 @@ export function latestTxNotConfirmed(context, next) {
   }
   return next(context.vars.latestTxConfirmed === false)
 }
+
+const countTry = (event: string) => (_c, events, done) => {
+  events.emit('counter', event, 1)
+}
+
+export const countWalletTry = countTry('walletDeploy')
+export const countSetAccountTry = countTry('setAccount')
+export const countRequestAttestationTry = countTry('requestAttestation')
+export const countSelectIssuersTry = countTry('selectIssuers')
