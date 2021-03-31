@@ -240,7 +240,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     Result<true, TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>
   > {
     const cachedTxData = this.transactions.get(txHash)
-    const gasPrice = new BigNumber(cachedTxData.gasPrice, 10).times(1.5).toFixed()
+    const gasPrice = new BigNumber(cachedTxData.gasPrice, 10).times(1.5).toFixed(0)
 
     try {
       const result = await this.kit.sendTransaction({
