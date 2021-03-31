@@ -400,12 +400,15 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     try {
       const gasPriceMinimum = await this.kit.contracts.getGasPriceMinimum()
       const rawGasPrice = await gasPriceMinimum.getGasPriceMinimum(ZERO_ADDRESS)
-      const gasPrice = rawGasPrice.multipliedBy(this.appCfg.gasPriceMultiplier)
-      this.gasPrice = BigNumber.min(gasPrice, this.appCfg.maxGasPrice)
+      const gasPrice = BigNumber.min(
+        rawGasPrice.multipliedBy(this.appCfg.gasPriceMultiplier),
+        this.appCfg.maxGasPrice
+      )
       this.logger.event(EventType.GasPriceUpdate, {
-        gasPriceGwei: parseFloat(gasPrice.dividedBy(GWEI_PER_UNIT).toFixed()),
+        gasPriceGwei: parseFloat(this.gasPrice.dividedBy(GWEI_PER_UNIT).toFixed()),
         cappedAtMax: gasPrice.gte(this.appCfg.maxGasPrice)
       })
+      this.gasPrice = gasPrice
     } catch (e) {
       this.logger.error(new GasPriceFetchError(e))
       if (this.gasPrice.isZero()) {
