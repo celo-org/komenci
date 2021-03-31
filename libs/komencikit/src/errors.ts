@@ -82,20 +82,25 @@ export enum TxErrorTypes {
 }
 
 export class TxTimeoutError extends RootError<TxErrorTypes.Timeout> {
+  public readonly message = "TxTimeoutError"
   constructor() {
     super(TxErrorTypes.Timeout)
   }
 }
 
 export class TxRevertError extends RootError<TxErrorTypes.Revert> {
+  public readonly message: string
   constructor(public readonly txHash: string, public readonly reason: string) {
     super(TxErrorTypes.Revert)
+    this.message = `Transaction reverted (reason: ${reason || 'n/a'})`
   }
 }
 
 export class TxEventNotFound extends RootError<TxErrorTypes.EventNotFound> {
+  public readonly message: string
   constructor(public readonly txHash: string, public readonly event: string) {
     super(TxErrorTypes.EventNotFound)
+    this.message = `Transaction should have emitted ${event}`
   }
 }
 
@@ -106,8 +111,10 @@ export enum KomenciErrorTypes {
 }
 
 export class AuthenticationFailed extends RootError<KomenciErrorTypes.AuthenticationFailed> {
+  public readonly message: string
   constructor() {
     super(KomenciErrorTypes.AuthenticationFailed)
+    this.message = "Komenci Authentication failed"
   }
 }
 
@@ -118,20 +125,26 @@ export enum KomenciKitErrorTypes {
 }
 
 export class LoginSignatureError extends RootError<KomenciKitErrorTypes.LoginSignatureError> {
+  public readonly message: string
   constructor(public readonly error: Error) {
     super(KomenciKitErrorTypes.LoginSignatureError)
+    this.message = "Login signature invalid"
   }
 }
 
 export class InvalidWallet extends RootError<KomenciKitErrorTypes.InvalidWallet> {
+  public readonly message: string
   constructor(public readonly error: WalletValidationError) {
     super(KomenciKitErrorTypes.InvalidWallet)
+    this.message = "Wallet Invalid"
   }
 }
 
 export class KomenciDown extends RootError<KomenciKitErrorTypes.KomenciDown> {
+  public readonly message: string
   constructor() {
     super(KomenciKitErrorTypes.KomenciDown)
+    this.message = "Komenci Service down"
   }
 }
 
@@ -142,6 +155,7 @@ export enum WalletVerificationErrorTypes {
 }
 
 export class InvalidBytecode extends RootError<WalletVerificationErrorTypes.InvalidBytecode> {
+  public readonly message: string
   constructor(public readonly walletAddress: string) {
     super(WalletVerificationErrorTypes.InvalidBytecode)
     this.message = 'Invalid wallet bytecode, should be a Proxy'
