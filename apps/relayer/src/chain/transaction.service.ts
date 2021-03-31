@@ -248,9 +248,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private async speedUp(txs: TxSummary): Promise<
     Result<true, TxSpeedUpError | NonceTooLow | GasPriceBellowMinimum>
   > {
-    const prevGasPrice = new BigNumber(txs.cachedTx.gasPrice, 10)
     const speedUpPrice = BigNumber.max(
-      prevGasPrice.times(1.25),
+      txs.cachedTx.gasPrice.times(1.25),
       this.gasPrice
     )
 
@@ -309,9 +308,10 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private async deadLetter(txs: TxSummary): Promise<
     Result<true, TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>
   > {
-    const prevGasPrice = new BigNumber(txs.cachedTx.gasPrice, 10)
-    const speedUpPrice = prevGasPrice.times(1.25)
-    const gasPrice = BigNumber.max(speedUpPrice, new BigNumber(this.gasPrice, 10))
+    const gasPrice = BigNumber.max(
+      txs.cachedTx.gasPrice.times(1.25),
+      this.gasPrice
+    )
 
     try {
       const result = await this.kit.sendTransaction({
@@ -420,8 +420,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     if (txs.tx && txs.tx.blockHash !== null) { return false }
     if (txs.cachedTx == null) { return false }
 
-    const txGasPrice = new BigNumber(txs.cachedTx.gasPrice, 10)
-    return txGasPrice.lt(new BigNumber(this.gasPrice, 10)) 
+    return txs.cachedTx.gasPrice.lt(this.gasPrice)
   }
 
   private async getPendingTransactions(): Promise<Array<{hash: string, nonce: number, gasPrice: BigNumber}>> {
