@@ -325,7 +325,9 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     // an unhandled exception being logged if the
     // tx reverts.
     // tslint:disable-next-line:no-empty
-    result.waitReceipt().then().catch(() => {})
+    result.waitReceipt().then().catch((e) => {
+      this.logger.warn(e)
+    })
     return result.getHash()
   }
 
