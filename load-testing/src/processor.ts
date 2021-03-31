@@ -149,7 +149,7 @@ export const prepareSetAccount = wrapped(async (requestParams, context, ee) => {
 
 export const resetRetryCounter = (context, events, done) => {
   context.vars._retryCounter = 0
-  return done();
+  return done()
 }
 
 export const waitForWallet = wrapped(async (requestParams, response, context, ee, next) => {
