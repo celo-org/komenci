@@ -358,7 +358,7 @@ describe('TransactionService', () => {
           deadLetterTx.hash, 
           expect.objectContaining({
             expireIn: 4000,
-            gasPrice: new BigNumber("1250000000"),
+            gasPrice: new BigNumber("1400000000"),
             nonce: 2,
             traceContext: undefined
           })
@@ -442,7 +442,7 @@ describe('TransactionService', () => {
           deadLetterTx.hash, 
           expect.objectContaining({
             expireIn: 4000,
-            gasPrice: new BigNumber("1250000000"),
+            gasPrice: new BigNumber("1400000000"),
             nonce: 2,
             traceContext: undefined
           })

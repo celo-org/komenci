@@ -17,7 +17,11 @@ import {
   OnModuleInit
 } from '@nestjs/common'
 import { BalanceService } from 'apps/relayer/src/chain/balance.service'
-import { ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, NonceTooLow, ReceiptNotFoundError, TxDeadletterError, TxNotFoundError, TxNotInCache, TxSubmitError } from 'apps/relayer/src/chain/errors'
+import { 
+  ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, 
+  NonceTooLow, ReceiptNotFoundError, TxDeadletterError, 
+  TxNotFoundError, TxNotInCache, TxSubmitError 
+} from 'apps/relayer/src/chain/errors'
 import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
 import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
 import { Mutex } from 'async-mutex'
@@ -252,7 +256,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     Result<true, TxDeadletterError | NonceTooLow | GasPriceBellowMinimum>
   > {
     const gasPrice = BigNumber.max(
-      txs.cachedTx.gasPrice.times(1.25),
+      txs.cachedTx.gasPrice.times(1.4),
       this.gasPrice
     )
 

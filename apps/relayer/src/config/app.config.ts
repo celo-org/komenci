@@ -10,7 +10,7 @@ export const appConfig = registerAs('app', () => {
     transactionMaxGas: parseInt(process.env.TRANSACTION_MAX_GAS, 10) || 1000000,
     version: process.env.KOMENCI_VERSION || 'version-missing',
     service: process.env.KOMENCI_SERVICE || 'komenci-relayer',
-    gasPriceUpdateIntervalMs: parseInt(process.env.GAS_PRICE_UPDATE_INTERVAL_MS, 10) || 30000, // 30s
+    gasPriceUpdateIntervalMs: parseInt(process.env.GAS_PRICE_UPDATE_INTERVAL_MS, 10) || 5000, // 5s
     gasPriceMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 5,
     gasPriceFallback: process.env.GAS_PRICE_FALLBACK || "1000000000", // 1 Gwei
     maxGasPrice: process.env.MAX_GAS_PRICE || "50000000000", // 50 Gwei
