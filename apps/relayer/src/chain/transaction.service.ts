@@ -35,7 +35,6 @@ interface TxCachedData {
   seenAt: number,
   expireIn: number, // ms until tx gets expired
   traceContext?: RelayerTraceContext,
-  raw?: RawTransactionDto,
 }
 
 interface TxSummary {
@@ -134,7 +133,6 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
         gasPrice: this.gasPrice, 
         expireIn: this.appCfg.transactionTimeoutMs,
         traceContext: ctx,
-        raw: tx,
       })
 
       this.logger.event(EventType.TxSubmitted, {
@@ -174,7 +172,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private async checkTransactions() {
     const txs = await this.getTxSummaries()
     const gasTooLow = txs.filter(
-      item => (this.hasGasTooLow(item) && item.cachedTx.raw !== undefined)
+      item => (this.hasGasTooLow(item))
     )
 
     const completed = txs.filter(item => item.tx && item.tx.blockHash !== null)
@@ -186,7 +184,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       item => (this.isExpired(item))
     )
 
-    await Promise.all(gasTooLow.map(item => this.speedUp(item)))
+    await Promise.all(gasTooLow.map(item => this.deadLetter(item)))
     await Promise.all(expired.map(item => this.deadLetter(item)))
     await Promise.all(completed.map(item => this.finalizeTransaction(item)))
   }
@@ -238,66 +236,6 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Speedup transaction
-   * @param txs TxSummary to speedup
-   */
-  @retry<[TxSummary], TxSpeedUpError | NonceTooLow | GasPriceBellowMinimum>({
-      tries: 3,
-      bailOnErrorTypes: [ChainErrorTypes.NonceTooLow]
-  })
-  private async speedUp(txs: TxSummary): Promise<
-    Result<true, TxSpeedUpError | NonceTooLow | GasPriceBellowMinimum>
-  > {
-    const speedUpPrice = BigNumber.max(
-      txs.cachedTx.gasPrice.times(1.25),
-      this.gasPrice
-    )
-
-    try {
-      const newTxHash = await this.sendTransaction(
-        txs.cachedTx.raw,
-        speedUpPrice,
-        txs.cachedTx.nonce
-      )
-      this.unwatchTransaction(txs.hash)
-
-      this.watchTransaction(
-        newTxHash,
-        {
-          nonce: txs.cachedTx.nonce,
-          gasPrice: speedUpPrice,
-          expireIn: this.appCfg.transactionTimeoutMs,
-          traceContext: txs.cachedTx.traceContext,
-          raw: txs.cachedTx.raw
-        }
-      )
-
-      this.logger.event(EventType.TxSpeedUp, {
-        destination: txs.tx ? txs.tx.to : "n/a",
-        txHash: newTxHash,
-        prevTxHash: txs.hash,
-        nonce: txs.cachedTx.nonce
-      }, txs.cachedTx.traceContext)
-
-      return Ok(true)
-    } catch (e) {
-      if (e.message.match(/nonce too low/)) {
-        this.logger.warn(`Trying to speed up a tx that probably when through: ${txs.hash}`)
-        this.unwatchTransaction(txs.hash)
-        return Err(new NonceTooLow())
-      } else if (e.message.match(/gasprice is less than gas price minimum/)) {
-        this.logger.warn(`GasPrice ${speedUpPrice} bellow minimum - triggering update`)
-        await this.updateGasPrice()
-        return Err(new GasPriceBellowMinimum(speedUpPrice.toFixed()))
-      } else {
-        const err = new TxSpeedUpError(e, txs.hash)
-        this.logger.errorWithContext(err, txs.cachedTx.traceContext)
-        return Err(err)
-      }
-    }
-  }
-
-  /**
    * Replace expired transaction with a dummy transaction
    * @param tx Expired tx
    */
@@ -330,11 +268,6 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
           nonce: txs.cachedTx.nonce,
           gasPrice,
           expireIn: txs.cachedTx.expireIn * 2, // backoff expiry
-          raw: {
-            destination: this.walletCfg.address,
-            value: "0",
-            data: '0x0'
-          },
           traceContext: txs.cachedTx.traceContext
         }
       )

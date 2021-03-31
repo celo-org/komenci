@@ -245,11 +245,6 @@ describe('TransactionService', () => {
           expireIn: 2000,
           gasPrice: new BigNumber("1000000000"),
           nonce: 2,
-          raw: {
-            data: tx.input,
-            destination: tx.to,
-            value: tx.value
-          },
           traceContext: undefined
         })
 
@@ -355,9 +350,6 @@ describe('TransactionService', () => {
             expireIn: 2000,
             gasPrice: new BigNumber("1000000000"),
             nonce: 2,
-            raw: expect.objectContaining({
-              data: "0x0"
-            }),
             traceContext: undefined
           })
         )
@@ -368,11 +360,6 @@ describe('TransactionService', () => {
             expireIn: 4000,
             gasPrice: new BigNumber("1250000000"),
             nonce: 2,
-            raw: expect.objectContaining({
-              destination: relayerAddress,
-              data: "0x0",
-              value: "0"
-            }),
             traceContext: undefined
           })
         )
@@ -381,26 +368,26 @@ describe('TransactionService', () => {
     })
 
     describe('when the transaction has gas too low', () => {
-      it('gets speed up', async () => {
+      it('is deadlettered', async () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
 
-        const speedUpTx = txFixture()
-        const deadLetterReceipt = receiptFixture(speedUpTx)
+        const deadLetterTx = txFixture()
+        const deadLetterReceipt = receiptFixture(deadLetterTx)
 
         const txResult = Promise.resolve({
           getHash: () => Promise.resolve(tx.hash),
           waitReceipt: () => Promise.resolve(receipt)
         })
 
-        const speedUpResult = Promise.resolve({
-          getHash: () => Promise.resolve(speedUpTx.hash),
+        const deadLetterResult = Promise.resolve({
+          getHash: () => Promise.resolve(deadLetterTx.hash),
           waitReceipt: () => Promise.resolve(deadLetterReceipt)
         })
 
         const sendTransaction = jest.spyOn(contractKit, 'sendTransaction')
           .mockReturnValueOnce(txResult as any)
-          .mockResolvedValueOnce(speedUpResult as any)
+          .mockResolvedValueOnce(deadLetterResult as any)
         // @ts-ignore
         const watchTransaction = jest.spyOn(service, 'watchTransaction')
         // @ts-ignore
@@ -408,11 +395,13 @@ describe('TransactionService', () => {
         const txPromise = Promise.resolve(tx)
         const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
         // @ts-ignore
-        const speedUp = jest.spyOn(service, 'speedUp')
+        const deadLetter = jest.spyOn(service, 'deadLetter')
         // @ts-ignore
         const checkTransactions = jest.spyOn(service, 'checkTransactions')
         // @ts-ignore
         const finalizeTransaction = jest.spyOn(service, 'finalizeTransaction')
+        // @ts-ignore
+        const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(false)
         // @ts-ignore
         const hasGasTooLow = jest.spyOn(service, 'hasGasTooLow').mockReturnValue(true)
 
@@ -436,7 +425,7 @@ describe('TransactionService', () => {
         // @ts-ignore
         await service.checkTransactions()
         expect(finalizeTransaction).not.toHaveBeenCalled()
-        expect(speedUp).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}))
+        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}))
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
         expect(watchTransaction).toHaveBeenNthCalledWith(
           1,
@@ -445,18 +434,16 @@ describe('TransactionService', () => {
             expireIn: 2000,
             gasPrice: new BigNumber("1000000000"),
             nonce: 2,
-            raw: expect.objectContaining(rawTx),
             traceContext: undefined
           })
         )
         expect(watchTransaction).toHaveBeenNthCalledWith(
           2,
-          speedUpTx.hash, 
+          deadLetterTx.hash, 
           expect.objectContaining({
-            expireIn: 2000,
+            expireIn: 4000,
             gasPrice: new BigNumber("1250000000"),
             nonce: 2,
-            raw: expect.objectContaining(rawTx),
             traceContext: undefined
           })
         )
