@@ -38,7 +38,7 @@ export class ThrottlerGuard extends BaseThrottlerGuard {
       throw new ThrottlerException(this.errorMessage)
     }
 
-    res.header(`${this.headerPrefix}-Limit`, limit);
+    res.header(`${this.headerPrefix}-Limit`, limit)
     // We're about to add a record so we need to take that into account here.
     // Otherwise the header says we have a request left when there are none.
     res.header(`${this.headerPrefix}-Remaining`, Math.max(0, limit - (ttls.length + 1)))
