@@ -38,8 +38,8 @@ describe('AppController', () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         ThrottlerModule.forRoot({
-          ttl: 100,
-          limit:1000
+          ttl: 20,
+          limit: 5
         }),
         JwtModule.register({
           secret: 'test-secret'

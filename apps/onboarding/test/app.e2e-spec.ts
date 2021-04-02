@@ -132,16 +132,29 @@ describe('AppController (e2e)', () => {
       jest.useRealTimers()
     })
 
-    it('returns ok until the ratelimit is met', async () => {
+    it.only('returns ok until the rate limit is met', async () => {
       const server = app.getHttpServer()
-      const responses = await Promise.all(_.times(5).map(() => {
-        return request(server).get('/v1/ready')
-      }))
+      const captchaToken = "captcha-token"
+      const wallet = new LocalWallet()
+      const privateKey = trimLeading0x(Web3.utils.randomHex(32))
+      wallet.addAccount(privateKey)
+      const eoa = ensureLeading0x(wallet.getAccounts()[0])
+      const signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
+      jest.spyOn(
+        captchaService, 'verifyCaptcha'
+      ).mockResolvedValue(Ok(true))
+      const startSessionPayload = {
+        externalAccount: eoa,
+        captchaResponseToken: captchaToken,
+        signature
+      }
 
-      responses.forEach(resp => {
-        expect(resp.statusCode).toBe(200)
-        expect(resp.body.status).toBe('Ready')
-      })
+      await Promise.all(_.times(5).map(async () => {
+        const readyResp = await request(server).get('/v1/ready')
+        expect(readyResp.statusCode).toBe(200)
+        expect(readyResp.body.status).toBe('Ready')
+        await request(app.getHttpServer()).post('/v1/startSession').send(startSessionPayload)
+      }))
 
       const nextResp = await request(server).get('/v1/ready')
       expect(nextResp.statusCode).toBe(429)

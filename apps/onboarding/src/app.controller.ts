@@ -1,9 +1,9 @@
-import { extractMethodId } from '@app/blockchain/utils'
 import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 
+import { Throttle, ThrottlerGuard } from '@app/komenci-throttler'
 import { SubmitMetaTransactionDto } from '@app/onboarding/dto/SubmitMetaTransactionDto'
 import { QuotaAction } from '@app/onboarding/session/quota.decorator'
 import { QuotaGuard } from '@app/onboarding/session/quota.guard'
@@ -30,7 +30,6 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { RelayerResponse } from 'apps/relayer/src/app.controller'
@@ -100,8 +99,12 @@ export class AppController {
     }
   }
 
-  @Get('ready')
+  @Throttle({
+    key: 'start-session',
+    checkOnly: true
+  })
   @UseGuards(ThrottlerGuard)
+  @Get('ready')
   ready(): { status: string } {
     // XXX: This endpoint tells Valora whether to attempt
     // verification or not, this is throttled based on
@@ -111,9 +114,11 @@ export class AppController {
     }
   }
 
-  @Post('startSession')
+  @Throttle({
+    key: 'start-session',
+  })
   @UseGuards(ThrottlerGuard)
-  @Throttle(100, 60)
+  @Post('startSession')
   async startSession(
     @Body() startSessionDto: StartSessionDto,
     @Req() req
