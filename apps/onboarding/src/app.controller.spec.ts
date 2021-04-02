@@ -9,10 +9,12 @@ import { networkConfig } from '@app/utils/config/network.config'
 import { ContractKit } from '@celo/contractkit'
 import { JwtModule, JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import httpMocks from 'node-mocks-http'
 import { AppController } from './app.controller'
 import { AuthService } from './auth/auth.service'
+import { throttleConfig } from './config/throttle.config'
 import { DeviceType, StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
 import { SessionService } from './session/session.service'
@@ -35,6 +37,10 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
+        ThrottlerModule.forRoot({
+          ttl: 100,
+          limit:1000
+        }),
         JwtModule.register({
           secret: 'test-secret'
         })
@@ -61,7 +67,7 @@ describe('AppController', () => {
         {
           provide: networkConfig.KEY,
           useValue: {}
-        }
+        },
       ]
     }).compile()
 
