@@ -30,7 +30,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { ThrottlerGuard } from '@nestjs/throttler'
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { RelayerResponse } from 'apps/relayer/src/app.controller'
@@ -112,6 +112,8 @@ export class AppController {
   }
 
   @Post('startSession')
+  @UseGuards(ThrottlerGuard)
+  @Throttle(100, 60)
   async startSession(
     @Body() startSessionDto: StartSessionDto,
     @Req() req
