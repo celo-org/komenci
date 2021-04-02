@@ -30,6 +30,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
+import { ThrottlerGuard } from '@nestjs/throttler'
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
 import { RelayerResponse } from 'apps/relayer/src/app.controller'
@@ -91,11 +92,22 @@ export class AppController {
 
   @Get('health')
   health(@Req() req): { status: string } {
-    // TODO: Think about how to have a more clear understanding of
-    // service health here. Think about the relayer load balancer health
-    // or maybe just a toggle that we can do from ENV vars?
+    // XXX: This does not indicate whether the service is under
+    // load, it is used by k8s to know whether the server
+    // is running.
     return {
       status: 'OK'
+    }
+  }
+
+  @Get('ready')
+  @UseGuards(ThrottlerGuard)
+  ready(): { status: string } {
+    // XXX: This endpoint tells Valora whether to attempt
+    // verification or not, this is throttled based on
+    // the current config see throttle.config.ts
+    return {
+      status: 'Ready'
     }
   }
 

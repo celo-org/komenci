@@ -11,6 +11,7 @@ import { HttpModule, Module, Scope } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER } from '@nestjs/core'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { RelayerProxyService } from 'apps/onboarding/src/relayer/relayer_proxy.service'
 import { SessionService } from 'apps/onboarding/src/session/session.service'
@@ -22,18 +23,25 @@ import { quotaConfig } from './config/quota.config'
 import { relayerConfig } from './config/relayer.config'
 import { rulesConfig } from './config/rules.config'
 import { thirdPartyConfig } from './config/third-party.config'
+import { ThrottleConfig, throttleConfig } from './config/throttle.config'
 import { GatewayModule } from './gateway/gateway.module'
 import { SessionModule } from './session/session.module'
 
 @Module({
   controllers: [AppController],
   imports: [
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        config.get<ThrottleConfig>('throttle')
+    }),
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [
         relayerConfig, appConfig, thirdPartyConfig,
-        databaseConfig, rulesConfig, networkConfig, quotaConfig,
+        databaseConfig, rulesConfig, networkConfig, 
+        quotaConfig, throttleConfig,
       ],
       envFilePath: ['apps/onboarding/.env.local', 'apps/onboarding/.env']
     }),
