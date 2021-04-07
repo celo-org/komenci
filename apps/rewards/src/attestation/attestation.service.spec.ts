@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
+import { EventService } from '../event/eventService.service'
 import { partialEventLog } from '../utils/testing'
 import { Attestation } from './attestation.entity'
 import { AttestationRepository } from './attestation.repository'
@@ -48,6 +49,7 @@ describe('InviteRewardService', () => {
       providers: [
         AttestationService,
         NotifiedBlockService,
+        EventService,
         {
           provide: getRepositoryToken(Attestation),
           useClass: Repository
@@ -93,7 +95,8 @@ describe('InviteRewardService', () => {
             blockNumber: metadata.blockNumber,
             returnValues: {
               identifier: metadata.identifier,
-              account: metadata.address
+              account: metadata.address,
+              issuer: '0xsome_issuer'
             }
           })
         )

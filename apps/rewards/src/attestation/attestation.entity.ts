@@ -17,8 +17,11 @@ export class Attestation {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column({ unique: true })
+  @Column()
   txHash: string
+
+  @Column()
+  issuer: string
 
   @Column()
   address: string

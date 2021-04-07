@@ -15,8 +15,12 @@ export class CreateAttestation1617063533846 implements MigrationInterface {
           {
             name: 'txHash',
             type: 'varchar',
-            isNullable: false,
-            isUnique: true
+            isNullable: false
+          },
+          {
+            name: 'issuer',
+            type: 'varchar',
+            isNullable: false
           },
           {
             name: 'address',
@@ -34,6 +38,7 @@ export class CreateAttestation1617063533846 implements MigrationInterface {
             isNullable: false
           }
         ],
+        uniques: [{ columnNames: ['issuer', 'txHash'] }]
       }),
       true
     )

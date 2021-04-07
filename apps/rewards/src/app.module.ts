@@ -16,6 +16,7 @@ import { AttestationService } from './attestation/attestation.service'
 import { NotifiedBlockService } from './blocks/notifiedBlock.service'
 import { appConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
+import { EventService } from './event/eventService.service'
 
 @Module({
   controllers: [],
@@ -56,6 +57,7 @@ import { DatabaseConfig, databaseConfig } from './config/database.config'
     InviteRewardService,
     AttestationService,
     NotifiedBlockService,
+    EventService,
     {
       provide: APP_FILTER,
       useClass: ApiErrorFilter

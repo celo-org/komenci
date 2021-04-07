@@ -19,6 +19,7 @@ import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
+import { EventService } from '../event/eventService.service'
 import { partialEventLog, partialTransaction } from '../utils/testing'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
@@ -59,6 +60,7 @@ describe('InviteRewardService', () => {
       providers: [
         InviteRewardService,
         NotifiedBlockService,
+        EventService,
         {
           provide: getRepositoryToken(InviteReward),
           useClass: Repository
