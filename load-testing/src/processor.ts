@@ -250,6 +250,15 @@ const countTry = (event: string) => (_c, events, done) => {
   return done()
 }
 
+export async function saveStartSessionStatus(requestParams, response, context, ee, next) {
+  context.vars._startSessionStatus = response.statusCode
+  return next()
+}
+
+export function startSessionRateLimited(context, next) {
+  return next(context.vars._startSessionStatus === 429)
+}
+
 export const countWalletTry = countTry('walletDeploy')
 export const countSetAccountTry = countTry('setAccount')
 export const countRequestAttestationTry = countTry('requestAttestation')
