@@ -1,8 +1,8 @@
-import { Address, ensureLeading0x, normalizeAddress, throwIfError } from '@celo/base'
+import { Address, ensureLeading0x, throwIfError } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
-import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { networkConfig, NetworkConfig } from '@komenci/core'
 import { verifyWallet } from '@komenci/kit/lib/verifyWallet'
@@ -18,6 +18,20 @@ import {
   InvalidWallet,
   WalletNotDeployed,
 } from '../wallet/errors'
+import { EIP1167ProxyDeployer } from './eip1167-proxy-deployer'
+import { LegacyProxyDeployer } from './legacy-proxy-deployer'
+
+export enum WalletProxyType {
+  // This means we deploy: Celo Core Proxy -> MTW
+  Legacy = "Legacy", 
+  // This means we deploy: EIP1167Proxy -> Celo Core Proxy -> MTW
+  EIP1167 = "EIP1167" 
+}
+
+export interface ProxyDeployer {
+  findWallet(blockNumber: number, txHash: string, deployerAddress: string): Promise<Result<string, WalletNotDeployed>>
+  getDeployTransaction(owner: string, implementation: string, initCallData: string): {transaction: RawTransaction, deployerAddress: string}
+}
 
 @Injectable({
   // RelayerProxyService is Request scoped
@@ -27,7 +41,9 @@ export class WalletService {
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
     private readonly sessionService: SessionService,
-    private readonly walletDeployer: MetaTransactionWalletDeployerWrapper,
+    private readonly legacyDeployer: MetaTransactionWalletDeployerWrapper,
+    private readonly eip1167ProxyDeployer: EIP1167ProxyDeployer,
+    private readonly legacyProxyDeployer: LegacyProxyDeployer,
     private readonly web3: Web3,
     private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
@@ -55,58 +71,58 @@ export class WalletService {
     return valid
   }
 
+  getProxyDeployer(proxyType?: WalletProxyType): ProxyDeployer {
+    if (proxyType === WalletProxyType.EIP1167) {
+      return this.eip1167ProxyDeployer
+    }
+    return this.legacyProxyDeployer
+  }
+
   async getWallet(session: Session, implementationAddress?: string): Promise<Result<string, WalletNotDeployed>> {
     if (this.hasDeployInProgress(session, implementationAddress)) {
       const tx = await this.web3.eth.getTransaction(
         session.meta.walletDeploy.txHash
       )
+
       if (tx.blockNumber !== null) {
-        const events = await this.walletDeployer.getPastEvents(
-          this.walletDeployer.eventTypes.WalletDeployed,
-          {
-            fromBlock: tx.blockNumber,
-            toBlock: tx.blockNumber
-          }
-        )
-
-        const deployWalletLog = events.find(
-          event =>
-            normalizeAddress(event.returnValues.owner) ===
-            normalizeAddress(session.externalAccount)
-        )
-
-        if (deployWalletLog) {
-          return Ok(deployWalletLog.returnValues.wallet)
-        }
+        const proxyDeployer = this.getProxyDeployer(session.meta.walletDeploy.proxyType)
+        return proxyDeployer.findWallet(tx.blockNumber, tx.hash, session.meta.walletDeploy.deployerAddress)
       }
     }
 
     return Err(new WalletNotDeployed())
   }
 
-  async deployWallet(session: Session, implementationAddress: string): Promise<Result<string, InvalidImplementation>> {
+  async deployWallet(
+    session: Session, 
+    implementationAddress: string,
+    proxyType: WalletProxyType
+  ): Promise<Result<{txHash: string, deployerAddress: string}, InvalidImplementation>> {
     if (!this.isValidImplementation(implementationAddress)) {
       return Err(new InvalidImplementation(implementationAddress))
     }
 
     if (this.hasDeployInProgress(session, implementationAddress)) {
-      return Ok(session.meta.walletDeploy.txHash)
+      return Ok({
+        txHash: session.meta.walletDeploy.txHash,
+        deployerAddress: session.meta.walletDeploy.deployerAddress
+      })
     }
 
     const impl = newMetaTransactionWallet(this.web3, implementationAddress)
-    const txn = toRawTransaction(
-      this.walletDeployer.deploy(
-        ensureLeading0x(session.externalAccount),
-        ensureLeading0x(implementationAddress),
-        impl.methods.initialize(
-          ensureLeading0x(session.externalAccount)
-        ).encodeABI()
-      ).txo
-    )
-    const resp = throwIfError(await this.relayerProxyService.submitTransaction({
-      transaction: txn
-    }))
+    const initCallData = impl.methods.initialize(
+      ensureLeading0x(session.externalAccount)
+    ).encodeABI()
 
+    const proxyDeployer = this.getProxyDeployer(session.meta.walletDeploy.proxyType)
+    const { transaction, deployerAddress } = proxyDeployer.getDeployTransaction(
+      session.externalAccount,
+      implementationAddress,
+      initCallData,
+    )
+
+
+    const resp = throwIfError(await this.relayerProxyService.submitTransaction({transaction}))
     this.logger.event(EventType.DeployWalletTxSent, {
       txHash: resp.payload,
       sessionId: session.id,
@@ -119,12 +135,16 @@ export class WalletService {
         walletDeploy: {
           startedAt: Date.now(),
           txHash: resp.payload,
-          implementationAddress
+          implementationAddress,
+          deployerAddress: deployerAddress
         }
       }
     })
 
-    return Ok(resp.payload)
+    return Ok({
+      txHash: resp.payload,
+      deployerAddress: "0x0"
+    })
   }
 
   private hasDeployInProgress(session: Session, implementationAddress?: string): boolean {

@@ -5,29 +5,29 @@ import { JwtModule, JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
 import { ThrottlerModule } from '@nestjs/throttler'
 import httpMocks from 'node-mocks-http'
-import { AppController } from './app.controller'
-import { AuthService } from './auth/auth.service'
-import { appConfig } from './config/app.config'
-import { quotaConfig } from './config/quota.config'
-import { DeviceType, StartSessionDto } from './dto/StartSessionDto'
-import { GatewayService } from './gateway/gateway.service'
-import { RelayerProxyService } from './relayer/relayer_proxy.service'
-import { Session } from './session/session.entity'
-import { SessionService } from './session/session.service'
-import { SubsidyService } from './subsidy/subsidy.service'
-import { TxParserService } from './wallet/tx-parser.service'
-import { WalletService } from './wallet/wallet.service'
+import { AuthService } from '../auth/auth.service'
+import { appConfig } from '../config/app.config'
+import { quotaConfig } from '../config/quota.config'
+import { DeviceType, StartSessionDto } from '../dto/StartSessionDto'
+import { GatewayService } from '../gateway/gateway.service'
+import { RelayerProxyService } from '../relayer/relayer_proxy.service'
+import { Session } from '../session/session.entity'
+import { SessionService } from '../session/session.service'
+import { SubsidyService } from '../subsidy/subsidy.service'
+import { TxParserService } from '../wallet/tx-parser.service'
+import { WalletService } from '../wallet/wallet.service'
+import { V1AppController } from './v1.controller'
 
-jest.mock('./gateway/gateway.service')
-jest.mock('./relayer/relayer_proxy.service')
-jest.mock('./session/session.service')
-jest.mock('./wallet/wallet.service')
-jest.mock('./subsidy/subsidy.service')
+jest.mock('../gateway/gateway.service')
+jest.mock('../relayer/relayer_proxy.service')
+jest.mock('../session/session.service')
+jest.mock('../wallet/wallet.service')
+jest.mock('../subsidy/subsidy.service')
 jest.mock('@celo/contractkit')
 jest.mock('@komenci/logger/dist/komenci-logger.service')
 
-describe('AppController', () => {
-  let appController: AppController
+describe('V1AppController', () => {
+  let appController: V1AppController
   let jwtService: JwtService
   let gatewayService: GatewayService
   let sessionService: SessionService
@@ -44,7 +44,7 @@ describe('AppController', () => {
           secret: 'test-secret'
         })
       ],
-      controllers: [AppController],
+      controllers: [V1AppController],
       providers: [
         RelayerProxyService,
         AuthService,
@@ -70,7 +70,7 @@ describe('AppController', () => {
       ]
     }).compile()
 
-    appController = await app.resolve(AppController)
+    appController = await app.resolve(V1AppController)
     jwtService = app.get(JwtService)
     gatewayService = app.get(GatewayService)
     sessionService = app.get(SessionService)

@@ -47,14 +47,14 @@ const migratorAddressForEnv = (env) => {
 
 const baseNetworkConfig = {
   gas: 5000000,
-  gasPrice: 100000000000,
+  gasPrice: 1000000000,
 }
 
 module.exports = {
   plugins: ["truffle-security"],
 
   contracts_build_directory: "../contracts/artefacts",
-  migrations_directory: ".//migrations",
+  migrations_directory: "./migrations",
   networks: {
     alfajores: {
       ...baseNetworkConfig,

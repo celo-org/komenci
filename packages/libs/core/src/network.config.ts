@@ -18,6 +18,7 @@ export interface NetworkConfig {
   relayers: RelayerAccounts[]
   contracts: {
     MetaTransactionWalletDeployer: Address
+    ProxyCloneFactory: Address
     MetaTransactionWalletVersions: Record<Address, string>
   },
   fornoURL: string
@@ -89,7 +90,8 @@ const configs: Record<Network, NetworkConfig> = {
         "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.1.0.0-p2",
         "0x5C9a6E3c3E862eD306E2E3348EBC8b8310A99e5A": "1.1.0.0-p3"
       },
-      MetaTransactionWalletDeployer: "0x4cda887Bce324109535814D49b74c6a560fAe1D9"
+      MetaTransactionWalletDeployer: "0x4cda887Bce324109535814D49b74c6a560fAe1D9",
+      ProxyCloneFactory: "0x43Bec8C66645c177C7188B7Ce95b67ab02331316"
     },
     fornoURL: 'https://alfajores-forno.celo-testnet.org',
     odis: {
@@ -101,6 +103,7 @@ const configs: Record<Network, NetworkConfig> = {
   [Network.alfajoresstaging]: {
     relayers: [ ],
     contracts: {
+      ProxyCloneFactory: "",
       MetaTransactionWalletVersions: {
         "0x786ec5A4F8DCad3A58D5B1A04cc99B019E426065": "1.0.0"
       },
@@ -116,6 +119,7 @@ const configs: Record<Network, NetworkConfig> = {
   [Network.baklava]: {
     relayers: [ ],
     contracts: {
+      ProxyCloneFactory: "",
       MetaTransactionWalletVersions: {
         "0x0": "1.0.0"
       },
@@ -131,6 +135,7 @@ const configs: Record<Network, NetworkConfig> = {
   [Network.baklavastaging]: {
     relayers: [ ],
     contracts: {
+      ProxyCloneFactory: "",
       MetaTransactionWalletVersions: {
         "0x0": "1.0.0"
       },
@@ -187,11 +192,12 @@ const configs: Record<Network, NetworkConfig> = {
       }
     ],
     contracts: {
+      ProxyCloneFactory: "",
       MetaTransactionWalletVersions: {
         "0x63004Acf0Ace666651E191ad17BC8D85077A09e6": "1.1.0.0-p1",
         "0x6511FB5DBfe95859d8759AdAd5503D656E2555d7": "1.1.0.0-p2"
       },
-      MetaTransactionWalletDeployer: "0xbDb92Ca42559adc5adC20a1E4985dC7c476483be"
+      MetaTransactionWalletDeployer: "0xbDb92Ca42559adc5adC20a1E4985dC7c476483be",
     },
     fornoURL: 'https://forno.celo.org',
     odis: {

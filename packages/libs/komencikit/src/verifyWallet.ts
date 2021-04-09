@@ -1,4 +1,4 @@
-import { Address, normalizeAddress } from '@celo/base'
+import { Address, ensureLeading0x, normalizeAddress } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { GET_IMPLEMENTATION_ABI } from '@celo/contractkit/lib/proxy'
@@ -17,7 +17,9 @@ import {
  *
  * See: `scripts/proxy-bytecode-sha3.js` or run `yarn proxy:sha3`
  */
-const PROXY_BYTECODE_SHA3 = '0x69f56de93d0b1eb15364c67a2756afbc0b3112e544f64c4bf2c7bcdf287f0a91'
+const PROXY_V1_BYTECODE_SHA3 = '0x69f56de93d0b1eb15364c67a2756afbc0b3112e544f64c4bf2c7bcdf287f0a91'
+const PROXY_V2_BYTECODE_SHA3 = '0x5470bcd2760511ab356734c549dcf5bdee979f4fb238faa52758874114f7f709'
+const EIP1167_BYTECODE_REGEXP  = /^0x363d3d373d3d3d363d73([a-f0-9]{40})5af43d82803e903d91602b57fd5bf3$/
 
 export const verifyWallet = async (
   contractKit: ContractKit,
@@ -26,9 +28,21 @@ export const verifyWallet = async (
   expectedSigner: Address
 ): Promise<Result<true, WalletValidationError>> => {
   const code = await contractKit.connection.web3.eth.getCode(metaTxWalletAddress)
+  const eip1167Match = EIP1167_BYTECODE_REGEXP.exec(code)
 
-  if (contractKit.connection.web3.utils.soliditySha3(stripBzz(code)) !== PROXY_BYTECODE_SHA3) {
-    return Err(new InvalidBytecode(metaTxWalletAddress))
+  if (eip1167Match !== null) {
+    // We should have an instance of a EIP1167 Light proxy with a ProxyV2 implementation
+    // So we check the implementation code
+    const proxyImplementationAddress = ensureLeading0x(eip1167Match[1])
+    const proxyByteCode = await contractKit.connection.web3.eth.getCode(proxyImplementationAddress)
+    if (contractKit.connection.web3.utils.soliditySha3(stripBzz(proxyByteCode)) !== PROXY_V2_BYTECODE_SHA3) {
+      return Err(new InvalidBytecode(metaTxWalletAddress))
+    }
+  } else {
+    // We should have an instance of Proxy so we check the bytecode directly
+    if (contractKit.connection.web3.utils.soliditySha3(stripBzz(code)) !== PROXY_V1_BYTECODE_SHA3) {
+      return Err(new InvalidBytecode(metaTxWalletAddress))
+    }
   }
 
   const actualImplementationRaw = await contractKit.connection.web3.eth.call({

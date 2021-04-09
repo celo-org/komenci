@@ -1,6 +1,6 @@
 {
   "name": "@komenci/contracts",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Artifacts for smart contracts used in Komenci",
   "scripts": {
     "update": "./scripts/update.sh"
