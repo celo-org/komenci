@@ -2,7 +2,7 @@ config:
   target: 'http://localhost:4000'
   phases:
     - duration: 60
-      arrivalCount: 40
+      arrivalCount: 50
       name: Warm up
     - duration: 150
       arrivalCount: 300
@@ -10,24 +10,29 @@ config:
   processor: './lib/processor.js'
   environments:
     alfajores:
-      target: https://staging-komenci.azurefd.net/v1
+      # target: 'http://localhost:3000/v1'
+      # target: https://staging-komenci.azurefd.net/v1
       # target: 'https://weu.komenci.alfajores.celo-testnet.org/v1'
-      # target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
+      target: 'https://eus.komenci.alfajores.celo-testnet.org/v1'
     baklava:
       target: 'http://localhost:3000'
     mainnet:
       target: 'http://localhost:3000'
 scenarios:
   - flow:
-          - post: 
-              name: "Start session"
-              url: '/startSession'
-              headers: {content-type: application/json}
-              beforeRequest: "prepareStartSession"
-              capture:
-                json: "$.token"
-                as: "token"
-              strict: false
+          - loop:
+              - think: 2
+              - post: 
+                  name: "Start session"
+                  url: '/startSession'
+                  headers: {content-type: application/json}
+                  beforeRequest: "prepareStartSession"
+                  afterResponse: "saveStartSessionStatus"
+                  capture:
+                    json: "$.token"
+                    as: "token"
+                  strict: false
+            whileTrue: "startSessionRateLimited"
           - log: "Session started for {{ account }} with {{ token }}"
           - think: 0.2
           - get: 
