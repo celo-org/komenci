@@ -31,7 +31,7 @@
   "dependencies": {
     "@celo/base": "^1.2.1",
     "@celo/contractkit": "^1.2.0",
-    "@celo/phone-number-privacy-common": "^1.0.32",
+    "@celo/phone-number-privacy-common": "^1.0.33",
     "@komenci/blockchain": "^1.0.0",
     "@komenci/core": "^1.0.0",
     "@komenci/logger": "^1.0.0",

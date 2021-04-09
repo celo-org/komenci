@@ -114,7 +114,7 @@ export class WalletService {
       ensureLeading0x(session.externalAccount)
     ).encodeABI()
 
-    const proxyDeployer = this.getProxyDeployer(session.meta.walletDeploy.proxyType)
+    const proxyDeployer = this.getProxyDeployer(proxyType)
     const { transaction, deployerAddress } = proxyDeployer.getDeployTransaction(
       session.externalAccount,
       implementationAddress,

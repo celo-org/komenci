@@ -152,7 +152,7 @@ export interface DeployWalletPayload {
 export const deployWallet = action<ActionTypes.DeployWallet, DeployWalletPayload, DeployWalletResp>(
   ActionTypes.DeployWallet,
   RequestMethod.POST,
-  'v1/deployWallet',
+  'v2/deployWallet',
   DeployWalletResp
 )
 

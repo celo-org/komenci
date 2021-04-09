@@ -2,7 +2,6 @@ import { Address, normalizeAddressWith0x, serializeSignature, sleep } from '@cel
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { CeloTransactionObject, CeloTxReceipt } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
-import { ContractEventLog } from '@celo/contractkit/lib/generated/types'
 import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
@@ -504,31 +503,10 @@ export class KomenciKit {
       return receiptResult
     }
     const receipt = receiptResult.result
-
-    const deployer = await this.contractKit.contracts.getMetaTransactionWalletDeployer(receipt.to)
-
-    const events = await deployer.getPastEvents(deployer.eventTypes.WalletDeployed, {
-      fromBlock: receipt.blockNumber,
-      toBlock: receipt.blockNumber,
-    })
-
-    const deployWalletLog = events.find(
-      (
-        event: ContractEventLog<{
-          owner: string
-          wallet: string
-          implementation: string
-          0: string
-          1: string
-          2: string
-        }>
-      ) => normalizeAddressWith0x(event.returnValues.owner) === this.externalAccount
-    )
-
-    if (deployWalletLog === undefined) {
-      return Err(new TxEventNotFound(txHash, deployer.eventTypes.WalletDeployed))
-    }
-
-    return Ok(deployWalletLog.returnValues.wallet)
+    const deployProxyLog = receipt.logs.find((log) => log.topics[0] === "0x00fffc2da0b561cae30d9826d37709e9421c4725faebc226cbbb7ef5fc5e7349")
+    if (deployProxyLog === undefined) {
+      return Err(new TxEventNotFound(txHash, "ProxyDeployed"))
+    } 
+    return Ok(this.contractKit.web3.eth.abi.decodeParameter("address", deployProxyLog.data) as unknown as string)
   }
 }

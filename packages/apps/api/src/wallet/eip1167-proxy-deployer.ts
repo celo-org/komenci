@@ -1,4 +1,5 @@
 import { eqAddress, Err, Ok, Result } from "@celo/base"
+import { ContractKit } from "@celo/contractkit"
 import { RawTransaction } from "@celo/contractkit/lib/wrappers/MetaTransactionWallet"
 import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
 import { networkConfig, NetworkConfig } from "@komenci/core"
@@ -22,8 +23,9 @@ export class EIP1167ProxyDeployer implements ProxyDeployer {
   constructor(
     @Inject(networkConfig.KEY)
     networkCfg: NetworkConfig,
+    private contractKit: ContractKit
   ) {
-    this.deployer = new Contract(
+    this.deployer = new contractKit.web3.eth.Contract(
       ProxyCloneFactoryABI as any,
       networkCfg.contracts.ProxyCloneFactory
     )
@@ -32,7 +34,7 @@ export class EIP1167ProxyDeployer implements ProxyDeployer {
   async findWallet(blockNumber: number, txHash: string, deployerAddress: string): Promise<Result<string, WalletNotDeployed>> {
     const deployer = 
       (deployerAddress && !eqAddress(deployerAddress, this.deployer.options.address))
-      ? new Contract(ProxyCloneFactoryABI as any, deployerAddress)
+      ? new this.contractKit.web3.eth.Contract(ProxyCloneFactoryABI as any, deployerAddress)
       : this.deployer
 
     const events = await deployer.getPastEvents(
@@ -61,7 +63,7 @@ export class EIP1167ProxyDeployer implements ProxyDeployer {
     const transaction: RawTransaction = {
       destination: this.deployer.options.address,
       value: "0x0",
-      data: this.deployer.methods.deployV2(owner, implementation, initCallData).encodeABI()
+      data: this.deployer.methods.deployV2(implementation, initCallData).encodeABI()
     }
     return {
       transaction,
