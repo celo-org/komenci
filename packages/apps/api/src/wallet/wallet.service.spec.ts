@@ -12,7 +12,7 @@ import { RelayerProxyService } from '../relayer/relayer_proxy.service'
 import { Session } from '../session/session.entity'
 import { SessionService } from '../session/session.service'
 import { WalletErrorType } from '../wallet/errors'
-import { WalletService } from '../wallet/wallet.service'
+import { WalletProxyType, WalletService } from '../wallet/wallet.service'
 
 jest.mock('@komenci/logger/dist/komenci-logger.service')
 jest.mock('../relayer/relayer_proxy.service')
@@ -70,6 +70,7 @@ describe("WalletService", () => {
         transactionTimeoutMs: 1000
       }, {
         contracts: {
+          ProxyCloneFactory: "0x0",
           MetaTransactionWalletVersions: {
             [validImplementation]: "1.1.0.0"
           },
@@ -83,7 +84,7 @@ describe("WalletService", () => {
       it('returns an InvalidImplementation', async () => {
         const session = Session.of({})
         const walletService = await module.resolve(WalletService)
-        const deployRes = await walletService.deployWallet(session, invalidImplementation)
+        const deployRes = await walletService.deployWallet(session, invalidImplementation, WalletProxyType.Legacy)
 
         expect(deployRes.ok).toBe(false)
         if (deployRes.ok === false) {
@@ -115,7 +116,7 @@ describe("WalletService", () => {
             'update'
           ).mockResolvedValue(null)
 
-          const deployRes = await walletSvc.deployWallet(session, validImplementation)
+          const deployRes = await walletSvc.deployWallet(session, validImplementation, WalletProxyType.Legacy)
           expect(deployRes.ok).toBe(true)
 
           if (deployRes.ok === true) {
@@ -148,13 +149,16 @@ describe("WalletService", () => {
                 walletDeploy: {
                   txHash,
                   implementationAddress: validImplementation,
-                  startedAt: Date.now() - 100
+                  startedAt: Date.now() - 100,
+                  deployerAddress: "0x0",
+                  proxyType: WalletProxyType.Legacy
+
                 }
               }
             })
 
             const walletSvc = await module.resolve(WalletService)
-            const deployRes = await walletSvc.deployWallet(session, validImplementation)
+            const deployRes = await walletSvc.deployWallet(session, validImplementation, WalletProxyType.Legacy)
             const sessionSvc = module.get(SessionService)
             const relayerSvc = module.get(RelayerProxyService)
 
@@ -182,7 +186,9 @@ describe("WalletService", () => {
               walletDeploy: {
                 txHash: oldTxHash,
                 implementationAddress: validImplementation,
-                startedAt: Date.now() - 5000
+                startedAt: Date.now() - 5000,
+                deployerAddress: "0x0",
+                proxyType: WalletProxyType.Legacy,
               }
             }
           })
@@ -202,7 +208,7 @@ describe("WalletService", () => {
             'update'
           ).mockResolvedValue(null)
 
-          const deployRes = await walletSvc.deployWallet(session, validImplementation)
+          const deployRes = await walletSvc.deployWallet(session, validImplementation, WalletProxyType.Legacy)
           expect(deployRes.ok).toBe(true)
 
           if (deployRes.ok === true) {
@@ -236,6 +242,7 @@ describe("WalletService", () => {
         transactionTimeoutMs: 1000
       }, {
         contracts: {
+          ProxyCloneFactory: "0x0",
           MetaTransactionWalletVersions: {
             [validImplementation]: "1.1.0.0"
           },
@@ -287,7 +294,9 @@ describe("WalletService", () => {
               walletDeploy: {
                 txHash,
                 implementationAddress: validImplementation,
-                startedAt: Date.now() - 100
+                startedAt: Date.now() - 100,
+                deployerAddress: "0x0",
+                proxyType: WalletProxyType.Legacy
               }
             }
           })
@@ -319,7 +328,9 @@ describe("WalletService", () => {
               walletDeploy: {
                 txHash,
                 implementationAddress: validImplementation,
-                startedAt: Date.now() - 100
+                startedAt: Date.now() - 100,
+                deployerAddress: "0x0",
+                proxyType: WalletProxyType.Legacy
               }
             }
           })

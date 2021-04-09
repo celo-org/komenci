@@ -30,12 +30,11 @@ export class EIP1167ProxyDeployer implements ProxyDeployer {
   }
 
   async findWallet(blockNumber: number, txHash: string, deployerAddress: string): Promise<Result<string, WalletNotDeployed>> {
-    let deployer: Contract
-    if (deployerAddress && !eqAddress(deployerAddress, this.deployer.options.address)) {
-      this.deployer = new Contract(ProxyCloneFactoryABI as any, deployerAddress)
-    } else {
-      deployer = this.deployer
-    }
+    const deployer = 
+      (deployerAddress && !eqAddress(deployerAddress, this.deployer.options.address))
+      ? new Contract(ProxyCloneFactoryABI as any, deployerAddress)
+      : this.deployer
+
     const events = await deployer.getPastEvents(
       'ProxyCreated',
       {
