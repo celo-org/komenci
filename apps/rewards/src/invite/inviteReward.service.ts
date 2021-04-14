@@ -12,6 +12,7 @@ import { EventService } from '../event/eventService.service'
 import { fetchEvents } from '../utils/fetchEvents'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
+import { RewardSenderService } from './rewardSender.service'
 
 const NOTIFIED_BLOCK_KEY = 'inviteReward'
 const WEEKLY_INVITE_LIMIT = 20
@@ -25,6 +26,7 @@ export class InviteRewardService {
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
     private readonly attestationRepository: AttestationRepository,
+    private readonly rewardSenderService: RewardSenderService,
     private readonly eventService: EventService,
     private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
@@ -41,7 +43,7 @@ export class InviteRewardService {
   // Since there may be several instances of this service, we need to make sure we don't send more than
   // one reward for the same invitee. The invitee record is unique on the database, so any attempt to
   // create a new row with the same one will fail.
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async sendInviteRewards() {
     this.cUsdTokenAddress = (
       await this.contractKit.registry.addressFor(CeloContract.StableToken)
@@ -95,7 +97,7 @@ export class InviteRewardService {
         identifier
       )
       if (inviteReward) {
-        this.sendInviteReward(inviteReward)
+        this.rewardSenderService.sendInviteReward(inviteReward)
       }
     }
   }
@@ -164,9 +166,5 @@ export class InviteRewardService {
     } catch (error) {
       this.logger.log(`Error creating reward: ${error}`)
     }
-  }
-
-  sendInviteReward(invite: InviteReward) {
-    // TODO: Send using HSM
   }
 }
