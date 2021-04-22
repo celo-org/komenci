@@ -97,7 +97,9 @@ export class InviteRewardService {
         identifier
       )
       if (inviteReward) {
-        this.rewardSenderService.sendInviteReward(inviteReward)
+        // The error is handled in the reward sender service, just firing off the 
+        // sending here and catching to apease the linter.
+        this.rewardSenderService.sendInviteReward(inviteReward).catch()
       }
     }
   }

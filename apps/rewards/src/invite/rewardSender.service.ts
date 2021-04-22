@@ -1,12 +1,12 @@
 import { KomenciLoggerService } from '@app/komenci-logger'
 import { ContractKit } from '@celo/contractkit'
 import { Inject, Injectable } from '@nestjs/common'
+import { Cron, CronExpression } from '@nestjs/schedule'
+import { EntityManager, In, Raw, Repository } from 'typeorm'
+import { appConfig, AppConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
-import { Cron, CronExpression } from '@nestjs/schedule'
 import { InviteRewardRepository } from './inviteReward.repository'
-import { appConfig, AppConfig } from '../config/app.config'
-import { EntityManager, In, LessThan, Raw, Repository } from 'typeorm'
 
 interface WatchedInvite {
   inviteId: string
@@ -57,7 +57,7 @@ export class RewardSenderService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async checkFailedInvites() {
-    this.inviteRewardRepository.manager.transaction(
+    await this.inviteRewardRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         const repository = entityManager.getRepository<InviteReward>(
           'invite_reward'
