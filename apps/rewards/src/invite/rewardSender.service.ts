@@ -2,11 +2,14 @@ import { KomenciLoggerService } from '@app/komenci-logger'
 import { ContractKit } from '@celo/contractkit'
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
+import BigNumber from 'bignumber.js'
 import { EntityManager, In, Raw, Repository } from 'typeorm'
 import { appConfig, AppConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
+
+const WEI_PER_UNIT = 1000000000000000000
 
 interface WatchedInvite {
   inviteId: string
@@ -30,12 +33,16 @@ export class RewardSenderService {
     this.watchedInvites = new Set()
   }
 
+  async wasTxSentSuccesfully(txHash: string) {
+    const tx = await this.contractKit.web3.eth.getTransaction(txHash)
+    return Boolean(tx.blockHash)
+  }
+
   @Cron(CronExpression.EVERY_SECOND)
   async checkWatchedInvites() {
     await Promise.all(
       [...this.watchedInvites].map(async invite => {
-        const tx = await this.contractKit.web3.eth.getTransaction(invite.txHash)
-        if (tx.blockHash) {
+        if (await this.wasTxSentSuccesfully(invite.txHash)) {
           await this.inviteRewardRepository.update(invite.inviteId, {
             state: RewardStatus.Completed
           })
@@ -73,11 +80,34 @@ export class RewardSenderService {
             )
           })
           .getMany()
+        if (invites.length > 0) {
+          this.logger.log(`Found failed or submitted invites ${invites.length}`)
+        }
         await Promise.all(
-          invites.map(invite => this.sendInviteReward(invite, true, repository))
+          invites.map(async invite => {
+            if (
+              invite.state === RewardStatus.Submitted &&
+              (await this.wasTxSentSuccesfully(invite.rewardTxHash))
+            ) {
+              await repository.update(invite.id, {
+                state: RewardStatus.Completed
+              })
+            } else {
+              await this.sendInviteReward(invite, true, repository)
+            }
+          })
         )
       }
     )
+  }
+
+  async getRewardInCelo() {
+    const rewardInCusdWei = this.appCfg.inviteRewardAmountInCusd * WEI_PER_UNIT
+    const exchange = await this.contractKit.contracts.getExchange()
+    const exchangeRate = await exchange.getGoldExchangeRate(
+      new BigNumber(rewardInCusdWei)
+    )
+    return exchangeRate.multipliedBy(rewardInCusdWei).toFixed(0)
   }
 
   async sendInviteReward(
@@ -86,7 +116,10 @@ export class RewardSenderService {
     repository: Repository<InviteReward> = this.inviteRewardRepository
   ) {
     const celoToken = await this.contractKit.contracts.getGoldToken()
-    const tx = await celoToken.transfer(invite.inviter, 1)
+    const tx = await celoToken.transfer(
+      invite.inviter,
+      await this.getRewardInCelo()
+    )
 
     const resp = await this.relayerProxyService.submitTransaction(
       {

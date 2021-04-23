@@ -6,7 +6,9 @@ export const appConfig = registerAs('app', () => ({
   jwt_secret: process.env.JWT_SECRET || 'secret123456789',
   log_level: process.env.LOG_LEVEL || 'debug',
   transactionTimeoutMs:
-    parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 10000
+    parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 10000,
+  inviteRewardAmountInCusd:
+    parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 2
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>
