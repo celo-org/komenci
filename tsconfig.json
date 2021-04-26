@@ -40,6 +40,12 @@
       ],
       "@app/komenci-logger/*": [
         "libs/komenci-logger/src/*"
+      ],
+      "@app/komenci-throttler": [
+        "libs/komenci-throttler/src"
+      ],
+      "@app/komenci-throttler/*": [
+        "libs/komenci-throttler/src/*"
       ]
     }
   }

@@ -4,8 +4,13 @@ import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWa
 
 export enum ChainErrorTypes {
   TxSubmitError = "TxSubmitError",
+  TxNotFoundError = "TxNotFoundError",
+  ReceiptNotFoundError = "ReceiptNotFoundError",
   TxDeadletterError = "TxDeadletterError",
-  GasPriceFetchError = "GasPriceFetchError"
+  GasPriceFetchError = "GasPriceFetchError",
+  NonceTooLow = "NonceTooLow",
+  GasPriceBellowMinimum = "GasPriceBellowMinimum",
+  TxNotInCache = "TxNotInCache"
 }
 
 export class TxSubmitError extends MetadataError<ChainErrorTypes.TxSubmitError> {
@@ -22,7 +27,7 @@ export class TxDeadletterError extends MetadataError<ChainErrorTypes.TxDeadlette
 
   constructor(readonly err: Error, readonly txHash: string) {
     super(ChainErrorTypes.TxDeadletterError)
-    this.message = `TxSubmitError: ${err.message}`
+    this.message = `TxDeadletterError: ${err.message}`
   }
 }
 
@@ -30,5 +35,47 @@ export class GasPriceFetchError extends RootError<ChainErrorTypes.GasPriceFetchE
   constructor(readonly err: Error) {
     super(ChainErrorTypes.GasPriceFetchError)
     this.message = `GasPriceFetchError: ${err.message}`
+  }
+}
+
+export class TxNotFoundError extends RootError<ChainErrorTypes.TxNotFoundError> {
+  metadataProps = ['txHash']
+
+  constructor(readonly txHash: string) {
+    super(ChainErrorTypes.TxNotFoundError)
+    this.message = `TxNotFoundError: ${txHash} not found in node`
+  }
+}
+
+export class ReceiptNotFoundError extends RootError<ChainErrorTypes.ReceiptNotFoundError> {
+  metadataProps = ['txHash']
+
+  constructor(readonly txHash: string) {
+    super(ChainErrorTypes.ReceiptNotFoundError)
+    this.message = `Receipt not found for ${txHash}`
+  }
+}
+
+export class NonceTooLow extends RootError<ChainErrorTypes.NonceTooLow> {
+  constructor() {
+    super(ChainErrorTypes.NonceTooLow)
+    this.message = "Nonce too low"
+  }
+}
+
+export class GasPriceBellowMinimum extends RootError<ChainErrorTypes.GasPriceBellowMinimum> {
+  metadataProps = ['gasPrice']
+  constructor(readonly gasPrice: string) {
+    super(ChainErrorTypes.GasPriceBellowMinimum)
+    this.message = `Gas price bellow minium: ${gasPrice}`
+  }
+}
+
+export class TxNotInCache extends RootError<ChainErrorTypes.TxNotInCache> {
+  metadataProps = ['txHash']
+
+  constructor(readonly txHash: string) {
+    super(ChainErrorTypes.TxNotInCache)
+    this.message = `TxNotInCache: ${txHash} not found in cache`
   }
 }

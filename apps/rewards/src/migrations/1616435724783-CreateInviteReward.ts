@@ -45,7 +45,8 @@ export class CreateInviteReward1616435724783 implements MigrationInterface {
             type: 'timestamp',
             isNullable: false
           }
-        ]
+        ],
+        indices: [{ columnNames: ['inviter'] }]
       }),
       true
     )
