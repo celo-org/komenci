@@ -1,6 +1,7 @@
 import { BlockchainService, NodeRPCError, TxPool } from '@app/blockchain/blockchain.service'
 import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
 import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
+import { sleep } from '@celo/base'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
@@ -28,6 +29,11 @@ describe('TransactionService', () => {
       getTransactionReceipt: jest.fn()
     }
   }
+  // @ts-ignore
+  contractKit.connection = {
+    nonce:  () => Promise.resolve(2)
+  }
+  
 
   const buildModule = async (
     testAppConfig: Partial<AppConfig>,
@@ -191,7 +197,7 @@ describe('TransactionService', () => {
       const balanceService = module.get(BalanceService)
 
       // @ts-ignore
-      jest.spyOn(service, 'getPendingTransactionHashes').mockResolvedValue([])
+      jest.spyOn(service, 'getPendingTransactions').mockResolvedValue([])
       jest.spyOn(balanceService, 'logBalance').mockResolvedValue(null)
       await service.onModuleInit()
     })
@@ -235,7 +241,12 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, undefined)
+        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, {
+          expireIn: 2000,
+          gasPrice: new BigNumber("1000000000"),
+          nonce: 2,
+          traceContext: undefined
+        })
 
         // Ensure the checkTransactions method is called
         jest.runOnlyPendingTimers()
@@ -243,7 +254,9 @@ describe('TransactionService', () => {
         expect(checkTransactions).toHaveBeenCalled()
 
         // Shouldn't remove it from the unwatch list until it's finalized
-        expect(unwatchTransaction).not.toHaveBeenCalledWith(tx.hash)
+        expect(unwatchTransaction).not.toHaveBeenCalledWith(expect.objectContaining({
+          hash: tx.hash
+        }))
 
         // Simulate being included in a block and ensure it's unwatched
         const completedTx = txFixture()
@@ -260,11 +273,15 @@ describe('TransactionService', () => {
         const relayerBalancePromise = Promise.resolve(relayerBalanceFixture())
         getTotalBalance.mockReturnValue(relayerBalancePromise)
 
-        jest.runOnlyPendingTimers()
         await completedTxPromise
         await txReceiptPromise
         await relayerBalancePromise
+        // @ts-ignore
+        await service.checkTransactions()
+        // @ts-ignore
+        await service.checkTransactions()
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(unwatchTransaction).toHaveBeenCalledTimes(1)
       })
     })
 
@@ -272,12 +289,23 @@ describe('TransactionService', () => {
       it('gets dead lettered when it is expired', async () => {
         const tx = txFixture()
         const receipt = receiptFixture(tx)
-        const result: any = {
+
+        const deadLetterTx = txFixture()
+        const deadLetterReceipt = receiptFixture(deadLetterTx)
+
+        const txResult = Promise.resolve({
           getHash: () => Promise.resolve(tx.hash),
           waitReceipt: () => Promise.resolve(receipt)
-        }
-        const resultPromise = Promise.resolve(result)
-        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction').mockReturnValue(resultPromise)
+        })
+
+        const deadLetterResult = Promise.resolve({
+          getHash: () => Promise.resolve(deadLetterTx.hash),
+          waitReceipt: () => Promise.resolve(deadLetterReceipt)
+        })
+
+        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction')
+          .mockReturnValueOnce(txResult as any)
+          .mockResolvedValueOnce(deadLetterResult as any)
         // @ts-ignore
         const watchTransaction = jest.spyOn(service, 'watchTransaction')
         // @ts-ignore
@@ -308,18 +336,117 @@ describe('TransactionService', () => {
           from: relayerAddress
         }))
 
-        expect(watchTransaction).toHaveBeenCalledWith(tx.hash, undefined)
         expect(unwatchTransaction).not.toHaveBeenCalled()
 
-        jest.runOnlyPendingTimers()
-        expect(checkTransactions).toHaveBeenCalled()
+        // @ts-ignore
+        await service.checkTransactions()
         expect(finalizeTransaction).not.toHaveBeenCalled()
-        await txPromise
-        await resultPromise
-        await result.getHash()
-        jest.runOnlyPendingTimers()
-        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining(tx))
+        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}), 'Expired')
         expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          1,
+          tx.hash, 
+          expect.objectContaining({
+            expireIn: 2000,
+            gasPrice: new BigNumber("1000000000"),
+            nonce: 2,
+            traceContext: undefined
+          })
+        )
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          2,
+          deadLetterTx.hash, 
+          expect.objectContaining({
+            expireIn: 4000,
+            gasPrice: new BigNumber("1400000000"),
+            nonce: 2,
+            traceContext: undefined
+          })
+        )
+        expect(watchTransaction.mock.calls.length).toBe(2)
+      })
+    })
+
+    describe('when the transaction has gas too low', () => {
+      it('is deadlettered', async () => {
+        const tx = txFixture()
+        const receipt = receiptFixture(tx)
+
+        const deadLetterTx = txFixture()
+        const deadLetterReceipt = receiptFixture(deadLetterTx)
+
+        const txResult = Promise.resolve({
+          getHash: () => Promise.resolve(tx.hash),
+          waitReceipt: () => Promise.resolve(receipt)
+        })
+
+        const deadLetterResult = Promise.resolve({
+          getHash: () => Promise.resolve(deadLetterTx.hash),
+          waitReceipt: () => Promise.resolve(deadLetterReceipt)
+        })
+
+        const sendTransaction = jest.spyOn(contractKit, 'sendTransaction')
+          .mockReturnValueOnce(txResult as any)
+          .mockResolvedValueOnce(deadLetterResult as any)
+        // @ts-ignore
+        const watchTransaction = jest.spyOn(service, 'watchTransaction')
+        // @ts-ignore
+        const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
+        const txPromise = Promise.resolve(tx)
+        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
+        // @ts-ignore
+        const deadLetter = jest.spyOn(service, 'deadLetter')
+        // @ts-ignore
+        const checkTransactions = jest.spyOn(service, 'checkTransactions')
+        // @ts-ignore
+        const finalizeTransaction = jest.spyOn(service, 'finalizeTransaction')
+        // @ts-ignore
+        const isExpired = jest.spyOn(service, 'isExpired').mockReturnValue(false)
+        // @ts-ignore
+        const hasGasTooLow = jest.spyOn(service, 'hasGasTooLow').mockReturnValue(true)
+
+        const rawTx = {
+          destination: tx.to,
+          data: tx.input,
+          value: tx.value
+        }
+
+        const hash = await service.submitTransaction(rawTx)
+
+        expect(sendTransaction).toHaveBeenCalledWith(expect.objectContaining({
+          to: rawTx.destination,
+          data: rawTx.data,
+          value: rawTx.value,
+          from: relayerAddress
+        }))
+
+        expect(unwatchTransaction).not.toHaveBeenCalled()
+
+        // @ts-ignore
+        await service.checkTransactions()
+        expect(finalizeTransaction).not.toHaveBeenCalled()
+        expect(deadLetter).toHaveBeenCalledWith(expect.objectContaining({hash: tx.hash}), 'GasTooLow')
+        expect(unwatchTransaction).toHaveBeenCalledWith(tx.hash)
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          1,
+          tx.hash, 
+          expect.objectContaining({
+            expireIn: 2000,
+            gasPrice: new BigNumber("1000000000"),
+            nonce: 2,
+            traceContext: undefined
+          })
+        )
+        expect(watchTransaction).toHaveBeenNthCalledWith(
+          2,
+          deadLetterTx.hash, 
+          expect.objectContaining({
+            expireIn: 4000,
+            gasPrice: new BigNumber("1400000000"),
+            nonce: 2,
+            traceContext: undefined
+          })
+        )
         expect(watchTransaction.mock.calls.length).toBe(2)
       })
     })

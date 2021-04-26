@@ -1,9 +1,9 @@
-import { extractMethodId } from '@app/blockchain/utils'
 import { EventType, KomenciLoggerService } from '@app/komenci-logger'
 import { ActionCounts, TrackedAction } from '@app/onboarding/config/quota.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { RequestAttestationsDto } from '@app/onboarding/dto/RequestAttestationsDto'
 
+import { Throttle, ThrottlerGuard } from '@app/komenci-throttler'
 import { SubmitMetaTransactionDto } from '@app/onboarding/dto/SubmitMetaTransactionDto'
 import { QuotaAction } from '@app/onboarding/session/quota.decorator'
 import { QuotaGuard } from '@app/onboarding/session/quota.guard'
@@ -91,14 +91,33 @@ export class AppController {
 
   @Get('health')
   health(@Req() req): { status: string } {
-    // TODO: Think about how to have a more clear understanding of
-    // service health here. Think about the relayer load balancer health
-    // or maybe just a toggle that we can do from ENV vars?
+    // XXX: This does not indicate whether the service is under
+    // load, it is used by k8s to know whether the server
+    // is running.
     return {
       status: 'OK'
     }
   }
 
+  @Throttle({
+    key: 'start-session',
+    checkOnly: true
+  })
+  @UseGuards(ThrottlerGuard)
+  @Get('ready')
+  ready(): { status: string } {
+    // XXX: This endpoint tells Valora whether to attempt
+    // verification or not, this is throttled based on
+    // the current config see throttle.config.ts
+    return {
+      status: 'Ready'
+    }
+  }
+
+  @Throttle({
+    key: 'start-session',
+  })
+  @UseGuards(ThrottlerGuard)
   @Post('startSession')
   async startSession(
     @Body() startSessionDto: StartSessionDto,

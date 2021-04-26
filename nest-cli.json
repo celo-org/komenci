@@ -79,6 +79,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/utils/tsconfig.lib.json"
       }
+    },
+    "komenci-throttler": {
+      "type": "library",
+      "root": "libs/komenci-throttler",
+      "entryFile": "index",
+      "sourceRoot": "libs/komenci-throttler/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/komenci-throttler/tsconfig.lib.json"
+      }
     }
   }
 }
