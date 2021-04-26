@@ -26,6 +26,15 @@
         "tsConfigPath": "apps/relayer/tsconfig.app.json"
       }
     },
+    "rewards": {
+      "type": "application",
+      "root": "apps/rewards",
+      "entryFile": "main",
+      "sourceRoot": "apps/rewards/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/rewards/tsconfig.app.json"
+      }
+    },
     "blockchain": {
       "type": "library",
       "root": "libs/blockchain",
