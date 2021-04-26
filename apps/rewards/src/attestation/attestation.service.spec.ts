@@ -23,7 +23,7 @@ const account2 = '0x002'
 const identifier1 = '0x003'
 const identifier2 = '0x004'
 
-describe('InviteRewardService', () => {
+describe('AttestationService', () => {
   let service: AttestationService
   let repository: AttestationRepository
   let notifiedBlockRepository: NotifiedBlockRepository

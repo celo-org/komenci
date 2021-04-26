@@ -1,6 +1,6 @@
 import { EventLog } from 'web3-core'
 
-const EVENTS_BATCH_SIZE = 100000
+const EVENTS_BATCH_SIZE = 10000
 
 export async function fetchEvents(
   contract: any,

@@ -21,7 +21,7 @@ export class EventService {
     eventHandler: (event: EventLog) => Promise<void>
   ) {
     if (this.isRunning) {
-      this.logger.log('Skipping because previous run is still ongoing')
+      this.logger.log(`Skipping because previous run of ${key} is still ongoing`)
       return
     }
     this.isRunning = true
