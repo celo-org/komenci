@@ -25,8 +25,10 @@ export class RewardSenderService {
   watchedInvites: Set<WatchedInvite>
   rewardInCelo = {
     reward: '',
-    timestamp: 0,
+    timestamp: 0
   }
+  checkingWatchedInvites = false
+  checkingFailedInvites = false
 
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
@@ -46,70 +48,101 @@ export class RewardSenderService {
 
   @Cron(CronExpression.EVERY_SECOND)
   async checkWatchedInvites() {
-    await Promise.all(
-      [...this.watchedInvites].map(async invite => {
-        if (await this.wasTxSentSuccesfully(invite.txHash)) {
-          await this.inviteRewardRepository.update(invite.inviteId, {
-            state: RewardStatus.Completed
-          })
-          this.watchedInvites.delete(invite)
-        } else if (
-          Date.now() - invite.sentAt >
-          this.appCfg.transactionTimeoutMs
-        ) {
-          await this.inviteRewardRepository.update(invite.inviteId, {
-            state: invite.markAsDeadLetterIfFailed
-              ? RewardStatus.DeadLettered
-              : RewardStatus.Failed
-          })
-          this.watchedInvites.delete(invite)
-        }
-      })
-    )
+    if (this.checkingWatchedInvites) {
+      this.logger.debug(
+        'Skipping checking watched invites because previous run is still running'
+      )
+      return
+    }
+    this.checkingWatchedInvites = true
+    try {
+      await Promise.allSettled(
+        [...this.watchedInvites].map(async invite => {
+          if (await this.wasTxSentSuccesfully(invite.txHash)) {
+            await this.inviteRewardRepository.update(invite.inviteId, {
+              state: RewardStatus.Completed
+            })
+            this.watchedInvites.delete(invite)
+          } else if (
+            Date.now() - invite.sentAt >
+            this.appCfg.transactionTimeoutMs
+          ) {
+            await this.inviteRewardRepository.update(invite.inviteId, {
+              state: invite.markAsDeadLetterIfFailed
+                ? RewardStatus.DeadLettered
+                : RewardStatus.Failed
+            })
+            this.watchedInvites.delete(invite)
+          }
+        })
+      )
+    } catch (error) {
+      this.logger.error(error, 'Error checking watched invites')
+    } finally {
+      this.checkingWatchedInvites = false
+    }
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
   async checkFailedInvites() {
-    await this.inviteRewardRepository.manager.transaction(
-      async (entityManager: EntityManager) => {
-        const repository = entityManager.getRepository<InviteReward>(
-          'invite_reward'
-        )
-        const invites = await repository
-          .createQueryBuilder()
-          .setLock('pessimistic_read')
-          .where({
-            state: In([RewardStatus.Submitted, RewardStatus.Failed]),
-            createdAt: Raw(
-              alias =>
-                `${alias} <= current_timestamp - (30 ||' minutes')::interval`
+    if (this.checkingFailedInvites) {
+      this.logger.debug(
+        'Skipping checking failed invites because the previous run still running'
+      )
+      return
+    }
+    this.checkingFailedInvites = true
+    try {
+      await this.inviteRewardRepository.manager.transaction(
+        async (entityManager: EntityManager) => {
+          const repository = entityManager.getRepository<InviteReward>(
+            'invite_reward'
+          )
+          const invites = await repository
+            .createQueryBuilder()
+            .setLock('pessimistic_read')
+            .where({
+              state: In([RewardStatus.Submitted, RewardStatus.Failed]),
+              createdAt: Raw(
+                alias =>
+                  `${alias} <= current_timestamp - (30 ||' minutes')::interval`
+              )
+            })
+            .limit(MAX_INVITES_PER_QUERY)
+            .getMany()
+          if (invites.length > 0) {
+            this.logger.log(
+              `Found failed or submitted invites ${invites.length}`
             )
-          })
-          .limit(MAX_INVITES_PER_QUERY)
-          .getMany()
-        if (invites.length > 0) {
-          this.logger.log(`Found failed or submitted invites ${invites.length}`)
+          }
+          await Promise.allSettled(
+            invites.map(async invite => {
+              if (
+                invite.state === RewardStatus.Submitted &&
+                (await this.wasTxSentSuccesfully(invite.rewardTxHash))
+              ) {
+                await repository.update(invite.id, {
+                  state: RewardStatus.Completed
+                })
+              } else {
+                await this.sendInviteReward(invite, true, repository)
+              }
+            })
+          )
         }
-        await Promise.all(
-          invites.map(async invite => {
-            if (
-              invite.state === RewardStatus.Submitted &&
-              (await this.wasTxSentSuccesfully(invite.rewardTxHash))
-            ) {
-              await repository.update(invite.id, {
-                state: RewardStatus.Completed
-              })
-            } else {
-              await this.sendInviteReward(invite, true, repository)
-            }
-          })
-        )
-      }
-    )
+      )
+    } catch (error) {
+      this.logger.error(error, 'Error checking failed invites')
+    } finally {
+      this.checkingFailedInvites = false
+    }
   }
 
   async getRewardInCelo() {
-    if (this.rewardInCelo.timestamp + REWARD_VALUE_CACHE_DURATION > Date.now()) {
+    if (
+      this.rewardInCelo.timestamp + REWARD_VALUE_CACHE_DURATION >
+      Date.now()
+    ) {
       return this.rewardInCelo.reward
     }
     const rewardInCusdWei = this.appCfg.inviteRewardAmountInCusd * WEI_PER_UNIT
