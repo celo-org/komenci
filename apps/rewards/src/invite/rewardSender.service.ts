@@ -10,6 +10,8 @@ import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 
 const WEI_PER_UNIT = 1000000000000000000
+const MAX_INVITES_PER_QUERY = 100
+const REWARD_VALUE_CACHE_DURATION = 1 * 60 * 1000 // One minute
 
 interface WatchedInvite {
   inviteId: string
@@ -21,6 +23,10 @@ interface WatchedInvite {
 @Injectable()
 export class RewardSenderService {
   watchedInvites: Set<WatchedInvite>
+  rewardInCelo = {
+    reward: '',
+    timestamp: 0,
+  }
 
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
@@ -79,6 +85,7 @@ export class RewardSenderService {
                 `${alias} <= current_timestamp - (30 ||' minutes')::interval`
             )
           })
+          .limit(MAX_INVITES_PER_QUERY)
           .getMany()
         if (invites.length > 0) {
           this.logger.log(`Found failed or submitted invites ${invites.length}`)
@@ -102,12 +109,19 @@ export class RewardSenderService {
   }
 
   async getRewardInCelo() {
+    if (this.rewardInCelo.timestamp + REWARD_VALUE_CACHE_DURATION > Date.now()) {
+      return this.rewardInCelo.reward
+    }
     const rewardInCusdWei = this.appCfg.inviteRewardAmountInCusd * WEI_PER_UNIT
     const exchange = await this.contractKit.contracts.getExchange()
     const exchangeRate = await exchange.getGoldExchangeRate(
       new BigNumber(rewardInCusdWei)
     )
-    return exchangeRate.multipliedBy(rewardInCusdWei).toFixed(0)
+    this.rewardInCelo = {
+      timestamp: Date.now(),
+      reward: exchangeRate.multipliedBy(rewardInCusdWei).toFixed(0)
+    }
+    return this.rewardInCelo.reward
   }
 
   async sendInviteReward(
