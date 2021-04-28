@@ -1,5 +1,5 @@
-import { IsCeloAddress } from '@app/onboarding/utils/validators'
-import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
+import { IsCeloAddress } from '@komenci/core'
+import { RawTransactionDto } from '@komenci/relayer/dist/dto/RawTransactionDto'
 import {
   IsNotEmpty,
   IsNumber, IsOptional,

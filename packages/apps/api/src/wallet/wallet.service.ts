@@ -1,22 +1,22 @@
-import { EventType, KomenciLoggerService } from '@app/komenci-logger'
-import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
-import { Session } from '@app/onboarding/session/session.entity'
-import { SessionService } from '@app/onboarding/session/session.service'
+import Web3 from 'web3'
+import { Inject, Injectable, Scope } from '@nestjs/common'
+import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
+import { ContractKit } from '@celo/contractkit/lib/kit'
+import { Err, Ok, Result } from '@celo/base/lib/result'
+import { Address, ensureLeading0x, normalizeAddress, throwIfError } from '@celo/base'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
+import { networkConfig, NetworkConfig } from '@komenci/core'
+import { verifyWallet } from '@komenci/kit/lib/verifyWallet'
+import { RelayerProxyService } from '../relayer/relayer_proxy.service'
+import { Session } from '../session/session.entity'
+import { SessionService } from '../session/session.service'
 import {
   InvalidImplementation,
   InvalidWallet,
   WalletNotDeployed,
-} from '@app/onboarding/wallet/errors'
-import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
-import { Address, ensureLeading0x, normalizeAddress, throwIfError } from '@celo/base'
-import { Err, Ok, Result } from '@celo/base/lib/result'
-import { ABI as MetaTxWalletABI, newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
-import { ContractKit } from '@celo/contractkit/lib/kit'
-import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
-import { verifyWallet } from '@celo/komencikit/lib/verifyWallet'
-import { Inject, Injectable, Scope } from '@nestjs/common'
-import Web3 from 'web3'
+} from '../wallet/errors'
 import { AppConfig, appConfig } from '../config/app.config'
 
 @Injectable({

@@ -1,4 +1,4 @@
-import { IsCeloAddress } from '@app/onboarding/utils/validators'
+import { IsCeloAddress } from '@komenci/core'
 import { IsHexadecimal } from 'class-validator'
 
 export class SubmitMetaTransactionDto {

@@ -6,67 +6,69 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ToolsModule = void 0;
-const blockchain_1 = require("@app/blockchain");
-const node_config_1 = require("@app/blockchain/config/node.config");
-const funding_service_1 = require("@app/blockchain/funding.service");
-const network_config_1 = require("@app/utils/config/network.config");
-const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const deployer_command_1 = require("apps/tools/src/deployer.command");
-const fund_config_1 = require("apps/tools/src/fund.config");
-const nestjs_console_1 = require("nestjs-console");
-const nestjs_pino_1 = require("nestjs-pino");
-const fund_command_1 = require("./fund.command");
-let ToolsModule = class ToolsModule {
-};
-ToolsModule = __decorate([
-    common_1.Module({
-        imports: [
-            nestjs_console_1.ConsoleModule,
-            nestjs_pino_1.LoggerModule.forRoot({
-                pinoHttp: {
-                    prettyPrint: true
-                }
-            }),
-            config_1.ConfigModule.forRoot({
-                isGlobal: true,
-                load: [network_config_1.networkConfig, fund_config_1.fundConfig],
-                envFilePath: [
-                    'apps/tools/.env.local',
-                    'apps/tools/.env',
-                ]
-            }),
-            blockchain_1.BlockchainModule.forRootAsync({
-                inject: [config_1.ConfigService],
-                useFactory: (config) => {
-                    const networkCfg = config.get('network');
-                    const fundCfg = config.get('fund');
-                    return {
-                        node: {
-                            providerType: node_config_1.NodeProviderType.HTTP,
-                            url: networkCfg.fornoURL
-                        },
-                        wallet: fundCfg
-                    };
-                }
-            }),
-            blockchain_1.ContractsModule.forRootAsync({
-                inject: [config_1.ConfigService],
-                useFactory: (config) => {
-                    const networkCfg = config.get('network');
-                    return {
-                        deployerAddress: networkCfg.contracts.MetaTransactionWalletDeployer,
-                    };
-                },
-            }),
-        ],
-        providers: [
-            funding_service_1.FundingService,
-            fund_command_1.FundCommand,
-            deployer_command_1.DeployerCommand,
-        ],
-    })
-], ToolsModule);
+var blockchain_module_1 = require("@komenci/blockchain/dist/blockchain.module");
+var contracts_module_1 = require("@komenci/blockchain/dist/contracts.module");
+var node_config_1 = require("@komenci/blockchain/dist/config/node.config");
+var funding_service_1 = require("@komenci/blockchain/dist/funding.service");
+var core_1 = require("@komenci/core");
+var common_1 = require("@nestjs/common");
+var config_1 = require("@nestjs/config");
+var deployer_command_1 = require("./deployer.command");
+var fund_config_1 = require("./fund.config");
+var nestjs_console_1 = require("nestjs-console");
+var nestjs_pino_1 = require("nestjs-pino");
+var fund_command_1 = require("./fund.command");
+var ToolsModule = (function () {
+    function ToolsModule() {
+    }
+    ToolsModule = __decorate([
+        common_1.Module({
+            imports: [
+                nestjs_console_1.ConsoleModule,
+                nestjs_pino_1.LoggerModule.forRoot({
+                    pinoHttp: {
+                        prettyPrint: true
+                    }
+                }),
+                config_1.ConfigModule.forRoot({
+                    isGlobal: true,
+                    load: [core_1.networkConfig, fund_config_1.fundConfig],
+                    envFilePath: [
+                        './.env.local',
+                        './.env',
+                    ]
+                }),
+                blockchain_module_1.BlockchainModule.forRootAsync({
+                    inject: [config_1.ConfigService],
+                    useFactory: function (config) {
+                        var networkCfg = config.get('network');
+                        var fundCfg = config.get('fund');
+                        return {
+                            node: {
+                                providerType: node_config_1.NodeProviderType.HTTP,
+                                url: networkCfg.fornoURL
+                            },
+                            wallet: fundCfg
+                        };
+                    }
+                }),
+                contracts_module_1.ContractsModule.forRootAsync({
+                    inject: [config_1.ConfigService],
+                    useFactory: function (config) {
+                        var networkCfg = config.get('network');
+                        return {
+                            deployerAddress: networkCfg.contracts.MetaTransactionWalletDeployer,
+                        };
+                    },
+                }),
+            ],
+            providers: [
+                funding_service_1.FundingService,
+                fund_command_1.FundCommand,
+                deployer_command_1.DeployerCommand,
+            ],
+        })
+    ], ToolsModule);
+    return ToolsModule;
+}());
 exports.ToolsModule = ToolsModule;
-//# sourceMappingURL=tools.module.js.map

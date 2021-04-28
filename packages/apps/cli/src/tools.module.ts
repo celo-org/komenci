@@ -1,12 +1,13 @@
-import { BlockchainModule, ContractsModule } from '@app/blockchain'
-import { NodeProviderType } from '@app/blockchain/config/node.config'
-import { WalletConfig, WalletType } from '@app/blockchain/config/wallet.config'
-import { FundingService } from '@app/blockchain/funding.service'
-import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
+import { BlockchainModule } from '@komenci/blockchain/dist/blockchain.module'
+import { ContractsModule } from '@komenci/blockchain/dist/contracts.module'
+import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
+import { WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { FundingService } from '@komenci/blockchain/dist/funding.service'
+import { NetworkConfig, networkConfig } from '@komenci/core'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { DeployerCommand } from 'apps/tools/src/deployer.command'
-import { fundConfig } from 'apps/tools/src/fund.config'
+import { DeployerCommand } from './deployer.command'
+import { fundConfig } from './fund.config'
 import { ConsoleModule } from 'nestjs-console'
 import { LoggerModule } from 'nestjs-pino'
 import { FundCommand } from './fund.command'
@@ -23,8 +24,8 @@ import { FundCommand } from './fund.command'
       isGlobal: true,
       load: [networkConfig, fundConfig],
       envFilePath: [
-        'apps/tools/.env.local',
-        'apps/tools/.env',
+        './.env.local',
+        './.env',
       ]
     }),
     BlockchainModule.forRootAsync({

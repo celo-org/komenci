@@ -1,9 +1,9 @@
-import { ActionCounts, quotaConfig, TrackedAction } from '@app/onboarding/config/quota.config'
-import { normalizeAddress, trimLeading0x } from '@celo/base'
+import { v4 as uuidv4 } from 'uuid'
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
-import { v4 as uuidv4 } from 'uuid'
+import { normalizeAddress, trimLeading0x } from '@celo/base'
+import { ActionCounts, quotaConfig, TrackedAction } from '../config/quota.config'
 import { Session } from './session.entity'
 import { SessionRepository } from './session.repository'
 

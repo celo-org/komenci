@@ -7,11 +7,22 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx nest build",
+    "start:dev": "npx nest start --watch",
+    "start": "nps nest start",
+    "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch",
+    "test:cov": "jest --coverage --runInBand",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config jest.config.e2e.js --runInBand",
+    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
   "license": "ISC",
   "devDependencies": {
     "@nestjs/cli": "^7.6.0"
+  },
+  "dependencies": {
+    "class-validator": "^0.13.1"
   }
 }

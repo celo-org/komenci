@@ -7,7 +7,7 @@ import { Wallet } from '@celo/wallet-base'
 import { AzureHSMWallet } from '@celo/wallet-hsm-azure'
 import { LocalWallet } from '@celo/wallet-local'
 import { FactoryProvider } from '@nestjs/common'
-import Web3 from 'web3'
+import * as Web3 from 'web3'
 import { provider } from 'web3-core'
 
 export const BLOCKCHAIN_MODULE_OPTIONS = 'BLOCKCHAIN_MODULE_OPTIONS'

@@ -1,8 +1,8 @@
-import { ApiError } from '@app/komenci-logger/errors'
+import { ApiError } from '@komenci/logger/dist/errors'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from  '@nestjs/jwt'
-import { Session } from 'apps/onboarding/src/session/session.entity'
-import { SessionService } from 'apps/onboarding/src/session/session.service'
+import { Session } from '../session/session.entity'
+import { SessionService } from '../session/session.service'
 import { isLeft } from 'fp-ts/Either'
 import * as t from 'io-ts'
 

@@ -1,7 +1,8 @@
-import { thirdPartyConfig } from '@app/onboarding/config/third-party.config'
 import { HttpModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
+
+import { thirdPartyConfig } from '../../config/third-party.config'
 import { SafetyNetService } from './safety-net.service'
 
 describe('SafetyNetService', () => {
@@ -13,7 +14,7 @@ describe('SafetyNetService', () => {
         ConfigModule.forRoot({
           isGlobal: true,
           load: [thirdPartyConfig],
-          envFilePath: ['apps/onboarding/.env.test']
+          envFilePath: ['./.env.test']
         }),
         HttpModule
       ],

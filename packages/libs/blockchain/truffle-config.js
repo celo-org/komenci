@@ -1,9 +1,8 @@
 const Web3 = require('web3')
 
-const LocalWallet = require('./libs/celo/packages/contractkit/lib/wallets/local-wallet').LocalWallet
-const CeloProvider = require('./libs/celo/packages/contractkit/lib/providers/celo-provider').CeloProvider
-const generateUtils = require('./libs/celo/packages/celotool/lib/lib/generate_utils')
-const mnemonics = require('./truffle-deployer-config')
+const LocalWallet = require('@celo/local-wallet').LocalWallet
+const CeloProvider = require('@celo/contractkit/lib/providers/celo-provider').CeloProvider
+const mnemonics = require('./dist/truffle-deployer-config')
 
 const generatePrivateKey = generateUtils.generatePrivateKeyWithDerivations
 const fornoURLForEnv = (env) => "https://"+env+"-forno.celo-testnet.org"

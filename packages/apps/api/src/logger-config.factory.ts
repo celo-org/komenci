@@ -1,6 +1,6 @@
-import { buildLabels, levelFormatter } from '@app/utils/logger'
+import { buildLabels, levelFormatter } from '@komenci/core'
 import { ConfigService } from '@nestjs/config'
-import { AppConfig } from 'apps/onboarding/src/config/app.config'
+import { AppConfig } from './config/app.config'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Params } from 'nestjs-pino'
 import { v4 as uuidv4 } from "uuid"

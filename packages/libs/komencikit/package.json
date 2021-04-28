@@ -1,7 +1,7 @@
 {
   "name": "@komenci/kit",
   "version": "0.0.2-dev",
-  "description": "Celo's KomenciKit client to interact with the Komenci meta-tx server",
+  "description": "Valora's KomenciKit client to interact with the Komenci meta-tx server",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "author": "Celo",
@@ -16,18 +16,19 @@
   ],
   "scripts": {
     "build": "tsc -b .",
-    "clean": "tsc -b . --clean",
+    "build:watch": "tsc -b . --watch",
+    "clean": "rm -rf ./dist",
     "prepublishOnly": "yarn build",
     "test": "jest --runInBand",
     "lint": "tslint -c tslint.json --project .",
     "proxy:sha3": "node ./scripts/proxy-bytecode-sha3"
   },
   "dependencies": {
-    "@celo/base": "1.1.0",
-    "@celo/connect": "1.1.0",
-    "@celo/contractkit": "1.1.0",
-    "@celo/identity": "1.1.0",
-    "@celo/utils": "1.1.0",
+    "@celo/base": "1.2.0",
+    "@celo/connect": "1.2.0",
+    "@celo/contractkit": "1.2.0",
+    "@celo/identity": "1.2.0",
+    "@celo/utils": "1.2.0",
     "cross-fetch": "3.0.6",
     "fp-ts": "2.8.4",
     "io-ts": "2.2.11",
@@ -37,9 +38,10 @@
     "node": ">=8.13.0"
   },
   "devDependencies": {
-    "typescript": "3.8.3",
+    "@celo/typescript": "^0.0.1",
     "domexception": "^2.0.1",
     "jest-fetch-mock": "^3.0.3",
+    "typescript": "3.8.3",
     "web3": "1.3.4"
   }
 }

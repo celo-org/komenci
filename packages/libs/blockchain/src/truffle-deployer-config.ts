@@ -6,20 +6,26 @@
 // This file is used in:
 // - truffle-config.js - for contract deployment
 // - apps/tools/src/fund.config.ts - for relayer funding
+import * as dotenv from 'dotenv'
+const findWorkspaceRoot = require('find-yarn-workspace-root')
+import { join } from 'path'
 
-const dotenv = require('dotenv')
-const deployerMnemonicConfig = dotenv.config({path: './.env.mnemonic.deployer'})
+const workspaceRoot = findWorkspaceRoot()
 
-const getDeployerMnemonic = (key) => {
+const deployerMnemonicConfig = dotenv.config({
+  path: join(workspaceRoot, '.env.mnemonic.deployer')
+})
+
+const getDeployerMnemonic = (env: string) => {
   if (deployerMnemonicConfig.error) {
     console.warn("Could not parse .env.mnemonic.deployer did you run `yarn secrets:decrypt`")
     return ""
   }
 
-  return deployerMnemonicConfig.parsed["FUND_"+key+"_MNEMONIC"] || ""
+  return deployerMnemonicConfig.parsed["FUND_"+env+"_MNEMONIC"] || ""
 }
 
-module.exports = {
+export default {
   alfajores: getDeployerMnemonic('ALFAJORES'),
   alfajoresstaging: getDeployerMnemonic('ALFAJORES_STAGING'),
   baklava: getDeployerMnemonic('BAKLAVA'),

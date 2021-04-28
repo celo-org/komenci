@@ -1,31 +1,30 @@
-import { AuthService, TokenPayload } from '@app/onboarding/auth/auth.service'
-import { RulesConfig, rulesConfig } from '@app/onboarding/config/rules.config'
-import { throttleConfig, ThrottleConfig } from '@app/onboarding/config/throttle.config'
-import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
-import { StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
-import { CaptchaService, CaptchaVerificationFailed } from '@app/onboarding/gateway/captcha/captcha.service'
-import { DeviceCheckService } from '@app/onboarding/gateway/device-check/device-check.service'
-import { RuleID } from '@app/onboarding/gateway/rules/rule'
-import { SafetyNetService } from '@app/onboarding/gateway/safety-net/safety-net.service'
-import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
-import { Session } from '@app/onboarding/session/session.entity'
-import { SessionService } from '@app/onboarding/session/session.service'
-import { ensureLeading0x, sleep, trimLeading0x } from '@celo/base/lib'
-import { Err, Ok } from '@celo/base/lib/result'
-import { ContractKit } from '@celo/contractkit'
-import { buildLoginTypedData } from '@celo/komencikit/lib/login'
-import { LocalWallet } from '@celo/wallet-local'
 import { ValidationPipe } from '@nestjs/common'
+import { assert } from 'console'
 import { JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
-import { ThrottlerGuard } from '@nestjs/throttler'
 import { getRepositoryToken } from '@nestjs/typeorm'
-import { assert } from 'console'
+import { ensureLeading0x, trimLeading0x } from '@celo/base/lib'
+import { Err, Ok } from '@celo/base/lib/result'
+import { ContractKit } from '@celo/contractkit'
+import { LocalWallet } from '@celo/wallet-local'
+import { buildLoginTypedData } from '@komenci/kit/lib/login'
+import { AuthService, TokenPayload } from '../src/auth/auth.service'
+import { RulesConfig, rulesConfig } from '../src/config/rules.config'
+import { throttleConfig, ThrottleConfig } from '../src/config/throttle.config'
+import { DeployWalletDto } from '../src/dto/DeployWalletDto'
+import { StartSessionDto } from '../src/dto/StartSessionDto'
+import { CaptchaService, CaptchaVerificationFailed } from '../src/gateway/captcha/captcha.service'
+import { DeviceCheckService } from '../src/gateway/device-check/device-check.service'
+import { RuleID } from '../src/gateway/rules/rule'
+import { SafetyNetService } from '../src/gateway/safety-net/safety-net.service'
+import { RelayerProxyService } from '../src/relayer/relayer_proxy.service'
+import { Session } from '../src/session/session.entity'
+import { SessionService } from '../src/session/session.service'
+import { AppModule } from '../src/app.module'
 import { isRight } from 'fp-ts/Either'
 import _ from 'lodash'
 import { Connection, EntityManager, Repository } from 'typeorm'
 import Web3 from 'web3'
-import { AppModule } from '../src/app.module'
 const request = require('supertest')
 
 jest.mock('@app/onboarding/gateway/captcha/captcha.service')
@@ -405,7 +404,7 @@ describe('AppController (e2e)', () => {
             })
             .expect(400)
             .then(res => {
-              assert(res.body.message, ['blindedPhoneNumber must be a valid base64 string'])
+              assert(res.body.message, 'blindedPhoneNumber must be a valid base64 string')
             })
         })
       })
@@ -420,7 +419,7 @@ describe('AppController (e2e)', () => {
             })
             .expect(201)
             .then(res => {
-              assert(res.body.message, ['blindedPhoneNumber must be a valid base64 string'])
+              assert(res.body.message, 'blindedPhoneNumber must be a valid base64 string')
             })
         })
 

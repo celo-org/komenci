@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common'
 import {
   DeviceType,
   StartSessionDto
-} from 'apps/onboarding/src/dto/StartSessionDto'
+} from '../..//dto/StartSessionDto'
 import { DeviceCheckService } from '../device-check/device-check.service'
 import { GatewayContext, Rule, RuleID } from '../rules/rule'
 import { SafetyNetService } from '../safety-net/safety-net.service'

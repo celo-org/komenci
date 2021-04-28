@@ -1,17 +1,17 @@
-import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
-import { decodeExecuteMetaTransaction, decodeExecuteTransactions } from '@app/onboarding/wallet/decode-txs'
+import { Injectable, OnModuleInit } from '@nestjs/common'
+import { CeloContract, ContractKit } from '@celo/contractkit'
+import { BaseWrapper } from '@celo/contractkit/lib/wrappers/BaseWrapper'
+import { Err, normalizeAddress, Ok, Result } from '@celo/base'
+import { MetaTransactionWalletWrapper, RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { extractMethodId, normalizeMethodId } from '@komenci/core'
+import { decodeExecuteMetaTransaction, decodeExecuteTransactions } from '../wallet/decode-txs'
 import {
   InvalidRootTransaction,
   TransactionDecodeError,
   TransactionNotAllowed,
   TxParseErrors,
-} from '@app/onboarding/wallet/errors'
-import { MethodFilter, TransactionWithMetadata } from '@app/onboarding/wallet/method-filter'
-import { Err, normalizeAddress, Ok, Result } from '@celo/base'
-import { CeloContract, ContractKit } from '@celo/contractkit'
-import { BaseWrapper } from '@celo/contractkit/lib/wrappers/BaseWrapper'
-import { MetaTransactionWalletWrapper, RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Injectable, OnModuleInit } from '@nestjs/common'
+} from '../wallet/errors'
+import { MethodFilter, TransactionWithMetadata } from '../wallet/method-filter'
 
 @Injectable()
 export class TxParserService implements OnModuleInit {

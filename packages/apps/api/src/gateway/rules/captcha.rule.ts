@@ -1,4 +1,4 @@
-import { RulesConfig } from '@app/onboarding/config/rules.config'
+import { RulesConfig } from '../../config/rules.config'
 import { Err, Ok } from '@celo/base/lib/result'
 import { Injectable } from '@nestjs/common'
 import { StartSessionDto } from '../../dto/StartSessionDto'

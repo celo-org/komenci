@@ -1,9 +1,9 @@
-import { ApiError } from '@app/komenci-logger/errors'
-import { quotaConfig, TrackedAction } from '@app/onboarding/config/quota.config'
-import { Session } from '@app/onboarding/session/session.entity'
 import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { Reflector } from '@nestjs/core'
+import { ApiError } from '@komenci/core'
+import { quotaConfig, TrackedAction } from '../config/quota.config'
+import { Session } from '../session/session.entity'
 
 class QuotaExceededError extends ApiError<'QuotaExceededError'> {
   statusCode = 429

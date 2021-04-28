@@ -1,6 +1,6 @@
-import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
-import { RelayerCommandDto } from 'apps/relayer/src/dto/RelayerCommandDto'
 import { ValidateNested } from 'class-validator'
+import { RawTransactionDto } from './RawTransactionDto'
+import { RelayerCommandDto } from './RelayerCommandDto'
 
 export class SubmitTransactionDto extends RelayerCommandDto {
   @ValidateNested()

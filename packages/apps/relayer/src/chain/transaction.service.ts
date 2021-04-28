@@ -1,33 +1,33 @@
-import { BlockchainService } from '@app/blockchain/blockchain.service'
+import { Mutex } from 'async-mutex'
+import BigNumber from 'bignumber.js'
+import Web3 from 'web3'
+import { Transaction } from 'web3-core'
+import { BlockchainService } from '@komenci/blockchain/dist/blockchain.service'
 import {
   WalletConfig,
   walletConfig
-} from '@app/blockchain/config/wallet.config'
-import { EventType, KomenciLoggerService } from '@app/komenci-logger'
+} from '@komenci/blockchain/dist/config/wallet.config'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { Address, sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { CeloTxObject } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { retry } from '@celo/komencikit/lib/retry'
+import { retry } from '@komenci/kit/lib/retry'
 import {
   Inject,
   Injectable,
   OnModuleDestroy,
   OnModuleInit
 } from '@nestjs/common'
-import { BalanceService } from 'apps/relayer/src/chain/balance.service'
+import { BalanceService } from '../chain/balance.service'
 import { 
   ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, 
   NonceTooLow, ReceiptNotFoundError, TxDeadletterError, 
   TxNotFoundError, TxNotInCache, TxSubmitError 
-} from 'apps/relayer/src/chain/errors'
-import { RawTransactionDto } from 'apps/relayer/src/dto/RawTransactionDto'
-import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
-import { Mutex } from 'async-mutex'
-import BigNumber from 'bignumber.js'
-import Web3 from 'web3'
-import { Transaction } from 'web3-core'
+} from '../chain/errors'
+import { RawTransactionDto } from '../dto/RawTransactionDto'
+import { RelayerTraceContext } from '../dto/RelayerCommandDto'
 import { AppConfig, appConfig } from '../config/app.config'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
@@ -124,18 +124,20 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
       let startedSend: number | null
       let endedSend: number | null
 
-      const [txHash, nonce] = await this.nonceLock.runExclusive<[string, number]>(async () => {
-        endedAcquireLock = Date.now()
-        startedSend = Date.now()
-        const _txHash = await this.sendTransaction(tx, this.gasPrice, this.nonce)
-        endedSend = Date.now()
+      const [txHash, nonce] = await this.nonceLock.runExclusive<[string, number]>(
+        async (): Promise<[string, number]> => {
+          endedAcquireLock = Date.now()
+          startedSend = Date.now()
+          const _txHash = await this.sendTransaction(tx, this.gasPrice, this.nonce)
+          endedSend = Date.now()
 
 
-        return [
-          _txHash,
-          this.nonce++,
-        ]
-      })
+          return [
+            _txHash,
+            this.nonce++,
+          ]
+        }
+      )
 
       this.watchTransaction(txHash, {
         nonce, 

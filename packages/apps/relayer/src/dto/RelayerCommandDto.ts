@@ -1,4 +1,4 @@
-import { IsArray, IsHexadecimal, IsOptional, IsString, ValidateNested } from 'class-validator'
+import { IsHexadecimal, IsString, ValidateNested } from 'class-validator'
 
 export class RelayerTraceContext {
   @IsHexadecimal()

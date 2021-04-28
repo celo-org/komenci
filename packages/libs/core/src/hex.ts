@@ -1,4 +1,4 @@
-import { normalizeAddress, trimLeading0x } from '@celo/base'
+import { trimLeading0x } from '@celo/base'
 
 // The method id (or method selector) is the first 4 bytes
 // of the calldata => the first 8 chars in hex
