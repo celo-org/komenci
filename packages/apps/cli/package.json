@@ -1,0 +1,17 @@
+{
+  "name": "@komenci/cli",
+  "version": "1.0.0",
+  "description": "CLI tools useful for interacting with the on-chain part of the Komenci service",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bogdan Dumitru <bogdan@clabs.co>",
+  "license": "ISC",
+  "devDependencies": {
+    "@nestjs/cli": "^7.6.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@komenci/load-testing",
+  "version": "1.0.0",
+  "description": "Komenci load-testing via Artillery",
+  "main": "index.js",
+  "author": "Celo",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/celo-org/komenci",
+  "repository": "https://github.com/celo-org/komenci",
+  "scripts": {
+    "build": "tsc -b .",
+    "clean": "tsc -b . --clean",
+    "load-testing": "artillery run artillery.yml",
+    "report": "artillery report"
+  },
+  "dependencies": {
+    "artillery": "1.6.1",
+    "csv-parse": "4.8.8"
+  }
+}

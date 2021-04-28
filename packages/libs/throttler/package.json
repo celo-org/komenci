@@ -1,0 +1,23 @@
+{
+  "name": "@komenci/throttler",
+  "version": "1.0.0",
+  "description": "Extension of @nestjs/throttler with some added functionality",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "build:watch": "node_modules/.bin/tsc -p tsconfig.build.json -w --preserveWatchOutput",
+    "start:dev": "npm run build:watch",
+    "test": "",
+    "test:watch": ""
+  },
+  "author": "Bogdan Dumitru <bogdan@clabs.co>",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/reflect-metadata": "^0.1.0",
+    "typescript": "3.8.3"
+  },
+  "dependencies": {
+    "@nestjs/throttler": "^1.1.3"
+  }
+}

@@ -19,7 +19,6 @@ module.exports = {
   collectCoverageFrom: [
     "**/*.{js,jsx}",
     "!**/node_modules/**",
-    "!libs/celo/**",
     "!libs/blockchain/migrations/**",
   ],
   moduleNameMapper: {
@@ -29,7 +28,5 @@ module.exports = {
         prefix: "<rootDir>/"
       }
     ),
-    "apps/onboarding/(.*)": "<rootDir>/apps/onboarding/$1",
-    "apps/relayer/(.*)": "<rootDir>/apps/relayer/$1",
   }
 }
