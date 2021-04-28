@@ -1,0 +1,25 @@
+{
+  "name": "@komenci/core",
+  "version": "1.0.0",
+  "description": "Shared komenci utils and configuration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "build:watch": "node_modules/.bin/tsc -p tsconfig.build.json -w --preserveWatchOutput",
+    "start:dev": "npm run build:watch",
+    "test": "",
+    "test:watch": ""
+  },
+  "author": "Bogdan Dumitru <bogdan@clabs.co>",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "3.8.3"
+  },
+  "dependencies": {
+    "@celo/base": "^1.2.1",
+    "@nestjs/config": "^0.6.3",
+    "@nestjs/core": "^7.6.15",
+    "@nestjs/microservices": "^7.6.15"
+  }
+}

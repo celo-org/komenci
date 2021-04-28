@@ -1,7 +1,5 @@
 {
-  "exclude": [
-    "libs/celo"
-  ],
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -13,40 +11,13 @@
     "esModuleInterop": true,
     "target": "es2017",
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./.dist",
     "baseUrl": ".",
     "incremental": true,
     "paths": {
-      "@app/utils": [
-        "libs/utils/src"
-      ],
-      "@app/utils/*": [
-        "libs/utils/src/*"
-      ],
-      "@app/blockchain": [
-        "libs/blockchain/src"
-      ],
-      "@app/blockchain/*": [
-        "libs/blockchain/src/*"
-      ],
-      "@app/onboarding": [
-        "apps/onboarding/src"
-      ],
-      "@app/onboarding/*": [
-        "apps/onboarding/src/*"
-      ],
-      "@app/komenci-logger": [
-        "libs/komenci-logger/src"
-      ],
-      "@app/komenci-logger/*": [
-        "libs/komenci-logger/src/*"
-      ],
-      "@app/komenci-throttler": [
-        "libs/komenci-throttler/src"
-      ],
-      "@app/komenci-throttler/*": [
-        "libs/komenci-throttler/src/*"
-      ]
     }
-  }
+  },
+  "types": [
+    "node",
+  ]
 }
