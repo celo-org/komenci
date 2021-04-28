@@ -1,7 +1,6 @@
 import { HttpService, Inject, Injectable } from '@nestjs/common'
-import { ConfigType } from '@nestjs/config'
 import jwt from "jsonwebtoken"
-import uuidv4 from "uuid"
+import { v4 as uuidv4 } from "uuid"
 import { thirdPartyConfig, ThirdPartyConfig } from '../../config/third-party.config'
 
 @Injectable()

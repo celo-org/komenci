@@ -1,5 +1,5 @@
 import { IsHexadecimal, IsNotEmpty, IsOptional, ValidateIf } from 'class-validator'
-import { IsCeloAddress } from "../utils/validators"
+import { IsCeloAddress } from "@komenci/core"
 
 export enum DeviceType {
   Android = 'android',

@@ -1,4 +1,4 @@
-import { IsCeloAddress } from '@app/onboarding/utils/validators'
+import { IsCeloAddress } from '@komenci/core'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { IsHexadecimal, IsNumberString } from 'class-validator'
 

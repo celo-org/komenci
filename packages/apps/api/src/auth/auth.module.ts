@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
-import { AuthService } from 'apps/onboarding/src/auth/auth.service'
-import { JwtStrategy } from 'apps/onboarding/src/auth/jwt.strategy'
-import { AppConfig } from 'apps/onboarding/src/config/app.config'
-import { SessionModule } from 'apps/onboarding/src/session/session.module'
-import { SessionService } from 'apps/onboarding/src/session/session.service'
+import { AuthService } from './auth.service'
+import { JwtStrategy } from './jwt.strategy'
+import { AppConfig } from '../config/app.config'
+import { SessionModule } from '../session/session.module'
+import { SessionService } from '../session/session.service'
 
 @Module({
     imports: [

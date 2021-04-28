@@ -11,6 +11,8 @@
     "packages/*"
   ],
   "scripts": {
+    "libs:build:watch": "./scripts/libs.run.sh build:watch",
+    "libs:build": "./scripts/libs.run.sh build",
     "build": "nest build",
     "build:komencikit": "yarn --cwd ./libs/komencikit build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
@@ -29,7 +31,7 @@
     "test:e2e": "jest --config jest.config.e2e.js --runInBand",
     "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand",
     "tools": "node dist/apps/tools/main.js",
-    "tools:dev": "nest start tools --",
+    "cli": "yarn --cwd ./packages/apps/cli nest start",
     "typeorm": "ts-node ./node_modules/typeorm/cli -f migration.config.ts",
     "typeorm:create": "ts-node ./node_modules/typeorm/cli -f migration.config.ts migration:create",
     "typeorm:generate": "ts-node ./node_modules/typeorm/cli -f migration.config.ts migration:generate -n",

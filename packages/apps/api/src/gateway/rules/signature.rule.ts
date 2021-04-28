@@ -1,10 +1,10 @@
-import { StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
+import { Injectable } from '@nestjs/common'
 import { ensureLeading0x } from '@celo/base'
 import { Err, Ok, RootError } from '@celo/base/lib/result'
-import { buildLoginTypedData } from '@celo/komencikit/lib/login'
 import { generateTypedDataHash } from '@celo/utils/lib/sign-typed-data-utils'
 import { parseSignatureWithoutPrefix } from '@celo/utils/lib/signatureUtils'
-import { Injectable } from '@nestjs/common'
+import { buildLoginTypedData } from '@komenci/kit/lib/login'
+import { StartSessionDto } from '../../dto/StartSessionDto'
 import { Rule, RuleID } from './rule'
 
 export enum SignatureErrorTypes {

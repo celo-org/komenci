@@ -1,8 +1,8 @@
-import { extractMethodId, normalizeMethodId } from '@app/blockchain/utils'
 import { Err, normalizeAddress, Ok, Result } from '@celo/base'
 import { CeloContract } from '@celo/contractkit'
 import { BaseWrapper } from '@celo/contractkit/lib/wrappers/BaseWrapper'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { extractMethodId, normalizeMethodId } from '@komenci/core'
 import { Contract } from 'web3-eth-contract'
 
 export interface TransactionWithMetadata {

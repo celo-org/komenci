@@ -1,5 +1,5 @@
-import { MetadataError } from '@app/komenci-logger/errors'
-import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
+import { MetadataError } from '@komenci/core'
+import { Err, Ok, Result } from '@celo/base/lib/result'
 import {
   HttpService,
   Inject,

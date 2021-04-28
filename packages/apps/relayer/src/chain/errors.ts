@@ -1,6 +1,6 @@
-import { MetadataError } from '@app/komenci-logger/errors'
 import { RootError } from '@celo/base'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { MetadataError } from '@komenci/core'
 
 export enum ChainErrorTypes {
   TxSubmitError = "TxSubmitError",

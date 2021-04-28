@@ -1,22 +1,22 @@
-import { BlockchainService, NodeRPCError, TxPool } from '@app/blockchain/blockchain.service'
-import { walletConfig, WalletConfig } from '@app/blockchain/config/wallet.config'
-import { KomenciLoggerModule, KomenciLoggerService } from '@app/komenci-logger'
-import { sleep } from '@celo/base'
-import { Err, Ok } from '@celo/base/lib/result'
-import { ContractKit } from '@celo/contractkit'
-import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
-import { Test, TestingModule } from '@nestjs/testing'
-import { BalanceService } from 'apps/relayer/src/chain/balance.service'
-import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
 import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
+
+import { Test, TestingModule } from '@nestjs/testing'
+import { Err, Ok } from '@celo/base/lib/result'
+import { ContractKit } from '@celo/contractkit'
+import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { BlockchainService, NodeRPCError, TxPool } from '@komenci/blockchain/dist/blockchain.service'
+import { walletConfig, WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { KomenciLoggerModule } from '@komenci/logger'
+import { BalanceService } from '../chain/balance.service'
+import { appConfig, AppConfig } from '../config/app.config'
 import { TransactionService } from './transaction.service'
 
-jest.mock('@app/blockchain/blockchain.service')
 jest.mock('@celo/contractkit')
-jest.mock('@app/komenci-logger/komenci-logger.service')
 jest.mock('@celo/contractkit/lib/wrappers/MetaTransactionWallet')
+jest.mock('@komenci/blockchain/dist/blockchain.service')
+jest.mock('@komenci/logger/dist/komenci-logger.service')
 
 describe('TransactionService', () => {
   const relayerAddress = Web3.utils.randomHex(20)

@@ -1,15 +1,14 @@
-import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
-import { KomenciLoggerService } from '@app/komenci-logger'
-import { networkConfig, NetworkConfig } from '@app/utils/config/network.config'
+import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { KomenciLoggerService } from '@komenci/logger'
+import { networkConfig, NetworkConfig } from '@komenci/core'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { OdisUtils } from '@celo/identity'
 import { AuthSigner, ServiceContext } from '@celo/identity/lib/odis/query'
-import { retry } from '@celo/komencikit/lib/retry'
+import { retry } from '@komenci/kit/lib/retry'
 import { Inject, Injectable } from '@nestjs/common'
-import { appConfig, AppConfig } from 'apps/relayer/src/config/app.config'
-import { GetPhoneNumberSignatureDto } from 'apps/relayer/src/dto/GetPhoneNumberSignatureDto'
-import { RelayerTraceContext } from 'apps/relayer/src/dto/RelayerCommandDto'
+import { appConfig, AppConfig } from '../config/app.config'
+import { GetPhoneNumberSignatureDto } from '../dto/GetPhoneNumberSignatureDto'
 
 export enum OdisQueryErrorTypes {
   OutOfQuota = "OutOfQuota",

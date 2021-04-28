@@ -1,4 +1,4 @@
-import { IsCeloAddress } from '@app/onboarding/utils/validators'
+import { IsCeloAddress } from '@komenci/core'
 
 export class DeployWalletDto {
   @IsCeloAddress()

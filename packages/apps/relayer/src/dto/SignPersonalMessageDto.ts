@@ -1,4 +1,4 @@
-import { RelayerCommandDto } from 'apps/relayer/src/dto/RelayerCommandDto'
+import { RelayerCommandDto } from './RelayerCommandDto'
 import {
   IsNotEmpty,
 } from 'class-validator'

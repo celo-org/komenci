@@ -1,16 +1,16 @@
-import { BlockchainModule } from '@app/blockchain'
-import { WALLET } from '@app/blockchain/blockchain.providers'
-import { nodeConfig, NodeConfig } from '@app/blockchain/config/node.config'
-import { walletConfig, WalletType } from '@app/blockchain/config/wallet.config'
-import { KomenciLoggerService } from '@app/komenci-logger'
-import { DistributedBlindedPepperDto } from '@app/onboarding/dto/DistributedBlindedPepperDto'
+import { BlockchainModule } from '@komenci/blockchain'
+import { WALLET } from '@komenci/blockchain/dist/blockchain.providers'
+import { nodeConfig, NodeConfig } from '@komenci/blockchain/dist/config/node.config'
+import { walletConfig, WalletType } from '@komenci/blockchain/dist/config/wallet.config'
+import { KomenciLoggerService } from '@komenci/logger'
+import { DistributedBlindedPepperDto } from '@komenci/api/dist/dto/DistributedBlindedPepperDto'
 import { Connection } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { OdisUtils } from '@celo/identity'
 import { LocalWallet } from '@celo/wallet-local'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
-import { OdisService } from 'apps/relayer/src/odis/odis.service'
+import { OdisService } from './odis/odis.service'
 import Web3 from 'web3'
 
 import { AppController } from './app.controller'
@@ -20,8 +20,7 @@ import { ACCOUNT_ADDRESS, getTestBlindedPhoneNumber, MOCK_ODIS_RESPONSE, ODIS_UR
 const mockWallet: LocalWallet = new LocalWallet()
 mockWallet.addAccount(PRIVATE_KEY)
 
-jest.mock('@app/komenci-logger/komenci-logger.service')
-
+jest.mock('@komenci/logger')
 jest.mock('@celo/identity/lib/odis/bls-blinding-client', () => {
   class WasmBlsBlindingClient {
     blindMessage = (m: string) => m
@@ -89,7 +88,7 @@ describe('AppController', () => {
 
   xdescribe('getPhoneNumberIdentifier', () => {
     afterEach(() => {
-      fetchMock.reset()
+      fetchMock.resetMocks()
     })
 
     it('should retry after increasing quota when out of quota error is hit', async () => {

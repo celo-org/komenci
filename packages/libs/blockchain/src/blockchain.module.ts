@@ -7,7 +7,6 @@ import {
 } from './blockchain.providers'
 import { BlockchainService } from './blockchain.service'
 import { WalletConfig, } from './config/wallet.config'
-import { FundingService } from './funding.service'
 import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
 import { NodeConfig } from './config/node.config'
 
@@ -25,6 +24,7 @@ export interface AsyncOptions<TOptions> extends Pick<ModuleMetadata, 'imports'> 
 @Module({})
 export class BlockchainModule {
   public static forRootAsync(options: AsyncOptions<BlockchainOptions>): DynamicModule {
+    const providers = this.providers()
     return {
       global: true,
       module: BlockchainModule,
@@ -36,11 +36,11 @@ export class BlockchainModule {
           inject: options.inject || [],
         },
         BlockchainService,
-        ...this.providers()
+        ...providers
       ],
       exports: [
         BlockchainService,
-        ...this.providers().map(p => p.provide)
+        ...providers.map(p => p.provide)
       ]
     }
   }

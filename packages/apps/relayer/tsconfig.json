@@ -1,6 +1,7 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "downlevelIteration": true,
     "declaration": false,
     "outDir": "../../dist/apps/relayer"
   },

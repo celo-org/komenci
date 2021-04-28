@@ -1,4 +1,4 @@
-import { isApiError, isMetadataError, isRootError } from './errors'
+import { isApiError, isMetadataError, isRootError } from '@komenci/core'
 import { isError } from '@nestjs/cli/lib/utils/is-error'
 import { Injectable, LoggerService } from '@nestjs/common'
 import { PinoLogger } from 'nestjs-pino'

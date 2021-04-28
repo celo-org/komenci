@@ -1,7 +1,7 @@
-import { WalletConfig } from '@app/blockchain/config/wallet.config'
-import { buildLabels, levelFormatter } from '@app/utils/logger'
+import { WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { buildLabels, levelFormatter } from '@komenci/core'
 import { ConfigService } from '@nestjs/config'
-import { AppConfig } from 'apps/relayer/src/config/app.config'
+import { AppConfig } from './config/app.config'
 import { Params } from 'nestjs-pino'
 
 export const loggerConfigFactory = (config: ConfigService): Params => {

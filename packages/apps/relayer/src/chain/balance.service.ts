@@ -1,11 +1,11 @@
-import { WalletConfig, walletConfig } from '@app/blockchain/config/wallet.config'
-import { EventType, KomenciLoggerService } from '@app/komenci-logger'
+import BigNumber from 'bignumber.js'
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ContractKit } from '@celo/contractkit'
 import { GoldTokenWrapper } from '@celo/contractkit/lib/wrappers/GoldTokenWrapper'
 import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { StableTokenWrapper } from '@celo/contractkit/lib/wrappers/StableTokenWrapper'
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
-import BigNumber from 'bignumber.js'
+import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 
 @Injectable()
 export class BalanceService implements OnModuleInit {

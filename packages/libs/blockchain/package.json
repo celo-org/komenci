@@ -6,8 +6,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "node_modules/.bin/tsc -p tsconfig.build.json",
-    "build:watch": "node_modules/.bin/tsc -p tsconfig.build.json -w --preserveWatchOutput",
+    "build:watch": "npx tsc -p tsconfig.build.json -w --preserveWatchOutput",
     "start:dev": "npm run build:watch",
+    "clean": "rm -rf ./dist",
     "test": "",
     "test:watch": ""
   },
@@ -21,6 +22,8 @@
     "@nestjs/common": "^7.6.15",
     "@types/jest": "^26.0.23",
     "bignumber.js": "^9.0.1",
+    "dotenv": "^8.2.0",
+    "find-yarn-workspace-root": "^2.0.0",
     "fp-ts": "^2.10.4",
     "io-ts": "^2.2.16",
     "nestjs-pino": "^1.4.0",

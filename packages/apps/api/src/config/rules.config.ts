@@ -1,6 +1,5 @@
-import { CaptchaRuleConfig } from '@app/onboarding/gateway/rules/captcha.rule'
+import { RuleID } from '../gateway/rules/rule'
 import { registerAs } from '@nestjs/config'
-import { RuleID } from 'apps/onboarding/src/gateway/rules/rule'
 
 const isTrue = (content: string) => String(content).toLowerCase() === 'true'
 

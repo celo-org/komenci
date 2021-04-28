@@ -1,16 +1,16 @@
-import { EventType, KomenciLoggerService } from '@app/komenci-logger'
-import { SignatureRule } from '@app/onboarding/gateway/rules/signature.rule'
-import { RootError } from '@celo/base/lib/result'
+import { FastifyRequest } from 'fastify'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
-import { FastifyRequest } from 'fastify'
+import { RootError } from '@celo/base/lib/result'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { rulesConfig } from '../config/rules.config'
 import { StartSessionDto } from '../dto/StartSessionDto'
 import { CaptchaRule } from './rules/captcha.rule'
 import { DailyCapRule } from './rules/daily-cap.rule'
 import { DeviceAttestationRule } from './rules/device-attestation.rule'
 import { Rule } from './rules/rule'
+import { SignatureRule } from './rules/signature.rule'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {

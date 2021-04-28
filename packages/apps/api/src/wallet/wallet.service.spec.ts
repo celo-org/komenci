@@ -1,23 +1,22 @@
-import { BlockchainModule, ContractsModule } from '@app/blockchain'
-import { WEB3_PROVIDER } from '@app/blockchain/blockchain.providers'
-import { NodeProviderType } from '@app/blockchain/config/node.config'
-import { KomenciLoggerModule } from 'packages/libs/logger/src'
-import { appConfig, AppConfig } from '@app/onboarding/config/app.config'
-import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
-import { Session } from '@app/onboarding/session/session.entity'
-import { SessionService } from '@app/onboarding/session/session.service'
-import { buildMockWeb3Provider } from '@app/onboarding/utils/testing/mock-web3-provider'
-import { WalletErrorType } from '@app/onboarding/wallet/errors'
-import { WalletService } from '@app/onboarding/wallet/wallet.service'
-import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
+import Web3 from 'web3'
+import { Test, TestingModule } from '@nestjs/testing'
 import { Ok } from '@celo/base'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
-import { Test, TestingModule } from '@nestjs/testing'
-import Web3 from 'web3'
+import { BlockchainModule, ContractsModule } from '@komenci/blockchain'
+import { WEB3_PROVIDER } from '@komenci/blockchain/dist/blockchain.providers'
+import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
+import { KomenciLoggerModule } from '@komenci/logger'
+import { buildMockWeb3Provider, NetworkConfig, networkConfig  } from '@komenci/core'
+import { appConfig, AppConfig } from '../config/app.config'
+import { RelayerProxyService } from '../relayer/relayer_proxy.service'
+import { Session } from '../session/session.entity'
+import { SessionService } from '../session/session.service'
+import { WalletErrorType } from '../wallet/errors'
+import { WalletService } from '../wallet/wallet.service'
 
-jest.mock('@app/komenci-logger/komenci-logger.service')
-jest.mock('@app/onboarding/relayer/relayer_proxy.service')
-jest.mock('@app/onboarding/session/session.service')
+jest.mock('@komenci/logger/dist/komenci-logger.service')
+jest.mock('../relayer/relayer_proxy.service')
+jest.mock('../session/session.service')
 
 describe("WalletService", () => {
   const buildModule = async (appCfg: Partial<AppConfig>, networkCfg: Partial<NetworkConfig>) => {

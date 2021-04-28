@@ -1,4 +1,4 @@
-import { Result, RootError } from '@celo/base/lib/result'
+import { Result } from '@celo/base/lib/result'
 import { FastifyRequest } from 'fastify'
 import { StartSessionDto } from '../../dto/StartSessionDto'
 

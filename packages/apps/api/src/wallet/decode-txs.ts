@@ -1,7 +1,7 @@
-import { TransactionDecodeError } from '@app/onboarding/wallet/errors'
 import { Err, Ok, Result } from '@celo/base'
 import { ABI as MetaTxWalletABI } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { TransactionDecodeError } from '../wallet/errors'
 
 const InputDataDecoder = require('ethereum-input-data-decoder')
 const MetaTxWalletDecoder = new InputDataDecoder(MetaTxWalletABI)

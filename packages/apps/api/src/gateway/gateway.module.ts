@@ -1,5 +1,5 @@
-import { KomenciLoggerService } from '@app/komenci-logger'
 import { HttpModule, Module } from '@nestjs/common'
+import { KomenciLoggerService } from '@komenci/logger'
 import { CaptchaService } from './captcha/captcha.service'
 import { DeviceCheckService } from './device-check/device-check.service'
 import { GatewayService } from './gateway.service'
