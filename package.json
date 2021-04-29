@@ -11,8 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "libs:build:watch": "./scripts/libs.run.sh build:watch",
-    "libs:build": "./scripts/libs.run.sh build",
+    "libs:build:watch": "yarn libs:build && ./scripts/libs.run.sh build:watch",
+    "libs:build": "./scripts/libs.build.sh",
     "build": "nest build",
     "build:komencikit": "yarn --cwd ./libs/komencikit build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",

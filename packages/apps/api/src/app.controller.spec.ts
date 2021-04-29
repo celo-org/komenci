@@ -14,7 +14,6 @@ import { WalletService } from './wallet/wallet.service'
 import { RelayerProxyService } from './relayer/relayer_proxy.service'
 import { AppController } from './app.controller'
 import { AuthService } from './auth/auth.service'
-import { throttleConfig } from './config/throttle.config'
 import { DeviceType, StartSessionDto } from './dto/StartSessionDto'
 import { GatewayService } from './gateway/gateway.service'
 import { SessionService } from './session/session.service'
@@ -25,7 +24,7 @@ jest.mock('./session/session.service')
 jest.mock('./wallet/wallet.service')
 jest.mock('./subsidy/subsidy.service')
 jest.mock('@celo/contractkit')
-jest.mock('@app/komenci-logger/komenci-logger.service')
+jest.mock('@komenci/logger/dist/komenci-logger.service')
 
 describe('AppController', () => {
   let appController: AppController

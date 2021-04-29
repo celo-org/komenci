@@ -1,5 +1,6 @@
-const { pathsToModuleNameMapper } = require('ts-jest/utils');
-const { compilerOptions } = require('./tsconfig');
+const path = require('path')
+const findWorkspaceRoot = require('find-yarn-workspace-root')
+const workspaceRoot = findWorkspaceRoot()
 
 module.exports = {
   moduleFileExtensions: [ "js", "json", "ts" ],
@@ -8,25 +9,13 @@ module.exports = {
   testRegex: "[^-]spec.ts$",
   testEnvironment: "node",
   setupFilesAfterEnv: [
-    './jest.setup.ts',
+    path.join(workspaceRoot, 'jest.setup.ts')
   ],
   coverageDirectory: "./coverage",
   verbose: true,
-  roots: [
-    "<rootDir>/apps/",
-    "<rootDir>/libs/blockchain",
-  ],
   collectCoverageFrom: [
     "**/*.{js,jsx}",
     "!**/node_modules/**",
     "!libs/blockchain/migrations/**",
-  ],
-  moduleNameMapper: {
-    ...pathsToModuleNameMapper(
-      compilerOptions.paths,
-      {
-        prefix: "<rootDir>/"
-      }
-    ),
-  }
+  ]
 }

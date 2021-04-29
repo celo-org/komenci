@@ -4,15 +4,14 @@
     "declaration": true,
     "noImplicitAny": false,
     "removeComments": true,
-    "allowSyntheticDefaultImports": true,
-    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "suppressImplicitAnyIndexErrors": true,
+    "esModuleInterop": true,
     "lib": [
       "es2015",
       "dom"
     ],
-    "target": "ES5",
+    "target": "ES2015",
     "typeRoots": [
       "./node_modules/@types",
     ],

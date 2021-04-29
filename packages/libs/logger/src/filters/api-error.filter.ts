@@ -9,7 +9,7 @@ import {
 import { AbstractHttpAdapter, BaseExceptionFilter } from '@nestjs/core'
 import { MESSAGES } from '@nestjs/core/constants'
 
-import { isApiError } from '../errors'
+import { isApiError } from '@komenci/core'
 
 @Catch()
 export class ApiErrorFilter extends BaseExceptionFilter {

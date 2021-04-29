@@ -18,7 +18,7 @@ import { TxParserService } from '../wallet/tx-parser.service'
 import { WalletService } from '../wallet/wallet.service'
 import { InvalidWallet, TxParseErrorTypes, WalletErrorType } from '../wallet/errors'
 
-jest.mock('@app/onboarding/wallet/wallet.service')
+jest.mock('../wallet/wallet.service')
 
 describe('SubsidyService', () => {
   let testingModule: TestingModule
