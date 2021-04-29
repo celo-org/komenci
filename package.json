@@ -23,7 +23,10 @@
     "lint": "tslint -c tslint.json --project tsconfig.json",
     "secrets:decrypt": "bash scripts/secrets.sh decrypt",
     "secrets:encrypt": "bash scripts/secrets.sh encrypt",
-    "cli": "yarn --cwd ./packages/apps/cli nest start"
+    "cli": "yarn --cwd ./packages/apps/cli nest start",
+    "test": "yarn lerna run test",
+    "test:cov": "yarn lerna run test:cov",
+    "test:e2e": "yarn lerna run test:e2e"
   },
   "devDependencies": {
     "@celo/typescript": "^0.0.1",
