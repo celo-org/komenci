@@ -19,7 +19,9 @@ export class FundCommand {
     private readonly networkCfg: NetworkConfig,
     @Inject(fundConfig.KEY)
     private readonly fundCfg: WalletConfig,
+    @Inject(FundingService)
     private readonly fundingSvc: FundingService,
+    @Inject(Logger)
     private readonly logger: Logger
   ) {}
 
