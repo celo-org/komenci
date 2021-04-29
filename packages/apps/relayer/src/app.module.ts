@@ -2,7 +2,6 @@ import { BlockchainModule, ContractsModule } from '@komenci/blockchain'
 import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
 import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
 import { KomenciLoggerModule } from '@komenci/logger'
-import { RpcErrorFilter } from '@komenci/logger/dist/filters/rpc-error.filter'
 import { NetworkConfig, networkConfig } from '@komenci/core'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
@@ -20,8 +19,8 @@ import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet
       isGlobal: true,
       load: [appConfig, networkConfig, walletConfig],
       envFilePath: [
-        'apps/relayer/.env.local',
-        'apps/relayer/.env',
+        './.env.local',
+        './.env',
       ]
     }),
     BlockchainModule.forRootAsync({
@@ -58,7 +57,6 @@ import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet
   ],
   controllers: [AppController],
   providers: [
-    RpcErrorFilter,
     OdisService,
     TransactionService,
     BalanceService,

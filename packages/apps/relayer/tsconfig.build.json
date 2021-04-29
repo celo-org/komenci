@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "sourceMap": true,
     "declaration": false,
     "downlevelIteration": true,
     "module": "commonjs",

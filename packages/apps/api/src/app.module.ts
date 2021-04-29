@@ -43,7 +43,7 @@ import { SessionModule } from './session/session.module'
         databaseConfig, rulesConfig, networkConfig, 
         quotaConfig, throttleConfig,
       ],
-      envFilePath: ['apps/onboarding/.env.local', 'apps/onboarding/.env']
+      envFilePath: ['.env.local', '.env']
     }),
     KomenciLoggerModule.forRootAsync({
       providers: [ConfigService],

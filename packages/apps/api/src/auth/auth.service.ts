@@ -1,4 +1,4 @@
-import { ApiError } from '@komenci/logger/dist/errors'
+import { ApiError } from '@komenci/core'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from  '@nestjs/jwt'
 import { Session } from '../session/session.entity'

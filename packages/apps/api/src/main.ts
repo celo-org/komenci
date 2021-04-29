@@ -1,3 +1,5 @@
+import 'source-map-support/register'
+
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService, ConfigType } from '@nestjs/config'
 import { NestApplication, NestFactory } from '@nestjs/core'
@@ -14,7 +16,7 @@ async function bootstrap() {
   logger.log(`Starting HTTP server on  ${cfg.host}:${cfg.port}`)
   app.useGlobalPipes(new ValidationPipe())
   if (process.env.NODE_ENV !== 'production') {
-    app.useStaticAssets(join(__dirname, '../../../apps/onboarding', 'public'))
+    app.useStaticAssets(join(__dirname, '../public'))
   }
 
   await app.listen(cfg.port, cfg.host)

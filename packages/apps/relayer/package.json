@@ -10,7 +10,7 @@
     "build": "npx nest build",
     "clean": "rm -rf ./dist",
     "start:dev": "npx nest start --watch",
-    "start": "nps nest start",
+    "start": "npx nest start",
     "test": "jest --runInBand",
     "test:watch": "jest --runInBand --watch",
     "test:cov": "jest --coverage --runInBand",
@@ -26,6 +26,9 @@
     "ts-jest": "^26.5.5"
   },
   "dependencies": {
-    "class-validator": "^0.13.1"
+    "@nestjs/platform-express": "^7.6.15",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
+    "source-map-support": "^0.5.19"
   }
 }

@@ -1,7 +1,7 @@
 import { isApiError, isMetadataError, isRootError } from '@komenci/core'
 import { isError } from '@nestjs/cli/lib/utils/is-error'
 import { Injectable, LoggerService } from '@nestjs/common'
-import { PinoLogger } from 'nestjs-pino'
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino'
 
 import { EventPayload } from './events'
 
@@ -16,8 +16,7 @@ interface EventContext {
 
 @Injectable()
 export class KomenciLoggerService implements KomenciLogger {
-  constructor(private readonly logger: PinoLogger) {
-    console.log("Logger: ", logger)
+  constructor(@InjectPinoLogger() private readonly logger: PinoLogger) {
   }
 
   log(message: any, context?: any, ...args): void {
