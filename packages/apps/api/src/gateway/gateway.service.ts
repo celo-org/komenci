@@ -1,9 +1,9 @@
-import { FastifyRequest } from 'fastify'
+import { RootError } from '@celo/base/lib/result'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { ModuleRef } from '@nestjs/core'
-import { RootError } from '@celo/base/lib/result'
-import { EventType, KomenciLoggerService } from '@komenci/logger'
+import { FastifyRequest } from 'fastify'
 import { rulesConfig } from '../config/rules.config'
 import { StartSessionDto } from '../dto/StartSessionDto'
 import { CaptchaRule } from './rules/captcha.rule'
@@ -14,7 +14,7 @@ import { SignatureRule } from './rules/signature.rule'
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
-  private rules: Array<Rule<any, RootError<any>>>
+  private rules: Rule<any, RootError<any>>[]
 
   constructor(
     @Inject(rulesConfig.KEY)

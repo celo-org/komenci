@@ -1,7 +1,7 @@
 import { isApiError, isMetadataError, isRootError } from '@komenci/core'
 import { isError } from '@nestjs/cli/lib/utils/is-error'
 import { Injectable, LoggerService } from '@nestjs/common'
-import { PinoLogger, InjectPinoLogger } from 'nestjs-pino'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 
 import { EventPayload } from './events'
 
@@ -11,7 +11,7 @@ export interface KomenciLogger extends LoggerService {
 
 interface EventContext {
   traceId: string,
-  labels: Array<{key: string, value: string}>
+  labels: {key: string, value: string}[]
 }
 
 @Injectable()

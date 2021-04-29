@@ -1,17 +1,17 @@
 import { BlockchainModule, ContractsModule } from '@komenci/blockchain'
 import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
 import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
-import { KomenciLoggerModule } from '@komenci/logger'
 import { NetworkConfig, networkConfig } from '@komenci/core'
+import { KomenciLoggerModule } from '@komenci/logger'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { BalanceService } from './chain/balance.service'
-import { loggerConfigFactory } from './logger-config.factory'
-import { OdisService } from './odis/odis.service'
 import { AppController } from './app.controller'
+import { BalanceService } from './chain/balance.service'
 import { TransactionService } from './chain/transaction.service'
 import { appConfig, AppConfig } from './config/app.config'
 import { metaTransactionWalletProvider } from './contracts/MetaTransactionWallet.contract'
+import { loggerConfigFactory } from './logger-config.factory'
+import { OdisService } from './odis/odis.service'
 
 @Module({
   imports: [

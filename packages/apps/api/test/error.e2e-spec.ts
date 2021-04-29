@@ -1,10 +1,10 @@
+import { RootError } from '@celo/base/lib/result'
+import { ApiError } from '@komenci/core'
+import { KomenciLoggerModule } from '@komenci/logger'
+import { ApiErrorFilter } from '@komenci/logger/dist/filters/api-error.filter'
 import { Controller, Get } from '@nestjs/common'
 import { APP_FILTER } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
-import { KomenciLoggerModule } from '@komenci/logger'
-import { RootError } from '@celo/base/lib/result'
-import { ApiError } from '@komenci/core'
-import { ApiErrorFilter } from '@komenci/logger/dist/filters/api-error.filter'
 
 const request = require('supertest')
 

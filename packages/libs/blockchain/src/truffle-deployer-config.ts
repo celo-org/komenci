@@ -31,4 +31,4 @@ export default {
   baklava: getDeployerMnemonic('BAKLAVA'),
   baklavastaging: getDeployerMnemonic('BAKLAVA_STAGING'),
   rc1: getDeployerMnemonic('RC1'),
-};
+}

@@ -1,16 +1,8 @@
+import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
 import { CeloTransactionObject } from '@celo/connect'
 import { CeloContract, ContractKit } from '@celo/contractkit'
 import { AccountsWrapper } from '@celo/contractkit/lib/wrappers/Accounts'
 import { AttestationsWrapper } from '@celo/contractkit/lib/wrappers/Attestations'
-import { Address, normalizeAddress, trimLeading0x } from '@celo/base'
-import { BlockchainModule } from '@komenci/blockchain'
-import { WEB3_PROVIDER } from '@komenci/blockchain/dist/blockchain.providers'
-import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
-import { normalizeMethodId } from '@komenci/core'
-import { buildMockWeb3Provider } from '@komenci/core'
-import { TxParseErrorTypes } from '../wallet/errors'
-import { MethodFilter } from '../wallet/method-filter'
-import { TxParserService } from '../wallet/tx-parser.service'
 import {
   MetaTransactionWalletWrapper,
   RawTransaction,
@@ -18,8 +10,15 @@ import {
   TransactionInput,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { StableTokenWrapper } from '@celo/contractkit/lib/wrappers/StableTokenWrapper'
+import { BlockchainModule } from '@komenci/blockchain'
+import { WEB3_PROVIDER } from '@komenci/blockchain/dist/blockchain.providers'
+import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
+import { buildMockWeb3Provider, normalizeMethodId } from '@komenci/core'
 import { Test, TestingModule } from '@nestjs/testing'
 import Web3 from 'web3'
+import { TxParseErrorTypes } from '../wallet/errors'
+import { MethodFilter } from '../wallet/method-filter'
+import { TxParserService } from '../wallet/tx-parser.service'
 
 describe('TxParserService', () => {
   let module: TestingModule

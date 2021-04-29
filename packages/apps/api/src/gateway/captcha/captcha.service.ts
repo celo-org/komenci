@@ -1,5 +1,5 @@
-import { MetadataError } from '@komenci/core'
 import { Err, Ok, Result } from '@celo/base/lib/result'
+import { MetadataError } from '@komenci/core'
 import {
   HttpService,
   Inject,

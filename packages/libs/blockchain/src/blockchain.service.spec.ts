@@ -1,6 +1,6 @@
-import { WEB3_PROVIDER } from './blockchain.providers'
 import { Test, TestingModule } from '@nestjs/testing'
 import Web3 from 'web3'
+import { WEB3_PROVIDER } from './blockchain.providers'
 import { BlockchainErrorTypes, BlockchainService } from './blockchain.service'
 
 jest.mock('web3')

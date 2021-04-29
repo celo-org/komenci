@@ -1,34 +1,34 @@
-import { Mutex } from 'async-mutex'
-import BigNumber from 'bignumber.js'
-import Web3 from 'web3'
-import { Transaction } from 'web3-core'
-import { BlockchainService } from '@komenci/blockchain/dist/blockchain.service'
-import {
-  WalletConfig,
-  walletConfig
-} from '@komenci/blockchain/dist/config/wallet.config'
-import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { Address, sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { CeloTxObject } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { BlockchainService } from '@komenci/blockchain/dist/blockchain.service'
+import {
+  WalletConfig,
+  walletConfig
+} from '@komenci/blockchain/dist/config/wallet.config'
 import { retry } from '@komenci/kit/lib/retry'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 import {
   Inject,
   Injectable,
   OnModuleDestroy,
   OnModuleInit
 } from '@nestjs/common'
+import { Mutex } from 'async-mutex'
+import BigNumber from 'bignumber.js'
+import Web3 from 'web3'
+import { Transaction } from 'web3-core'
 import { BalanceService } from '../chain/balance.service'
 import { 
   ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, 
   NonceTooLow, ReceiptNotFoundError, TxDeadletterError, 
   TxNotFoundError, TxNotInCache, TxSubmitError 
 } from '../chain/errors'
+import { AppConfig, appConfig } from '../config/app.config'
 import { RawTransactionDto } from '../dto/RawTransactionDto'
 import { RelayerTraceContext } from '../dto/RelayerCommandDto'
-import { AppConfig, appConfig } from '../config/app.config'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
 const GWEI_PER_UNIT = 1e9
@@ -375,7 +375,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     return txs.cachedTx.gasPrice.lt(this.gasPrice)
   }
 
-  private async getPendingTransactions(): Promise<Array<{hash: string, nonce: number, gasPrice: BigNumber}>> {
+  private async getPendingTransactions(): Promise<{hash: string, nonce: number, gasPrice: BigNumber}[]> {
     const txPoolRes = await this.blockchainService.getPendingTxPool()
     if (txPoolRes.ok === false) {
       if (txPoolRes.error.errorType === 'RPC') {

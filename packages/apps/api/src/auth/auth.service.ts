@@ -1,10 +1,10 @@
 import { ApiError } from '@komenci/core'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from  '@nestjs/jwt'
-import { Session } from '../session/session.entity'
-import { SessionService } from '../session/session.service'
 import { isLeft } from 'fp-ts/Either'
 import * as t from 'io-ts'
+import { Session } from '../session/session.entity'
+import { SessionService } from '../session/session.service'
 
 export const TokenPayload = t.type({
   sessionId: t.string

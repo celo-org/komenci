@@ -38,7 +38,7 @@ const alwaysReturn = <TResult, TError extends RootError<any>>(value: Result<TRes
 }
 
 const returnFromList = <TResult, TError extends RootError<any>>(
-  values: Array<Result<TResult, TError>>
+  values: Result<TResult, TError>[]
 ) => {
   const impl = jest.fn().mockImplementation(() => {
     return Promise.resolve(values[impl.mock.calls.length - 1])

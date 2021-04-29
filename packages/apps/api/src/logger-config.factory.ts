@@ -1,9 +1,9 @@
 import { buildLabels, levelFormatter } from '@komenci/core'
 import { ConfigService } from '@nestjs/config'
-import { AppConfig } from './config/app.config'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Params } from 'nestjs-pino'
 import { v4 as uuidv4 } from "uuid"
+import { AppConfig } from './config/app.config'
 
 export const loggerConfigFactory = (config: ConfigService): Params => {
   const appCfg = config.get<AppConfig>('app')

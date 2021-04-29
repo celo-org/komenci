@@ -23,7 +23,7 @@ export class MethodFilter {
   addContract<T extends Contract>(
     name: CeloContract,
     wrapper: BaseWrapper<T>,
-    methods: Array<keyof T["methods"]>
+    methods: (keyof T["methods"])[]
   ): MethodFilter {
     methods.forEach(methodName => {
       const methodId = wrapper.methodIds[methodName]

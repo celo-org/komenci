@@ -1,5 +1,5 @@
-import { IsCeloAddress } from '@komenci/core'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { IsCeloAddress } from '@komenci/core'
 import { IsHexadecimal, IsNumberString } from 'class-validator'
 
 export class RawTransactionDto implements RawTransaction {

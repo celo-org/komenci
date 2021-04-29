@@ -1,15 +1,15 @@
-import { WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
-import { NetworkConfig, networkConfig } from '@komenci/core'
 import { normalizeAddress, NULL_ADDRESS } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { isValidAddress } from '@celo/utils/lib/address'
+import { WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { NetworkConfig, networkConfig } from '@komenci/core'
 import { Inject } from '@nestjs/common'
-import { fundConfig } from './fund.config'
 import commander from 'commander'
 import { Command, Console, createSpinner } from 'nestjs-console'
 import { Logger } from 'nestjs-pino'
+import { fundConfig } from './fund.config'
 
 @Console({
   name: 'deployer',

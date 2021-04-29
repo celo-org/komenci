@@ -1,10 +1,10 @@
-import { WalletConfig, WalletType } from '@komenci/blockchain/dist/config/wallet.config'
-import { Network } from '@komenci/core'
 import { privateKeyToAddress } from '@celo/utils/lib/address'
+import { WalletConfig, WalletType } from '@komenci/blockchain/dist/config/wallet.config'
+import mnemonics from '@komenci/blockchain/dist/truffle-deployer-config'
+import { Network } from '@komenci/core'
 import { registerAs } from '@nestjs/config'
 import * as bip32 from 'bip32'
 import * as bip39 from 'bip39'
-import mnemonics from '@komenci/blockchain/dist/truffle-deployer-config'
 
 
 export const generatePrivateKeyWithDerivations = (mnemonic: string, derivations: number[]) => {

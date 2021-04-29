@@ -1,4 +1,3 @@
-import { KomenciLoggerService } from '../komenci-logger.service'
 import {
   ArgumentsHost,
   Catch,
@@ -8,6 +7,7 @@ import {
 } from '@nestjs/common'
 import { AbstractHttpAdapter, BaseExceptionFilter } from '@nestjs/core'
 import { MESSAGES } from '@nestjs/core/constants'
+import { KomenciLoggerService } from '../komenci-logger.service'
 
 import { isApiError } from '@komenci/core'
 

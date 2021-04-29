@@ -1,15 +1,15 @@
-import { walletConfig, WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
-import { KomenciLoggerModule } from '@komenci/logger'
-import { DistributedBlindedPepperDto } from '@komenci/api/dist/dto/DistributedBlindedPepperDto'
-import { networkConfig, NetworkConfig } from '@komenci/core'
 import { ContractKit } from '@celo/contractkit'
 import { WrapperCache } from '@celo/contractkit/lib/contract-cache'
 import { OdisUtils } from '@celo/identity'
+import { DistributedBlindedPepperDto } from '@komenci/api/dist/dto/DistributedBlindedPepperDto'
+import { walletConfig, WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { networkConfig, NetworkConfig } from '@komenci/core'
+import { KomenciLoggerModule } from '@komenci/logger'
 import { Test } from '@nestjs/testing'
-import { appConfig, AppConfig } from '../config/app.config'
-import { OdisQueryErrorTypes, OdisService } from './odis.service'
 import Web3 from 'web3'
+import { appConfig, AppConfig } from '../config/app.config'
 import { getTestBlindedPhoneNumber } from '../config/testing-constants'
+import { OdisQueryErrorTypes, OdisService } from './odis.service'
 
 jest.mock('@celo/phone-number-privacy-common/lib/test/utils', () => {
   return {
