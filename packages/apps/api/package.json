@@ -61,7 +61,7 @@
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "pg": "^8.6.0",
-    "reflect-metadata": "0.1.12",
+    "reflect-metadata": "^0.1.13",
     "rxjs": "^6.0.0",
     "source-map-support": "^0.5.19",
     "typeorm": "^0.2.32",

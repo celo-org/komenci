@@ -4195,13 +4195,6 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.3.tgz#7ee330ba7caafb98090bece86a5ee44115904c2c"
   integrity sha512-ewFXqrQHlFsgc09MK5jP5iR7vumV/BYayNC6PgJO2LPe8vrnNFyjQjSppfEngITi0qvfKtzFvgKymGheFM9UOA==
 
-"@types/reflect-metadata@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@types/reflect-metadata/-/reflect-metadata-0.1.0.tgz#592805bdf6d63dd7229773218afeba37ac2eab16"
-  integrity sha512-bXltFLY3qhzCnVYP5iUpeSICagQ8rc9K2liS+8M0lBcz54BHs3O6W5UvqespVSuebo1BXLi+/y9ioELAW9SC2A==
-  dependencies:
-    reflect-metadata "*"
-
 "@types/secp256k1@^4.0.0", "@types/secp256k1@^4.0.1":
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/@types/secp256k1/-/secp256k1-4.0.2.tgz#20c29a87149d980f64464e56539bf4810fdb5d1d"
@@ -9808,7 +9801,7 @@ graphql-ws@^4.4.1:
   resolved "https://registry.yarnpkg.com/graphql-ws/-/graphql-ws-4.4.4.tgz#0a8a90bd66a4d5cc42723364e38c8c7bec9af10d"
   integrity sha512-GuKIn9PlSC5a1G7wEkLEsFmNGWXiPOXo7MfSk35fMEEJhJSKRa3dMW1JWaNvDZNXF2lLrZ6fal8+kOyDuBHpcg==
 
-graphql@^15.3.0:
+graphql@^15.3.0, graphql@^15.5.0:
   version "15.5.0"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.5.0.tgz#39d19494dbe69d1ea719915b578bf920344a69d5"
   integrity sha512-OmaM7y0kaK31NKG31q4YbD2beNYa6jBBKtMFT6gLYJljHLJr42IqJ8KX08u3Li/0ifzTU5HjmoOOrwa5BRLeDA==
@@ -16119,15 +16112,15 @@ redux@^4.0.4:
   dependencies:
     "@babel/runtime" "^7.9.2"
 
-reflect-metadata@*, reflect-metadata@^0.1.13:
-  version "0.1.13"
-  resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.1.13.tgz#67ae3ca57c972a2aa1642b10fe363fe32d49dc08"
-  integrity sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
-
 reflect-metadata@0.1.12:
   version "0.1.12"
   resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.1.12.tgz#311bf0c6b63cd782f228a81abe146a2bfa9c56f2"
   integrity sha512-n+IyV+nGz3+0q3/Yf1ra12KpCyi001bi4XFxSjbiWWjfqb52iTTtpGXmCCAOWWIAn9KEuFZKGqBERHmrtScZ3A==
+
+reflect-metadata@^0.1.13:
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.1.13.tgz#67ae3ca57c972a2aa1642b10fe363fe32d49dc08"
+  integrity sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
 
 regenerator-runtime@^0.11.0:
   version "0.11.1"
