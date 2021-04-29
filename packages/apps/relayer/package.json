@@ -20,7 +20,9 @@
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
   "license": "ISC",
   "devDependencies": {
-    "@nestjs/cli": "^7.6.0"
+    "@nestjs/cli": "^7.6.0",
+    "fetch-mock": "^9.11.0",
+    "ts-jest": "^26.5.5"
   },
   "dependencies": {
     "class-validator": "^0.13.1"

@@ -16,7 +16,9 @@ interface EventContext {
 
 @Injectable()
 export class KomenciLoggerService implements KomenciLogger {
-  constructor(private readonly logger: PinoLogger) {}
+  constructor(private readonly logger: PinoLogger) {
+    console.log("Logger: ", logger)
+  }
 
   log(message: any, context?: any, ...args): void {
     this.logger.info(message, context, ...args)
