@@ -22,6 +22,8 @@
     "@nestjs/common": "^7.6.15",
     "@types/jest": "^26.0.23",
     "bignumber.js": "^9.0.1",
+    "bip32": "^2.0.6",
+    "bip39": "^3.0.4",
     "dotenv": "^8.2.0",
     "find-yarn-workspace-root": "^2.0.0",
     "fp-ts": "^2.10.4",
@@ -35,6 +37,7 @@
     "@nestjs/testing": "^7.6.15",
     "@types/jest": "^26.0.23",
     "jest": "^26.6.3",
+    "truffle": "^5.3.3",
     "typescript": "3.8.3"
   }
 }

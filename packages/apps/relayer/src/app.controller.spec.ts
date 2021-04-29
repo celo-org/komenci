@@ -12,6 +12,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import { OdisService } from './odis/odis.service'
 import Web3 from 'web3'
+import 'jest-fetch-mock'
 
 import { AppController } from './app.controller'
 import { appConfig } from './config/app.config'
@@ -92,7 +93,12 @@ describe('AppController', () => {
     })
 
     it('should retry after increasing quota when out of quota error is hit', async () => {
-      fetchMock.post(odisUrl, 403)
+      fetchMock.mockIf(odisUrl, () => {
+        return Promise.resolve({
+          status: 403,
+          body: 'Unauthorised',
+        })
+      })
 
       const getPhoneNumberIdentifierSpy = jest.spyOn(
         OdisUtils.PhoneNumberIdentifier,
@@ -112,9 +118,14 @@ describe('AppController', () => {
     })
 
     it('should return the identifier when input is correct', async () => {
-      fetchMock.post(odisUrl, {
-        success: true,
-        combinedSignature: MOCK_ODIS_RESPONSE
+      fetchMock.mockIf(odisUrl, () => {
+        return Promise.resolve({
+          status: 200,
+          body: JSON.stringify({
+            success: true,
+            combinedSignature: MOCK_ODIS_RESPONSE
+          })
+        })
       })
 
       const input: DistributedBlindedPepperDto = {
