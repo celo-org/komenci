@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "npx nest build",
+    "clean": "rm -rf ./dist",
     "start:dev": "npx nest start --watch",
     "start": "nps nest start",
     "test": "jest --runInBand",
