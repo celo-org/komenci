@@ -10,7 +10,7 @@
     "build": "npx nest build",
     "clean": "rm -rf ./dist",
     "start:dev": "npx nest start --watch",
-    "start": "npx nest start",
+    "start:prod": "node dist/main.js",
     "test": "jest --runInBand",
     "test:watch": "jest --runInBand --watch",
     "test:cov": "jest --coverage --runInBand",
@@ -41,10 +41,12 @@
     "@celo/contractkit": "1.2.0",
     "@nestjs/common": "^7.6.15",
     "@nestjs/config": "^0.6.3",
+    "@nestjs/core": "^7.0.0",
     "@nestjs/jwt": "^7.2.0",
     "@nestjs/microservices": "^7.6.15",
     "@nestjs/passport": "^7.1.5",
     "@nestjs/platform-express": "^7.6.15",
+    "@nestjs/throttler": "^1.1.3",
     "@nestjs/typeorm": "^7.1.5",
     "async-mutex": "^0.3.1",
     "axios": "^0.21.1",
@@ -59,8 +61,11 @@
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "pg": "^8.6.0",
+    "reflect-metadata": "0.1.12",
+    "rxjs": "^6.0.0",
     "source-map-support": "^0.5.19",
     "typeorm": "^0.2.32",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "web3": "1.3.5"
   }
 }

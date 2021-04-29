@@ -1,7 +1,5 @@
-node_modules/
 Dockerfile
-dist/
-docker-compose.proxy.yml
+**/dist
 
 node_modules
 **/node_modules
