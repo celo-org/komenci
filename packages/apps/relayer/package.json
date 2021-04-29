@@ -10,7 +10,7 @@
     "build": "npx nest build",
     "clean": "rm -rf ./dist",
     "start:dev": "npx nest start --watch",
-    "start": "npx nest start",
+    "start:prod": "node dist/main.js",
     "test": "jest --runInBand",
     "test:watch": "jest --runInBand --watch",
     "test:cov": "jest --coverage --runInBand",
