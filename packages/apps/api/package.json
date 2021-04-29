@@ -16,7 +16,11 @@
     "test:cov": "jest --coverage --runInBand",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config jest.config.e2e.js --runInBand",
-    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand"
+    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand",
+    "typeorm": "ts-node ../../../node_modules/typeorm/cli -f migration.config.ts",
+    "typeorm:create": "yarn typeorm migration:create",
+    "typeorm:generate": "yarn typeorm migration:generate -n",
+    "typeorm:migration:run": "yarn typeorm migration:run"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
   "license": "ISC",

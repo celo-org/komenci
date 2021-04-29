@@ -1,10 +1,21 @@
 const Web3 = require('web3')
+const bip32 = require('bip32')
+const bip39 = require('bip39')
 
-const LocalWallet = require('@celo/local-wallet').LocalWallet
-const CeloProvider = require('@celo/contractkit/lib/providers/celo-provider').CeloProvider
+const LocalWallet = require('@celo/wallet-local').LocalWallet
+const CeloProvider = require('@celo/connect/lib/celo-provider').CeloProvider
+const { Connection } = require('@celo/connect')
 const mnemonics = require('./dist/truffle-deployer-config')
 
-const generatePrivateKey = generateUtils.generatePrivateKeyWithDerivations
+const generatePrivateKey = (mnemonic, derivations) => {
+  const seed = bip39.mnemonicToSeedSync(mnemonic)
+  const node = bip32.fromSeed(seed)
+  const newNode = derivations.reduce((n, derivation) => {
+    return n.derive(derivation)
+  }, node)
+  return newNode.privateKey.toString('hex')
+}
+
 const fornoURLForEnv = (env) => "https://"+env+"-forno.celo-testnet.org"
 
 const walletCache = {}
@@ -25,7 +36,8 @@ const providerForEnv = (env) => {
   const httpProvider = new Web3.providers.HttpProvider(
     fornoURLForEnv(env),
   );
-  return new CeloProvider(httpProvider, wallet)
+  const connection = new Connection(new Web3(httpProvider), wallet)
+  return new CeloProvider(httpProvider, connection)
 }
 
 const migratorAddressForEnv = (env) => {
@@ -41,8 +53,8 @@ const baseNetworkConfig = {
 module.exports = {
   plugins: ["truffle-security"],
 
-  contracts_build_directory: "./libs/celo/packages/protocol/build/contracts",
-  migrations_directory: "./libs/blockchain/migrations",
+  contracts_build_directory: "../contracts/artefacts",
+  migrations_directory: ".//migrations",
   networks: {
     alfajores: {
       ...baseNetworkConfig,

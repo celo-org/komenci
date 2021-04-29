@@ -80,11 +80,11 @@ export class AppController {
     private readonly subsidyService: SubsidyService,
     private readonly sessionService: SessionService,
     private readonly walletService: WalletService,
-    private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
     @Inject(appConfig.KEY)
     private readonly appCfg: AppConfig,
+    @Inject(KomenciLoggerService)
     private readonly logger: KomenciLoggerService,
     private readonly txParserService: TxParserService
 ) {}
