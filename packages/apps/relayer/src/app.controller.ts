@@ -1,20 +1,20 @@
-import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
-import { RpcErrorFilter } from '@komenci/logger/dist/filters/rpc-error.filter'
 import { makeAsyncThrowable } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { RpcErrorFilter } from '@komenci/logger/dist/filters/rpc-error.filter'
 import { Body, Controller, Inject, UseFilters } from '@nestjs/common'
 import { MessagePattern } from '@nestjs/microservices'
+import Web3 from 'web3'
 import { TransactionService } from './chain/transaction.service'
 import { GetPhoneNumberSignatureDto } from './dto/GetPhoneNumberSignatureDto'
 import { SignPersonalMessageDto } from './dto/SignPersonalMessageDto'
 import { SubmitTransactionBatchDto } from './dto/SubmitTransactionBatchDto'
 import { SubmitTransactionDto } from './dto/SubmitTransactionDto'
 import { OdisService } from './odis/odis.service'
-import Web3 from 'web3'
 
 export interface RelayerResponse<T> {
   payload: T

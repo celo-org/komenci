@@ -10,14 +10,14 @@ import { ClientProxy } from '@nestjs/microservices'
 
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { MetadataError } from '@komenci/core'
-import { appConfig, AppConfig } from '../config/app.config'
-import { Session } from '../session/session.entity'
 import { RelayerCmd, RelayerResponse } from '@komenci/relayer/dist/app.controller'
 import { GetPhoneNumberSignatureDto } from '@komenci/relayer/dist/dto/GetPhoneNumberSignatureDto'
 import { RelayerCommandDto } from '@komenci/relayer/dist/dto/RelayerCommandDto'
 import { SignPersonalMessageDto } from '@komenci/relayer/dist/dto/SignPersonalMessageDto'
 import { SubmitTransactionBatchDto } from '@komenci/relayer/dist/dto/SubmitTransactionBatchDto'
 import { SubmitTransactionDto } from '@komenci/relayer/dist/dto/SubmitTransactionDto'
+import { appConfig, AppConfig } from '../config/app.config'
+import { Session } from '../session/session.entity'
 
 
 export enum RelayerErrorTypes {

@@ -1,11 +1,11 @@
-import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
-import { EventType, KomenciLoggerService } from '@komenci/logger'
-import { MetadataError, NetworkConfig, networkConfig } from '@komenci/core'
 import { normalizeAddress, RootError } from '@celo/base'
 import { ContractKit } from '@celo/contractkit'
 import { MetaTransactionWalletWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { isValidAddress } from '@celo/utils/lib/address'
+import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
+import { MetadataError, NetworkConfig, networkConfig } from '@komenci/core'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 
 enum RelayerMTWErrorTypes {
   NotRegister = "RelayerNotRegistered",

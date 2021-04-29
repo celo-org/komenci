@@ -1,5 +1,5 @@
-import { RuleID } from '../gateway/rules/rule'
 import { registerAs } from '@nestjs/config'
+import { RuleID } from '../gateway/rules/rule'
 
 const isTrue = (content: string) => String(content).toLowerCase() === 'true'
 

@@ -1,6 +1,6 @@
-import { RulesConfig } from '../../config/rules.config'
 import { Err, Ok } from '@celo/base/lib/result'
 import { Injectable } from '@nestjs/common'
+import { RulesConfig } from '../../config/rules.config'
 import { StartSessionDto } from '../../dto/StartSessionDto'
 import {
   CaptchaService,

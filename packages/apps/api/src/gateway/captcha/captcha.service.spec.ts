@@ -1,11 +1,11 @@
-import { thirdPartyConfig } from '../../config/third-party.config'
 import { Ok } from '@celo/base/lib/result'
 import { HttpModule, HttpService } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
-import { HttpErrorTypes } from '../../errors/http'
 import { AxiosError, AxiosResponse } from 'axios'
 import { Observable, of } from 'rxjs'
+import { thirdPartyConfig } from '../../config/third-party.config'
+import { HttpErrorTypes } from '../../errors/http'
 import { CaptchaService, ReCAPTCHAErrorTypes } from './captcha.service'
 import { ErrorCode, ReCAPTCHAResponseDto } from './ReCAPTCHAResponseDto'
 

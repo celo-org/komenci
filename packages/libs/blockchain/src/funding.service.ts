@@ -1,7 +1,7 @@
-import { RelayerAccounts } from '@komenci/core'
 import { TransactionResult } from '@celo/connect'
 import { Address, ContractKit } from '@celo/contractkit'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+import { RelayerAccounts } from '@komenci/core'
 import { Injectable } from '@nestjs/common'
 import BigNumber from 'bignumber.js'
 

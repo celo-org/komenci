@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common'
 import { Ok, Result } from '@celo/base/lib/result'
 import { CeloContract, ContractKit } from '@celo/contractkit'
 import { RawTransaction, toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { RawTransactionDto } from '@komenci/relayer/dist/dto/RawTransactionDto'
+import { Injectable } from '@nestjs/common'
 import { RequestAttestationsDto } from '../dto/RequestAttestationsDto'
+import { Session } from '../session/session.entity'
 import { InvalidWallet, TxParseErrors } from '../wallet/errors'
 import { MethodFilter } from '../wallet/method-filter'
 import { TxParserService } from '../wallet/tx-parser.service'
 import { WalletService } from '../wallet/wallet.service'
-import { Session } from '../session/session.entity'
 
 @Injectable()
 export class SubsidyService {

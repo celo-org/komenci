@@ -1,9 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Err, normalizeAddress, Ok, Result } from '@celo/base'
 import { CeloContract, ContractKit } from '@celo/contractkit'
 import { BaseWrapper } from '@celo/contractkit/lib/wrappers/BaseWrapper'
-import { Err, normalizeAddress, Ok, Result } from '@celo/base'
 import { MetaTransactionWalletWrapper, RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { extractMethodId, normalizeMethodId } from '@komenci/core'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 import { decodeExecuteMetaTransaction, decodeExecuteTransactions } from '../wallet/decode-txs'
 import {
   InvalidRootTransaction,

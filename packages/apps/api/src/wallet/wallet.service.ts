@@ -1,14 +1,15 @@
-import Web3 from 'web3'
-import { Inject, Injectable, Scope } from '@nestjs/common'
-import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
-import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { Address, ensureLeading0x, normalizeAddress, throwIfError } from '@celo/base'
+import { Err, Ok, Result } from '@celo/base/lib/result'
 import { newMetaTransactionWallet } from '@celo/contractkit/lib/generated/MetaTransactionWallet'
 import { ContractKit } from '@celo/contractkit/lib/kit'
-import { Err, Ok, Result } from '@celo/base/lib/result'
-import { Address, ensureLeading0x, normalizeAddress, throwIfError } from '@celo/base'
-import { EventType, KomenciLoggerService } from '@komenci/logger'
+import { toRawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
 import { networkConfig, NetworkConfig } from '@komenci/core'
 import { verifyWallet } from '@komenci/kit/lib/verifyWallet'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
+import { Inject, Injectable, Scope } from '@nestjs/common'
+import Web3 from 'web3'
+import { AppConfig, appConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
 import { Session } from '../session/session.entity'
 import { SessionService } from '../session/session.service'
@@ -17,7 +18,6 @@ import {
   InvalidWallet,
   WalletNotDeployed,
 } from '../wallet/errors'
-import { AppConfig, appConfig } from '../config/app.config'
 
 @Injectable({
   // RelayerProxyService is Request scoped

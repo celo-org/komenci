@@ -1,10 +1,10 @@
-import { WEB3_PROVIDER } from './blockchain.providers'
 import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { Inject, Injectable } from '@nestjs/common'
 import { isLeft } from 'fp-ts/Either'
 import * as t from 'io-ts'
 import { HttpProvider, Transaction } from 'web3-core'
 import { formatters } from 'web3-core-helpers'
+import { WEB3_PROVIDER } from './blockchain.providers'
 
 export const PoolTransaction  = t.type({
   hash: t.string,

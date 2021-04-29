@@ -2,12 +2,12 @@ import { WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
 import { DisbursementSummary, FundingService } from '@komenci/blockchain/dist/funding.service'
 import { networkConfig, NetworkConfig, RelayerAccounts } from '@komenci/core'
 import { Inject } from '@nestjs/common'
-import { fundConfig } from './fund.config'
 import BigNumber from 'bignumber.js'
 import commander from 'commander'
 import { Command, Console, createSpinner } from 'nestjs-console'
 import { Logger } from 'nestjs-pino'
 import { TransactionReceipt } from 'web3-core'
+import { fundConfig } from './fund.config'
 
 @Console({
   name: 'fund',
@@ -98,7 +98,7 @@ export class FundCommand {
     spin.succeed('Funding transactions submitted')
     spin.start(`Funding relayers`)
 
-    const receipts: Array<Promise<TransactionReceipt>> = []
+    const receipts: Promise<TransactionReceipt>[] = []
 
     const results = await Promise.all(Object.keys(summary).map(async (relayer) => {
       const celoTxHash = await summary[relayer].celo.getHash()

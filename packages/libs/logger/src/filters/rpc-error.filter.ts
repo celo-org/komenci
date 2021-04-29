@@ -1,5 +1,5 @@
-import { KomenciLoggerService } from '../komenci-logger.service'
 import { isMetadataError, isRootError } from '@komenci/core'
+import { KomenciLoggerService } from '../komenci-logger.service'
 
 import {
   ArgumentsHost,

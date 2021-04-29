@@ -1,7 +1,7 @@
-import { ApiError } from '@komenci/core'
-import { WalletValidationError } from '@komenci/kit/lib/errors'
 import { RootError } from '@celo/base/lib/result'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { ApiError } from '@komenci/core'
+import { WalletValidationError } from '@komenci/kit/lib/errors'
 
 export enum WalletErrorType {
   NotDeployed = "NotDeployed",

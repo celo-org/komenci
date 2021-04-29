@@ -1,7 +1,7 @@
-import { AsyncOptions } from './blockchain.module'
-import { KomenciLoggerModule, KomenciLoggerService } from '@komenci/logger'
 import { ContractKit } from '@celo/contractkit'
 import { MetaTransactionWalletDeployerWrapper } from '@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer'
+import { KomenciLoggerModule, KomenciLoggerService } from '@komenci/logger'
+import { AsyncOptions } from './blockchain.module'
 
 import { DynamicModule, Module } from '@nestjs/common'
 import { Logger } from 'nestjs-pino'

@@ -1,9 +1,9 @@
 import { DynamicModule, Global, Module } from '@nestjs/common'
 import { LoggerModule, LoggerModuleAsyncParams, Params } from 'nestjs-pino'
 
-import { KomenciLoggerService } from './komenci-logger.service'
-import { RpcErrorFilter } from './filters/rpc-error.filter'
 import { ApiErrorFilter } from './filters/api-error.filter'
+import { RpcErrorFilter } from './filters/rpc-error.filter'
+import { KomenciLoggerService } from './komenci-logger.service'
 
 @Global()
 @Module({})

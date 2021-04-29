@@ -1,7 +1,7 @@
-import { thirdPartyConfig } from '../../config/third-party.config'
 import { HttpModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
+import { thirdPartyConfig } from '../../config/third-party.config'
 import { DeviceCheckService } from './device-check.service'
 
 describe('DeviceCheckService', () => {

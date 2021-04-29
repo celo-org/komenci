@@ -1,3 +1,4 @@
+import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
 import {
   BLOCKCHAIN_MODULE_OPTIONS,
   contractKitDef,
@@ -6,9 +7,8 @@ import {
   web3ProviderDef,
 } from './blockchain.providers'
 import { BlockchainService } from './blockchain.service'
-import { WalletConfig, } from './config/wallet.config'
-import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
 import { NodeConfig } from './config/node.config'
+import { WalletConfig, } from './config/wallet.config'
 
 export interface BlockchainOptions {
   node: NodeConfig
