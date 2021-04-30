@@ -152,6 +152,7 @@ export enum WalletVerificationErrorTypes {
   InvalidBytecode = 'InvalidBytecode',
   InvalidSigner = 'InvalidSigner',
   InvalidImplementation = 'InvalidImplementation',
+  InvalidStorageRoot = 'InvalidStorageRoot',
 }
 
 export class InvalidBytecode extends RootError<WalletVerificationErrorTypes.InvalidBytecode> {
@@ -159,6 +160,14 @@ export class InvalidBytecode extends RootError<WalletVerificationErrorTypes.Inva
   constructor(public readonly walletAddress: string) {
     super(WalletVerificationErrorTypes.InvalidBytecode)
     this.message = 'Invalid wallet bytecode, should be a Proxy'
+  }
+}
+
+export class InvalidStorageRoot extends RootError<WalletVerificationErrorTypes.InvalidStorageRoot> {
+  public readonly message: string
+  constructor(public readonly walletAddress: string) {
+    super(WalletVerificationErrorTypes.InvalidStorageRoot)
+    this.message = 'Invalid wallet storage, should have only expected owner and implementation in trie'
   }
 }
 
@@ -184,4 +193,4 @@ export class InvalidImplementation extends RootError<WalletVerificationErrorType
   }
 }
 
-export type WalletValidationError = InvalidBytecode | InvalidImplementation | InvalidSigner
+export type WalletValidationError = InvalidBytecode | InvalidImplementation | InvalidSigner | InvalidStorageRoot
