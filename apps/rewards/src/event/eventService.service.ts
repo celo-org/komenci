@@ -1,7 +1,7 @@
 import { KomenciLoggerService } from '@app/komenci-logger'
 import { EventLog } from '@celo/connect'
 import { Injectable, Scope } from '@nestjs/common'
-import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
+import { NotifiedBlockService, StartingBlock } from '../blocks/notifiedBlock.service'
 
 @Injectable({
   scope: Scope.TRANSIENT
@@ -16,7 +16,7 @@ export class EventService {
 
   async runEventProcessingPolling(
     key: string,
-    fromBlockFetcher: () => Promise<number>,
+    startingBlock: StartingBlock,
     eventFetcher: (fromBlock: number) => Promise<EventLog[]>,
     eventHandler: (event: EventLog) => Promise<void>
   ) {
@@ -28,7 +28,7 @@ export class EventService {
     try {
       await this.notifiedBlockService.runUsingLastNotifiedBlock(
         key,
-        fromBlockFetcher,
+        startingBlock,
         fromBlock =>
           this.fetchAndProcessEvents(key, fromBlock, eventFetcher, eventHandler)
       )
@@ -49,7 +49,11 @@ export class EventService {
     this.logger.log(`${key} events received: ${events.length}`)
     let maxBlock = fromBlock
     for (const event of events) {
-      await eventHandler(event)
+      try {
+        await eventHandler(event)
+      } catch(error) {
+        this.logger.error(error, `Error while processing a ${key} event`)
+      }
       maxBlock = Math.max(maxBlock, event.blockNumber)
     }
     return maxBlock

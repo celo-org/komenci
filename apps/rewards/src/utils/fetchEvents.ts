@@ -14,7 +14,7 @@ export async function fetchEvents(
   while (currentFromBlock < toBlock) {
     const events = await contract.getPastEvents(event, {
       fromBlock: currentFromBlock,
-      toBlock: currentFromBlock + batchSize
+      toBlock: Math.min(currentFromBlock + batchSize, toBlock)
     })
     allEvents.push(...events)
     currentFromBlock += batchSize + 1
