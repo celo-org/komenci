@@ -26,6 +26,7 @@ const PROXY_BYTECODE_SHA3 = '0x69f56de93d0b1eb15364c67a2756afbc0b3112e544f64c4bf
 const INITIALIZABLE_PROXY_BYTECODE_SHA3 = '0xc2286bbf5380e663ae789ee05b878206db4ff6e693919f030ddc4923c5facca3'
 const EIP1167_BYTECODE_REGEXP  = /^0x363d3d373d3d3d363d73([a-f0-9]{40})5af43d82803e903d91602b57fd5bf3$/
 
+// from https://github.com/celo-org/celo-monorepo/blob/ce24a3c07b245c8a7a536a9cbf5649946ba5221a/packages/protocol/contracts/common/InitializableProxy.sol#L21
 const SENTINEL_PROXY_V2_OWNER = '0x1'.padEnd(2 + 40, '0')
 
 export const verifyWallet = async (
@@ -84,7 +85,7 @@ export const verifyWallet = async (
     return Err(new InvalidSigner(metaTxWalletAddress, actualSigner, normalizedExpectedSigner))
   }
 
-  // verify eip1167/proxy storage has ONLY signer owner and mtw implementation in storage trie
+  // verify eip1167/proxy storage has only signer owner and mtw implementation in storage trie
   if (!await verifyProxyStorageProof(contractKit.connection.web3, metaTxWalletAddress, expectedSigner, actualImplementationRaw)) {
     return Err(new InvalidStorageRoot(metaTxWalletAddress))
   }

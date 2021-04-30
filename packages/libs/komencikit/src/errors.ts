@@ -165,9 +165,9 @@ export class InvalidBytecode extends RootError<WalletVerificationErrorTypes.Inva
 
 export class InvalidStorageRoot extends RootError<WalletVerificationErrorTypes.InvalidStorageRoot> {
   public readonly message: string
-  constructor(public readonly walletAddress: string) {
+  constructor(public readonly proxyAddress: string) {
     super(WalletVerificationErrorTypes.InvalidStorageRoot)
-    this.message = 'Invalid wallet storage, should have only expected owner and implementation in trie'
+    this.message = 'Invalid proxy storage, should have only expected owner and implementation in trie'
   }
 }
 
