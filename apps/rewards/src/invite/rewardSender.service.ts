@@ -25,7 +25,8 @@ interface WatchedInvite {
 }
 
 /**
- * Service in charge of sending with retries of rewards.
+ * Service in charge of sending with retries of rewards. The actual sending of the transaction is done through a relayer.
+ * There are three main actions being done in this class:
  * - When the reward is first sent using the |sendInviteReward| method, we either mark it as submitted or failed.
  * - For submitted rewards, we add them to a set of txs |watchedInvites| and we check on them with a cron job
  *     |checkWatchedInvites| every so often until they succeed and get marked as completed or they fail.
@@ -118,7 +119,7 @@ export class RewardSenderService {
               .createQueryBuilder()
               .setLock('pessimistic_write_or_fail')
               .where({
-                state: In([RewardStatus.Submitted, RewardStatus.Failed]),
+                state: In([RewardStatus.Created, RewardStatus.Submitted, RewardStatus.Failed]),
                 createdAt: Raw(
                   alias =>
                     `${alias} <= current_timestamp - (30 ||' minutes')::interval`
