@@ -11,7 +11,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build:libs:dev": "yarn libs:build && ./scripts/libs.run.sh build:watch",
+    "build:libs:dev": "yarn build:libs && ./scripts/libs.run.sh build:watch",
     "build:libs": "./scripts/libs.build.sh",
     "build:relayer": "yarn --cwd ./packages/apps/relayer build",
     "start:relayer:prod": "yarn --cwd ./packages/apps/relayer start:prod",
@@ -19,6 +19,9 @@
     "build:api": "yarn --cwd ./packages/apps/api build",
     "start:api:prod": "yarn --cwd ./packages/apps/api start:prod",
     "start:api:dev": "yarn --cwd ./packages/apps/api start:dev",
+    "build:rewards": "yarn --cwd ./packages/apps/rewards build",
+    "start:rewards:prod": "yarn --cwd ./packages/apps/rewards start:prod",
+    "start:rewards:dev": "yarn --cwd ./packages/apps/rewards start:dev",
     "format": "prettier --write \"packages/**/*.ts\"",
     "lint": "tslint -c tslint.json --project tsconfig.json",
     "secrets:decrypt": "bash scripts/secrets.sh decrypt",

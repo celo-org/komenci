@@ -5,11 +5,12 @@ module.exports = {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'docker',
     database: process.env.DB_DATABASE || 'postgres',
-    entities: ['./src/session/session.entity.ts'],
+    entities: ['./src/blocks/notifiedBlock.entity.ts',
+               './src/invite/inviteReward.entity.ts'],
     synchronize: process.env.DB_SYNCHRONIZE === "false",
     migrationsTableName: "migration",
     migrations: [
-        "./src/migrations/*.ts",
+        "./src/migrations/*.ts"
     ],
     cli: {
         migrationsDir: "./src/migrations"

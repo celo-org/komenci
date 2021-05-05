@@ -1,6 +1,6 @@
 import { BlockchainModule, ContractsModule } from '@komenci/blockchain'
 import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
-import { NetworkConfig, networkConfig } from '@komenci/core'
+import { loggerConfigFactory, NetworkConfig, networkConfig } from '@komenci/core'
 import { KomenciLoggerModule, KomenciLoggerService } from '@komenci/logger'
 import { ApiErrorFilter } from '@komenci/logger/dist/filters/api-error.filter'
 import { HttpModule, Module, Scope } from '@nestjs/common'
@@ -11,7 +11,7 @@ import { ThrottlerModule } from '@nestjs/throttler'
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AppController } from './app.controller'
 import { AuthModule } from './auth/auth.module'
-import { appConfig } from './config/app.config'
+import { appConfig, AppConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
 import { quotaConfig } from './config/quota.config'
 import { relayerConfig } from './config/relayer.config'
@@ -19,7 +19,6 @@ import { rulesConfig } from './config/rules.config'
 import { thirdPartyConfig } from './config/third-party.config'
 import { ThrottleConfig, throttleConfig } from './config/throttle.config'
 import { GatewayModule } from './gateway/gateway.module'
-import { loggerConfigFactory } from './logger-config.factory'
 import { RelayerProxyService } from './relayer/relayer_proxy.service'
 import { SessionModule } from './session/session.module'
 import { SessionService } from './session/session.service'
@@ -48,7 +47,10 @@ import { WalletService } from './wallet/wallet.service'
     KomenciLoggerModule.forRootAsync({
       providers: [ConfigService],
       inject: [ConfigService],
-      useFactory: loggerConfigFactory
+      useFactory: (config: ConfigService) => {
+        const appCfg = config.get<AppConfig>('app')
+        return loggerConfigFactory(appCfg)
+      }
     }),
     GatewayModule,
     HttpModule,

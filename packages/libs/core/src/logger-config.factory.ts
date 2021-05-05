@@ -1,12 +1,48 @@
-import { buildLabels, levelFormatter } from '@komenci/core'
-import { ConfigService } from '@nestjs/config'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Params } from 'nestjs-pino'
 import { v4 as uuidv4 } from "uuid"
-import { AppConfig } from './config/app.config'
 
-export const loggerConfigFactory = (config: ConfigService): Params => {
-  const appCfg = config.get<AppConfig>('app')
+const levelToSeverity = {
+  trace: 'DEBUG',
+  debug: 'DEBUG',
+  info: 'INFO',
+  warn: 'WARNING',
+  error: 'ERROR',
+  fatal: 'CRITICAL',
+}
+
+export interface ServiceConfig {
+  version: string,
+  service: string
+
+}
+
+export const levelFormatter = (serviceCfg: ServiceConfig) => (label: string) => {
+  const pinoLevel = label
+  const severity = levelToSeverity[pinoLevel]
+  const typeProp =
+    pinoLevel === 'error' || pinoLevel === 'fatal'
+      ? {
+        '@type':
+          'type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent',
+        'serviceContext': {
+          service: serviceCfg.service,
+          version: serviceCfg.version
+        }
+      }
+      : {}
+  return { severity, ...typeProp }
+}
+
+export const buildLabels = (serviceCfg: ServiceConfig, extra: any = {}) => ({
+  ['logging.googleapis.com/labels']: {
+    service: serviceCfg.service,
+    version: serviceCfg.version,
+    ...extra
+  }
+})
+
+export const loggerConfigFactory = (serviceCfg: ServiceConfig): Params => {
 
   return {
     exclude: [
@@ -14,7 +50,7 @@ export const loggerConfigFactory = (config: ConfigService): Params => {
     ],
     pinoHttp: {
       formatters: {
-        level: levelFormatter(appCfg),
+        level: levelFormatter(serviceCfg),
         log(object) {
           const logObject = object as { err?: Error }
           const stackProp = logObject?.err?.stack
@@ -37,7 +73,7 @@ export const loggerConfigFactory = (config: ConfigService): Params => {
         },
       },
       base: {
-        ...buildLabels(appCfg)
+        ...buildLabels(serviceCfg)
       },
       customAttributeKeys: {
         req: 'logging.googleapis.com/trace'

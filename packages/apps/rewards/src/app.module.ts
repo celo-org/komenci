@@ -1,18 +1,17 @@
-import { BlockchainModule } from '@app/blockchain'
-import { NodeProviderType } from '@app/blockchain/config/node.config'
-import { KomenciLoggerModule } from '@app/komenci-logger'
-import { ApiErrorFilter } from '@app/komenci-logger/filters/api-error.filter'
-import { loggerConfigFactory } from '@app/onboarding/logger-config.factory'
-import { NetworkConfig, networkConfig } from '@app/utils/config/network.config'
+import { BlockchainModule } from '@komenci/blockchain'
+import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
+import { loggerConfigFactory, NetworkConfig, networkConfig } from '@komenci/core'
+import { KomenciLoggerModule } from '@komenci/logger'
+import { ApiErrorFilter } from '@komenci/logger/dist/filters/api-error.filter'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { InviteRewardModule } from 'apps/rewards/src/invite/inviteReward.module'
-import { InviteRewardService } from 'apps/rewards/src/invite/inviteReward.service'
-import { appConfig } from './config/app.config'
+import { appConfig, AppConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
+import { InviteRewardModule } from './invite/inviteReward.module'
+import { InviteRewardService } from './invite/inviteReward.service'
 
 @Module({
   controllers: [],
@@ -22,12 +21,15 @@ import { DatabaseConfig, databaseConfig } from './config/database.config'
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, databaseConfig, networkConfig],
-      envFilePath: ['apps/rewards/.env.local', 'apps/rewards/.env']
+      envFilePath: ['.env.local', '.env']
     }),
     KomenciLoggerModule.forRootAsync({
       providers: [ConfigService],
       inject: [ConfigService],
-      useFactory: loggerConfigFactory
+      useFactory: (config: ConfigService) => {
+        const appCfg = config.get<AppConfig>('app')
+        return loggerConfigFactory(appCfg)
+      }
     }),
     HttpModule,
     TypeOrmModule.forRootAsync({

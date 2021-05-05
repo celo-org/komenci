@@ -1,15 +1,13 @@
-import { BlockchainModule } from '@app/blockchain'
-import { WEB3_PROVIDER } from '@app/blockchain/blockchain.providers'
-import { NodeProviderType } from '@app/blockchain/config/node.config'
-import { KomenciLoggerModule } from '@app/komenci-logger'
-import { buildMockWeb3Provider } from '@app/onboarding/utils/testing/mock-web3-provider'
-import { networkConfig } from '@app/utils/config/network.config'
 import { ContractKit } from '@celo/contractkit'
 import {
   AttestationStat,
   AttestationsWrapper
 } from '@celo/contractkit/lib/wrappers/Attestations'
 import { EscrowWrapper } from '@celo/contractkit/lib/wrappers/Escrow'
+import { BlockchainModule, NodeProviderType } from '@komenci/blockchain'
+import { WEB3_PROVIDER } from '@komenci/blockchain/dist/blockchain.providers'
+import { buildMockWeb3Provider, networkConfig } from '@komenci/core'
+import { KomenciLoggerModule } from '@komenci/logger'
 import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
