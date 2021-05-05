@@ -53,6 +53,9 @@ export class EventService {
         await eventHandler(event)
       } catch(error) {
         this.logger.error(error, `Error while processing a ${key} event`)
+        // We rethrow the error so that we don't miss blocks if we have unexpected errors in the event handler.
+        // TODO: Throw an alarm when this happens.
+        throw error
       }
       maxBlock = Math.max(maxBlock, event.blockNumber)
     }
