@@ -1,5 +1,6 @@
 import { AuthService, TokenPayload } from '@app/onboarding/auth/auth.service'
 import { RulesConfig, rulesConfig } from '@app/onboarding/config/rules.config'
+import { throttleConfig, ThrottleConfig } from '@app/onboarding/config/throttle.config'
 import { DeployWalletDto } from '@app/onboarding/dto/DeployWalletDto'
 import { StartSessionDto } from '@app/onboarding/dto/StartSessionDto'
 import { CaptchaService, CaptchaVerificationFailed } from '@app/onboarding/gateway/captcha/captcha.service'
@@ -9,7 +10,7 @@ import { SafetyNetService } from '@app/onboarding/gateway/safety-net/safety-net.
 import { RelayerProxyService } from '@app/onboarding/relayer/relayer_proxy.service'
 import { Session } from '@app/onboarding/session/session.entity'
 import { SessionService } from '@app/onboarding/session/session.service'
-import { ensureLeading0x, trimLeading0x } from '@celo/base/lib'
+import { ensureLeading0x, sleep, trimLeading0x } from '@celo/base/lib'
 import { Err, Ok } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { buildLoginTypedData } from '@celo/komencikit/lib/login'
@@ -17,9 +18,11 @@ import { LocalWallet } from '@celo/wallet-local'
 import { ValidationPipe } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
+import { ThrottlerGuard } from '@nestjs/throttler'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { assert } from 'console'
 import { isRight } from 'fp-ts/Either'
+import _ from 'lodash'
 import { Connection, EntityManager, Repository } from 'typeorm'
 import Web3 from 'web3'
 import { AppModule } from '../src/app.module'
@@ -45,16 +48,14 @@ describe('AppController (e2e)', () => {
   let app
 
   let rulesConfigValue: RulesConfig
-  const relayerProxyServiceMock = {
-    getPhoneNumberIdentifier: jest.fn(() => ({payload: {}}))
-  }
-
-
+  let throttleConfigValue: ThrottleConfig
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
-    }).overrideProvider(rulesConfig.KEY).useValue(rulesConfigValue).compile()
+    }).overrideProvider(rulesConfig.KEY).useValue(rulesConfigValue)
+      .overrideProvider(throttleConfig.KEY).useValue(throttleConfigValue)
+      .compile()
 
 
     app = module.createNestApplication()
@@ -99,6 +100,11 @@ describe('AppController (e2e)', () => {
     )
   })
 
+  throttleConfigValue = {
+    ttl: 20,
+    limit: 5,
+  }
+
   rulesConfigValue = {
     enabled: {
       [RuleID.DailyCap]: false,
@@ -116,6 +122,47 @@ describe('AppController (e2e)', () => {
       [RuleID.Signature]: null
     },
   }
+
+  describe.only('/v1/ (GET) ready', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it.only('returns ok until the rate limit is met', async () => {
+      const server = app.getHttpServer()
+      const captchaToken = "captcha-token"
+      const wallet = new LocalWallet()
+      const privateKey = trimLeading0x(Web3.utils.randomHex(32))
+      wallet.addAccount(privateKey)
+      const eoa = ensureLeading0x(wallet.getAccounts()[0])
+      const signature = await wallet.signTypedData(eoa, buildLoginTypedData(eoa, captchaToken))
+      jest.spyOn(
+        captchaService, 'verifyCaptcha'
+      ).mockResolvedValue(Ok(true))
+      const startSessionPayload = {
+        externalAccount: eoa,
+        captchaResponseToken: captchaToken,
+        signature
+      }
+
+      await Promise.all(_.times(5).map(async () => {
+        const readyResp = await request(server).get('/v1/ready')
+        expect(readyResp.statusCode).toBe(200)
+        expect(readyResp.body.status).toBe('Ready')
+        await request(app.getHttpServer()).post('/v1/startSession').send(startSessionPayload)
+      }))
+
+      const nextResp = await request(server).get('/v1/ready')
+      expect(nextResp.statusCode).toBe(429)
+      jest.advanceTimersByTime(20000)
+      const okResp = await request(server).get('/v1/ready')
+      expect(okResp.statusCode).toBe(200)
+    })
+  })
 
   describe('/v1/ (POST) startSession', () => {
     const decodeToken = (token: string): TokenPayload => {

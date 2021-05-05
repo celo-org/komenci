@@ -15,7 +15,8 @@ export enum EventType {
   RelayerMTWInit = 'RelayerMTWInit',
   TxSubmitted = 'TxSubmitted',
   TxConfirmed = 'TxConfirmed',
-  TxTimeout = 'TxTimeout',
+  TxDeadletter = 'TxDeadletter',
+  TxSpeedUp = 'TxSpeedUp',
   RuleVerified = 'RuleVerified',
   RelayerBalance = 'RelayerBalance',
   GasPriceUpdate = 'GasPriceUpdate',
@@ -59,7 +60,11 @@ export type EventPayload = {
   [EventType.RelayerMTWInit]: {
     mtwAddress: string
   }
-  [EventType.TxSubmitted]: TxEvent
+  [EventType.TxSubmitted]: TxEvent & {
+    gasPrice: string,
+    lockAcquiredDuration: number,
+    sendDuration: number,
+  }
   [EventType.TxConfirmed]: TxEvent & {
     status: string
     gasPrice: number
@@ -70,9 +75,12 @@ export type EventPayload = {
     cUSD: number
     celo: number
   }
-  [EventType.TxTimeout]: TxEvent & {
+  [EventType.TxDeadletter]: TxEvent & {
+    reason: string,
     deadLetterHash: string,
-    nonce: number
+  },
+  [EventType.TxSpeedUp]: TxEvent & {
+    prevTxHash: string,
   },
   [EventType.GasPriceUpdate]: {
     gasPriceGwei: number
@@ -94,7 +102,8 @@ export type RelayerEvent = {
 
 export type TxEvent = {
   destination: Address,
-  txHash: string
+  txHash: string,
+  nonce: number
 }
 
 export type SessionTxEvent = SessionEvent & {

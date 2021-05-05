@@ -1,19 +1,26 @@
 import { KomenciLoggerService } from '@app/komenci-logger'
+import { ContractKit } from '@celo/contractkit'
 import { Injectable } from '@nestjs/common'
 import { LessThan } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 
+export enum StartingBlock {
+  Genesis,
+  Latest
+}
+
 @Injectable()
 export class NotifiedBlockService {
   constructor(
     private readonly notifiedBlockRepository: NotifiedBlockRepository,
+    private readonly contractKit: ContractKit,
     private readonly logger: KomenciLoggerService
   ) {}
 
   async runUsingLastNotifiedBlock(
     notifiedBlockKey: string,
-    fetchOriginalBlockFn: () => Promise<number>,
+    startingBlock: StartingBlock,
     handleBlockFn: (blockNumber: number) => Promise<number>
   ) {
     try {
@@ -21,7 +28,10 @@ export class NotifiedBlockService {
         key: notifiedBlockKey
       })
       if (!lastNotifiedBlock) {
-        const blockNumber = await fetchOriginalBlockFn()
+        const blockNumber =
+          startingBlock === StartingBlock.Genesis
+            ? 0
+            : await this.contractKit.web3.eth.getBlockNumber()
         lastNotifiedBlock = {
           id: uuidv4(),
           key: notifiedBlockKey,

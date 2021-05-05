@@ -4,12 +4,14 @@ import { ContractKit } from '@celo/contractkit'
 import { Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { v4 as uuidv4 } from 'uuid'
+import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'
 import { fetchEvents } from '../utils/fetchEvents'
 import { Attestation } from './attestation.entity'
 import { AttestationRepository } from './attestation.repository'
 
 const NOTIFIED_BLOCK_KEY = 'attestation'
+const ATTESTATION_COMPLETED_EVENT = 'AttestationCompleted'
 
 @Injectable()
 export class AttestationService {
@@ -24,7 +26,7 @@ export class AttestationService {
   async fetchAttestations() {
     await this.eventService.runEventProcessingPolling(
       NOTIFIED_BLOCK_KEY,
-      () => Promise.resolve(0),
+      StartingBlock.Genesis,
       this.fetchAttestationEvents.bind(this),
       this.handleAttestationRequest.bind(this)
     )
@@ -35,7 +37,7 @@ export class AttestationService {
     const attestations = await this.contractKit.contracts.getAttestations()
     return fetchEvents(
       attestations,
-      'AttestationCompleted',
+      ATTESTATION_COMPLETED_EVENT,
       fromBlock,
       lastBlock
     )

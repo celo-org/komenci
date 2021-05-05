@@ -31,45 +31,66 @@ export class KomenciLoggerService implements KomenciLogger {
     this.logger.debug(message, context, ...args)
   }
 
-  warn(message: any, context?: any, ...args): void {
-    this.logger.warn(message, context, ...args)
+  warn(error: any, trace?: string, context?: any, ...args): void {
+    this.logError('warn', error, trace, context, ...args)
   }
 
   error(error: any, trace?: string, context?: any, ...args): void {
+    this.logError('error', error, trace, context, ...args)
+  }
+
+  logError(level: 'error' | 'warn', error: any, trace?: string, context?: any, ...args): void {
     if (isApiError(error) || isMetadataError(error)) {
-      this.logger.error(
+      this.logger[level](
         { error: error.errorType, ...error.getMetadata() },
         error.stack,
       )
     } else if (isRootError(error)) {
-      this.logger.error(
+      this.logger[level](
         { error: error.errorType, },
         error.stack,
       )
     } else if (isError(error)) {
-      this.logger.error((error as Error).stack, context, ...args)
+      this.logger[level]((error as Error).stack, context, ...args)
     } else {
-      this.logger.error(trace || error, context, ...args)
+      this.logger[level](trace || error, context, ...args)
     }
   }
 
+
+  warnWithContext(error: Error, ctx?: EventContext) {
+    this.logWithContext('warn', error, ctx)
+  }
+
   errorWithContext(error: Error, ctx?: EventContext) {
+    this.logWithContext('error', error, ctx)
+  }
+
+  logWithContext(level: 'error' | 'warn', error: Error, ctx?: EventContext) {
     const context = ctx ? this.expandContext(ctx) : {}
     if (isApiError(error) || isMetadataError(error)) {
-      this.logger.error(
+      this.logger[level](
         {
           error: error.errorType,
+          message: error.message,
           ...error.getMetadata(),
           ...context
         },
       )
     } else if (isRootError(error)) {
-      this.logger.error(
-        { error: error.errorType, ...context },
+      this.logger[level](
+        { 
+          error: error.errorType, 
+          message: error.message,
+          ...context
+        },
         error.stack,
       )
     } else if (isError(error)) {
-      this.logger.error(context, (error as Error).stack)
+      this.logger[level]({
+        message: error.message,
+        ...context
+      }, (error as Error).stack)
     }
   }
 

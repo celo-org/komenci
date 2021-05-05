@@ -8,6 +8,7 @@ import { Cron, CronExpression } from '@nestjs/schedule'
 import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import { AttestationRepository } from '../attestation/attestation.repository'
+import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'
 import { fetchEvents } from '../utils/fetchEvents'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
@@ -16,6 +17,7 @@ import { RewardSenderService } from './rewardSender.service'
 
 const NOTIFIED_BLOCK_KEY = 'inviteReward'
 const WEEKLY_INVITE_LIMIT = 20
+const WITHDRAWAL_EVENT = 'Withdrawal'
 
 @Injectable()
 export class InviteRewardService {
@@ -51,7 +53,7 @@ export class InviteRewardService {
 
     await this.eventService.runEventProcessingPolling(
       NOTIFIED_BLOCK_KEY,
-      () => this.contractKit.web3.eth.getBlockNumber(),
+      StartingBlock.Latest,
       this.fetchWithdrawalEvents.bind(this),
       this.handleWithdrawalEvent.bind(this)
     )
@@ -60,7 +62,7 @@ export class InviteRewardService {
   async fetchWithdrawalEvents(fromBlock: number) {
     const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
     const escrow = await this.contractKit.contracts.getEscrow()
-    return fetchEvents(escrow, 'Withdrawal', fromBlock, lastBlock)
+    return fetchEvents(escrow, WITHDRAWAL_EVENT, fromBlock, lastBlock)
   }
 
   async handleWithdrawalEvent(withdrawalEvent: EventLog) {
@@ -117,6 +119,7 @@ export class InviteRewardService {
     const identifiers = identifierResult.map(
       identifierContainer => identifierContainer.identifier
     )
+    // TODO: Use Promise.any once it's available to do this in parallel.
     for (const identifier of identifiers) {
       if (await this.isAddressVerifiedWithIdentifier(address, identifier)) {
         return true
