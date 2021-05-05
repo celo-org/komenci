@@ -8,7 +8,7 @@ export const appConfig = registerAs('app', () => ({
   transactionTimeoutMs:
     parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 10000,
   inviteRewardAmountInCusd:
-    parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 2
+    parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 1
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>

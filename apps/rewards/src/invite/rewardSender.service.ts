@@ -1,4 +1,6 @@
 import { KomenciLoggerService } from '@app/komenci-logger'
+import { sleep } from '@celo/base'
+import { CeloTransactionObject } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
@@ -17,9 +19,19 @@ interface WatchedInvite {
   inviteId: string
   txHash: string
   sentAt: number
+  // TODO: Instead of having this boolean store the number of tries on the database to allow having a configurable number
+  // of tries (right now we retry only once). Update the class-level comment when this is done.
   markAsDeadLetterIfFailed: boolean
 }
 
+/**
+ * Service in charge of sending with retries of rewards.
+ * - When the reward is first sent using the |sendInviteReward| method, we either mark it as submitted or failed.
+ * - For submitted rewards, we add them to a set of txs |watchedInvites| and we check on them with a cron job
+ *     |checkWatchedInvites| every so often until they succeed and get marked as completed or they fail.
+ * - For failed rewards, the cron job |checkFailedInvites| fetches them and tries to send again using
+ *     |sendInviteReward|. If it fails again the invite is marked as DeadLettered.
+ */
 @Injectable()
 export class RewardSenderService {
   watchedInvites: Set<WatchedInvite>
@@ -59,11 +71,14 @@ export class RewardSenderService {
       await Promise.allSettled(
         [...this.watchedInvites].map(async invite => {
           if (await this.wasTxSentSuccesfully(invite.txHash)) {
+            this.logger.log(`Completed tx with hash ${invite.txHash}`)
             await this.inviteRewardRepository.update(invite.inviteId, {
               state: RewardStatus.Completed
             })
             this.watchedInvites.delete(invite)
           } else if (
+            // TODO: This is timeouting but the reward might still go through. How do we check if the sending
+            // actually failed for whatever reason and the tx is no longer in queue?
             Date.now() - invite.sentAt >
             this.appCfg.transactionTimeoutMs
           ) {
@@ -95,40 +110,47 @@ export class RewardSenderService {
     try {
       await this.inviteRewardRepository.manager.transaction(
         async (entityManager: EntityManager) => {
-          const repository = entityManager.getRepository<InviteReward>(
-            'invite_reward'
-          )
-          const invites = await repository
-            .createQueryBuilder()
-            .setLock('pessimistic_read')
-            .where({
-              state: In([RewardStatus.Submitted, RewardStatus.Failed]),
-              createdAt: Raw(
-                alias =>
-                  `${alias} <= current_timestamp - (30 ||' minutes')::interval`
-              )
-            })
-            .limit(MAX_INVITES_PER_QUERY)
-            .getMany()
-          if (invites.length > 0) {
-            this.logger.log(
-              `Found failed or submitted invites ${invites.length}`
+          try {
+            const repository = entityManager.getRepository<InviteReward>(
+              'invite_reward'
             )
+            const invites = await repository
+              .createQueryBuilder()
+              .setLock('pessimistic_write_or_fail')
+              .where({
+                state: In([RewardStatus.Submitted, RewardStatus.Failed]),
+                createdAt: Raw(
+                  alias =>
+                    `${alias} <= current_timestamp - (30 ||' minutes')::interval`
+                )
+              })
+              .limit(MAX_INVITES_PER_QUERY)
+              .getMany()
+            if (invites.length > 0) {
+              this.logger.log(
+                `Found failed or submitted invites ${invites.length}`
+              )
+            }
+            await Promise.allSettled(
+              invites.map(async invite => {
+                if (
+                  invite.state === RewardStatus.Submitted &&
+                  (await this.wasTxSentSuccesfully(invite.rewardTxHash))
+                ) {
+                  await repository.update(invite.id, {
+                    state: RewardStatus.Completed
+                  })
+                } else {
+                  await this.sendInviteReward(invite, true, repository)
+                }
+              })
+            )
+          } catch (error) {
+            // If the caught error is that the lock is in use, ignore it since it's expected.
+            if (!error.message.includes('could not obtain lock on row in relation')) {
+              throw error
+            }
           }
-          await Promise.allSettled(
-            invites.map(async invite => {
-              if (
-                invite.state === RewardStatus.Submitted &&
-                (await this.wasTxSentSuccesfully(invite.rewardTxHash))
-              ) {
-                await repository.update(invite.id, {
-                  state: RewardStatus.Completed
-                })
-              } else {
-                await this.sendInviteReward(invite, true, repository)
-              }
-            })
-          )
         }
       )
     } catch (error) {
@@ -168,16 +190,7 @@ export class RewardSenderService {
       await this.getRewardInCelo()
     )
 
-    const resp = await this.relayerProxyService.submitTransaction(
-      {
-        transaction: {
-          destination: tx.txo._parent.options.address,
-          value: '0',
-          data: tx.txo.encodeABI()
-        }
-      },
-      invite.id
-    )
+    const resp = await this.sendTxThroughRelayer(tx, invite.id)
     if (resp.ok === false) {
       this.logger.error(
         `Error sending reward for invite ${invite.id}: ${resp.error}`
@@ -199,5 +212,21 @@ export class RewardSenderService {
         markAsDeadLetterIfFailed: isRetry
       })
     }
+  }
+
+  private async sendTxThroughRelayer(
+    tx: CeloTransactionObject<boolean>,
+    inviteId: string
+  ) {
+    return this.relayerProxyService.submitTransaction(
+      {
+        transaction: {
+          destination: tx.txo._parent.options.address,
+          value: '0',
+          data: tx.txo.encodeABI()
+        }
+      },
+      inviteId
+    )
   }
 }

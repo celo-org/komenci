@@ -45,7 +45,7 @@ export class InviteRewardService {
   // Since there may be several instances of this service, we need to make sure we don't send more than
   // one reward for the same invitee. The invitee record is unique on the database, so any attempt to
   // create a new row with the same one will fail.
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async sendInviteRewards() {
     this.cUsdTokenAddress = (
       await this.contractKit.registry.addressFor(CeloContract.StableToken)
