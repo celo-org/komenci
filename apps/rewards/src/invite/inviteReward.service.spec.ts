@@ -24,6 +24,10 @@ import { partialEventLog, partialTransaction } from '../utils/testing'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 import { InviteRewardService } from './inviteReward.service'
+import { RewardSenderService } from './rewardSender.service'
+
+jest.mock('./rewardSender.service')
+RewardSenderService.prototype.sendInviteReward = () => Promise.resolve()
 
 const inviteeAddress = '0x001'
 const inviterAddress = '0x002'
@@ -37,6 +41,7 @@ describe('InviteRewardService', () => {
   let repository: InviteRewardRepository
   let attestationRepository: AttestationRepository
   let notifiedBlockRepository: NotifiedBlockRepository
+  let rewardSenderService: RewardSenderService
   let contractKit: ContractKit
   let escrow: EscrowWrapper
   let attestations: AttestationsWrapper
@@ -60,6 +65,7 @@ describe('InviteRewardService', () => {
       providers: [
         InviteRewardService,
         NotifiedBlockService,
+        RewardSenderService,
         EventService,
         {
           provide: getRepositoryToken(InviteReward),
@@ -100,6 +106,7 @@ describe('InviteRewardService', () => {
       getRepositoryToken(NotifiedBlockRepository)
     )
     service = module.get<InviteRewardService>(InviteRewardService)
+    rewardSenderService = module.get<RewardSenderService>(RewardSenderService)
     contractKit = module.get(ContractKit)
     escrow = await contractKit.contracts.getEscrow()
     attestations = await contractKit.contracts.getAttestations()
@@ -225,7 +232,7 @@ describe('InviteRewardService', () => {
 
   describe('#sendInviteRewards', () => {
     const updateBlockMock = jest.fn()
-    const saveInviteRewardMock = jest.fn()
+    const saveInviteRewardMock = jest.fn(reward => Promise.resolve(reward))
     let notifiedBlockId
 
     beforeEach(() => {
@@ -259,14 +266,14 @@ describe('InviteRewardService', () => {
       it('sends it', async () => {
         await service.sendInviteRewards()
 
-        expect(saveInviteRewardMock).toHaveBeenCalledWith(
-          expect.objectContaining({
-            inviter: inviterAddress,
-            invitee: inviteeAddress,
-            inviteeIdentifier: inviteeIdentifier,
-            state: RewardStatus.Created
-          })
-        )
+        const expectedObject = expect.objectContaining({
+          inviter: inviterAddress,
+          invitee: inviteeAddress,
+          inviteeIdentifier: inviteeIdentifier,
+          state: RewardStatus.Created
+        })
+        expect(saveInviteRewardMock).toHaveBeenCalledWith(expectedObject)
+        expect(rewardSenderService.sendInviteReward).toHaveBeenCalledWith(expectedObject)
         expect(updateBlockMock).toHaveBeenCalledWith(
           expect.objectContaining({
             id: notifiedBlockId,

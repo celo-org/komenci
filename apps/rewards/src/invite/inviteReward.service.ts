@@ -13,6 +13,7 @@ import { EventService } from '../event/eventService.service'
 import { fetchEvents } from '../utils/fetchEvents'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
+import { RewardSenderService } from './rewardSender.service'
 
 const NOTIFIED_BLOCK_KEY = 'inviteReward'
 const WEEKLY_INVITE_LIMIT = 20
@@ -27,6 +28,7 @@ export class InviteRewardService {
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
     private readonly attestationRepository: AttestationRepository,
+    private readonly rewardSenderService: RewardSenderService,
     private readonly eventService: EventService,
     private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
@@ -97,7 +99,9 @@ export class InviteRewardService {
         identifier
       )
       if (inviteReward) {
-        this.sendInviteReward(inviteReward)
+        // The error is handled in the reward sender service, just firing off the 
+        // sending here and catching to apease the linter.
+        this.rewardSenderService.sendInviteReward(inviteReward).catch()
       }
     }
   }
@@ -167,9 +171,5 @@ export class InviteRewardService {
     } catch (error) {
       this.logger.log(`Error creating reward: ${error}`)
     }
-  }
-
-  sendInviteReward(invite: InviteReward) {
-    // TODO: Send using HSM
   }
 }

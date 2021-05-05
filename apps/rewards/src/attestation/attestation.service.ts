@@ -22,7 +22,7 @@ export class AttestationService {
     private readonly logger: KomenciLoggerService
   ) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async fetchAttestations() {
     await this.eventService.runEventProcessingPolling(
       NOTIFIED_BLOCK_KEY,
