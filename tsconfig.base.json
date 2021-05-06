@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strictNullChecks": false,
+    "declaration": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "esModuleInterop": true,
+    "lib": [
+      "es2015",
+    ],
+    "target": "ES2015",
+    "typeRoots": [
+      "./node_modules/@types",
+    ],
+    "moduleResolution": "node",
+    "strictPropertyInitialization": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  }
+}

@@ -9,6 +9,7 @@ if docker image list | grep komenci | grep $komenci_hash; then
   echo "Skipping build: komenci image found!"
 else
   docker build .\
+      --no-cache \
       -t komenci:$komenci_hash \
       -t celotestnet.azurecr.io/komenci/komenci:$komenci_hash \
       --build-arg KOMENCI_VERSION=$komenci_hash

@@ -1,0 +1,10 @@
+{
+  "name": "@komenci/contracts",
+  "version": "1.0.0",
+  "description": "Artifacts for smart contracts used in Komenci",
+  "scripts": {
+    "update": "./scripts/update.sh"
+  },
+  "author": "Bogdan Dumitru <bogdan@clabs.co>",
+  "license": "ISC"
+}

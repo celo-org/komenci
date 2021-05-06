@@ -1,0 +1,40 @@
+{
+  "name": "@komenci/relayer",
+  "version": "1.0.0",
+  "description": "Komenci meta-transaction relayer service",
+  "main": "dist/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "npx nest build",
+    "clean": "rm -rf ./dist",
+    "start:dev": "npx nest start --watch",
+    "start:prod": "node dist/main.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch",
+    "test:cov": "jest --coverage --runInBand",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config jest.config.e2e.js --runInBand",
+    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand",
+    "typeorm": "ts-node ../../../node_modules/typeorm/cli -f migration.config.ts",
+    "typeorm:create": "yarn typeorm migration:create",
+    "typeorm:generate": "yarn typeorm migration:generate -n",
+    "typeorm:migration:run": "yarn typeorm migration:run"
+  },
+  "author": "Bogdan Dumitru <bogdan@clabs.co>",
+  "license": "ISC",
+  "devDependencies": {
+    "@nestjs/cli": "^7.6.0",
+    "fetch-mock": "^9.11.0",
+    "ts-jest": "^26.5.5"
+  },
+  "dependencies": {
+    "@celo/phone-number-privacy-common": "^1.0.32",
+    "@nestjs/platform-express": "^7.6.15",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
+    "jest-fetch-mock": "^3.0.3",
+    "source-map-support": "^0.5.19"
+  }
+}

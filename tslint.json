@@ -2,11 +2,7 @@
     "extends": ["@celo/typescript/tslint.json"],
     "linterOptions": {
       "include": [
-        "./apps/**/*.ts",
-        "./libs/**/*.ts"
-      ],
-      "exclude": [
-        "./libs/celo/**/*"
+        "./packages/**/*.ts"
       ]
     },
     "rules": {

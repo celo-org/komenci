@@ -1,18 +1,26 @@
-FROM node:10
+FROM node:10 as builder
 
 ARG KOMENCI_VERSION
 ENV KOMENCI_VERSION=$KOMENCI_VERSION
 
-COPY ./package.json .
-COPY ./yarn.lock .
-
-RUN SKIPPOSTINSTALL=1 yarn
+RUN mkdir /komenci
+WORKDIR /komenci
 
 COPY . .
 
-# Second `yarn` needed to:
-# - Build `libs/komencit`
-# - Setup `libs/komencit` as an npm workspace and link it
-RUN yarn 
-RUN yarn nest build onboarding
-RUN yarn nest build relayer 
+RUN yarn
+RUN yarn build:libs
+RUN yarn build:relayer
+RUN yarn build:api
+
+FROM node:10 as release
+
+RUN mkdir /komenci
+WORKDIR /komenci
+
+COPY --from=builder /komenci/packages ./packages
+COPY --from=builder /komenci/package.json ./package.json
+COPY --from=builder /komenci/yarn.lock ./yarn.lock
+
+RUN yarn install --prod
+

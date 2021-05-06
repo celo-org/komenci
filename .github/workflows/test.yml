@@ -26,10 +26,10 @@ jobs:
         run: yarn lint
       - name: Setup testing config
         run: |
-            cp apps/onboarding/.env.test.ci apps/onboarding/.env.test
-            cp apps/onboarding/.env.test.ci apps/onboarding/.env
-            cp apps/relayer/.env.test.ci apps/relayer/.env.test
-            cp apps/relayer/.env.test.ci apps/relayer/.env
+            cp packages/apps/api.env.test.ci packages/apps/api/.env.test
+            cp packages/apps/api/.env.test.ci packages/apps/api/.env
+            cp packages/apps/relayer/.env.test.ci packages/apps/relayer/.env.test
+            cp packages/apps/relayer/.env.test.ci packages/apps/relayer/.env
       - name: Run komencikit tests
         run: yarn --cwd libs/komencikit test
       - name: Run unit tests
