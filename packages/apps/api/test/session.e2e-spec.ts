@@ -23,7 +23,7 @@ describe('SessionController (e2e)', () => {
         ConfigModule.forRoot({
           isGlobal: true,
           load: [databaseConfig, quotaConfig],
-          envFilePath: ['apps/onboarding/.env.test']
+          envFilePath: ['.env.test']
         }),
         TypeOrmModule.forRootAsync({
           imports: [ConfigService],

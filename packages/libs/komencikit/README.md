@@ -20,7 +20,7 @@ options which must at least include the URL of the Komenci API to point to.
 
 ```ts
 import { newKit } from '@celo/contractkit'
-import { KomenciKit } from "@celo/komencikit"
+import { KomenciKit } from "@komenci/kit"
 
 const contractkit = newKit('https://alfajores-forno.celo-testnet.org:8545')
 

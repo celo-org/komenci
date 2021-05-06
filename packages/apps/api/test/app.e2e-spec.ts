@@ -27,10 +27,10 @@ import { Session } from '../src/session/session.entity'
 import { SessionService } from '../src/session/session.service'
 const request = require('supertest')
 
-jest.mock('@app/onboarding/gateway/captcha/captcha.service')
-jest.mock('@app/onboarding/gateway/device-check/device-check.service')
-jest.mock('@app/onboarding/gateway/safety-net/safety-net.service')
-jest.mock('@app/onboarding/relayer/relayer_proxy.service.ts')
+jest.mock('../src/gateway/captcha/captcha.service')
+jest.mock('../src/gateway/device-check/device-check.service')
+jest.mock('../src/gateway/safety-net/safety-net.service')
+jest.mock('../src/relayer/relayer_proxy.service.ts')
 
 describe('AppController (e2e)', () => {
   let safetyNetService: SafetyNetService

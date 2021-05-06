@@ -14,6 +14,7 @@
     "report": "artillery report"
   },
   "dependencies": {
+    "@komenci/kit": "1.0.0",
     "artillery": "1.6.1",
     "csv-parse": "4.8.8"
   }

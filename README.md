@@ -59,13 +59,22 @@ Make sure you either set up a komenci user and database and update the username 
 
 ### Configuration
 
-Setup local config files:
+Setup local config files used when running services:
 
-``` bash
+```bash
 cp packages/apps/api/.env.local.example packages/apps/api/.env.local
 cp packages/apps/relayer/.env.local.example packages/apps/relayer/.env.local
 cp packages/apps/rewards/.env.local.example packages/apps/rewards/.env.local
 cp packages/apps/cli/.env.local.example packages/apps/cli/.env.local
+```
+
+Setup local test config files used in e2e tests:
+
+```bash
+cp packages/apps/api/.env.local.example packages/apps/api/.env.test
+cp packages/apps/relayer/.env.local.example packages/apps/relayer/.env.test
+cp packages/apps/rewards/.env.local.example packages/apps/rewards/.env.test
+cp packages/apps/cli/.env.local.example packages/apps/cli/.env.test
 ```
 
 See each package's notes for details on the specific configurations.
@@ -74,6 +83,8 @@ See each package's notes for details on the specific configurations.
 
 There are a few different commands that can be used to run the services locally (all the following should be prefixed with yarn and ran at the top-level of the monorepo):
 
+- `build` - one time build for all packages in the monorepo
+- `clean` - clean all packages in the monorepo
 - `build:libs` - one time build function for all libs, can be run once during development if work is not being done on the libs
 - `build:libs:dev` - starts a watcher for all libs and continuously rebuilds
 - `build:cli` - builds the `cli` app once
@@ -85,5 +96,4 @@ There are a few different commands that can be used to run the services locally 
 
 > `service` ∈ {`api`, `relayer`, `rewards`}
 
-These commands can be used in various combination during development by starting in `watch` mode only the packages that are being worked on.
-
+These commands can be used in various combination during development by starting in `dev` mode only the packages that are being worked on and need code reload, while doing a one-time compile for the rest of the repo.

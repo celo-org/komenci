@@ -2,14 +2,14 @@ import { normalizeAddressWith0x } from '@celo/base/lib/address'
 import { Err, Ok } from '@celo/base/lib/result'
 import { serializeSignature } from '@celo/base/lib/signatureUtils'
 import { ContractKit } from '@celo/contractkit'
+import { sleep } from '@celo/utils/lib/async'
 import { 
   LoginSignatureError, 
   TxEventNotFound, 
   TxRevertError, 
   TxTimeoutError 
-} from '@celo/komencikit/lib/errors'
-import { buildLoginTypedData } from '@celo/komencikit/lib/login'
-import { sleep } from '@celo/utils/lib/async'
+} from '@komenci/kit/lib/errors'
+import { buildLoginTypedData } from '@komenci/kit/lib/login'
 import { EventLog, TransactionReceipt } from 'web3-core'
 
 
