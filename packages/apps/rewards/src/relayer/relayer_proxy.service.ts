@@ -1,16 +1,14 @@
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { MetadataError } from '@komenci/core'
-import { Inject, Injectable } from '@nestjs/common'
-import { ClientProxy } from '@nestjs/microservices'
 import {
   RelayerCmd,
   RelayerResponse
 } from '@komenci/relayer/dist/app.controller'
-import { GetPhoneNumberSignatureDto } from '@komenci/relayer/dist/dto/GetPhoneNumberSignatureDto'
 import { RelayerCommandDto } from '@komenci/relayer/dist/dto/RelayerCommandDto'
-import { SignPersonalMessageDto } from '@komenci/relayer/dist/dto/SignPersonalMessageDto'
 import { SubmitTransactionBatchDto } from '@komenci/relayer/dist/dto/SubmitTransactionBatchDto'
 import { SubmitTransactionDto } from '@komenci/relayer/dist/dto/SubmitTransactionDto'
+import { Inject, Injectable } from '@nestjs/common'
+import { ClientProxy } from '@nestjs/microservices'
 import { isRight } from 'fp-ts/Either'
 import * as t from 'io-ts'
 import { of, race } from 'rxjs'

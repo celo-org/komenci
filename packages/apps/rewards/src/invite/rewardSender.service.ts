@@ -7,6 +7,7 @@ import BigNumber from 'bignumber.js'
 import { EntityManager, In, Raw, Repository } from 'typeorm'
 import { appConfig, AppConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
+import { promiseAllSettled } from '../utils/promiseUtil'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 
@@ -68,7 +69,8 @@ export class RewardSenderService {
     }
     this.checkingWatchedInvites = true
     try {
-      await Promise.allSettled(
+      await promiseAllSettled(
+        // TODO: settled
         [...this.watchedInvites].map(async invite => {
           if (await this.wasTxSentSuccesfully(invite.txHash)) {
             this.logger.log(`Completed tx with hash ${invite.txHash}`)
@@ -135,7 +137,7 @@ export class RewardSenderService {
                 `Found failed or submitted invites ${invites.length}`
               )
             }
-            await Promise.allSettled(
+            await promiseAllSettled(
               invites.map(async invite => {
                 if (
                   invite.state === RewardStatus.Submitted &&

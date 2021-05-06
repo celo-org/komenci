@@ -1,5 +1,5 @@
 import { WalletConfig } from '@komenci/blockchain/dist/config/wallet.config'
-import { buildLabels, levelFormatter } from '@komenci/core'
+import { buildLabels, levelFormatter } from '@komenci/logger'
 import { ConfigService } from '@nestjs/config'
 import { Params } from 'nestjs-pino'
 import { AppConfig } from './config/app.config'

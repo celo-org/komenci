@@ -7,6 +7,7 @@ export const appConfig = registerAs('app', () => ({
   log_level: process.env.LOG_LEVEL || 'debug',
   service: process.env.KOMENCI_SERVICE || 'komenci-rewards',
   version: process.env.KOMENCI_VERSION || 'version-missing',
+  relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000,
   transactionTimeoutMs:
     parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 60000,
   inviteRewardAmountInCusd:
