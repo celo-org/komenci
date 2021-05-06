@@ -28,7 +28,7 @@ jobs:
         run: yarn lint
       - name: Setup testing config
         run: |
-            cp packages/apps/api/env.test.ci packages/apps/api/.env.test
+            cp packages/apps/api/.env.test.ci packages/apps/api/.env.test
             cp packages/apps/api/.env.test.ci packages/apps/api/.env
             cp packages/apps/relayer/.env.test.ci packages/apps/relayer/.env.test
             cp packages/apps/relayer/.env.test.ci packages/apps/relayer/.env
