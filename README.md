@@ -57,7 +57,7 @@ docker run --rm  --name pg-docker -e POSTGRES_PASSWORD=komenci -u postgres -d -p
 
 Make sure you either set up a komenci user and database and update the username (default "postgres") and database (default "postgres") according to the config files.
 
-#### Configs
+### Configuration
 
 Setup local config files:
 
@@ -67,6 +67,8 @@ cp packages/apps/relayer/.env.local.example packages/apps/relayer/.env.local
 cp packages/apps/rewards/.env.local.example packages/apps/rewards/.env.local
 cp packages/apps/cli/.env.local.example packages/apps/cli/.env.local
 ```
+
+See each package's notes for details on the specific configurations.
 
 ## Running
 
