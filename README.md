@@ -85,8 +85,3 @@ There are a few different commands that can be used to run the services locally 
 
 These commands can be used in various combination during development by starting in `watch` mode only the packages that are being worked on.
 
-## Chain interaction
-
-Currently, the required smart contracts from `celo-monorepo` are deployed using the migrations in `./packages/libs/blockchain/migrations`.
-Tho the contracts live in `celo-monorepo` their artefacts are pulled into the `@komenci/contracts` package for deployment and in order to utilise the ABI.
-The addresses for the contracts are loaded from `./packages/libs/core/src/network.config.ts`.
