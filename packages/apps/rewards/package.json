@@ -21,7 +21,7 @@
     "typeorm:migration:run": "yarn typeorm migration:run"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@nestjs/cli": "^7.6.0",
     "@nestjs/testing": "^7.6.15",

@@ -23,7 +23,7 @@
     "typeorm:migration:run": "yarn typeorm migration:run"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@nestjs/cli": "^7.6.0",
     "@nestjs/testing": "^7.6.15",
@@ -43,6 +43,7 @@
     "@komenci/core": "^1.0.0",
     "@komenci/kit": "^1.0.0",
     "@komenci/logger": "^1.0.0",
+    "@komenci/relayer": "^1.0.0",
     "@komenci/throttler": "^1.0.0",
     "@nestjs/common": "^7.6.15",
     "@nestjs/config": "^0.6.3",

@@ -19,7 +19,7 @@
     "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@nestjs/cli": "^7.6.0",
     "fetch-mock": "^9.11.0",

@@ -4,14 +4,15 @@
   "description": "The Komenci monorepo, collection of packages which make up the Komenci backend service and client libraries",
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN SUB-PACKAGES",
   "workspaces": [
     "packages/apps/*",
     "packages/libs/*",
     "packages/*"
   ],
   "scripts": {
-    "postinstall": "yarn secrets:decrypt",
+    "postinstall": "test -n \"${SKIPPOSTINSTALL}\" || yarn postinstall:actual",
+    "postinstall:actual": "yarn secrets:decrypt",
     "build:libs": "./scripts/libs.build.sh",
     "build:libs:dev": "yarn build:libs && ./scripts/libs.run.sh build:watch",
     "build:cli": "yarn --cwd ./packages/apps/cli build",
