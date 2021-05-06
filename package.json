@@ -11,8 +11,12 @@
     "packages/*"
   ],
   "scripts": {
-    "build:libs:dev": "yarn build:libs && ./scripts/libs.run.sh build:watch",
+    "postinstall": "yarn secrets:decrypt",
     "build:libs": "./scripts/libs.build.sh",
+    "build:libs:dev": "yarn build:libs && ./scripts/libs.run.sh build:watch",
+    "build:cli": "yarn --cwd ./packages/apps/cli build",
+    "build:cli:dev": "yarn --cwd ./packages/apps/cli build:watch",
+    "cli": "yarn --cwd ./packages/apps/cli start",
     "build:relayer": "yarn --cwd ./packages/apps/relayer build",
     "start:relayer:prod": "yarn --cwd ./packages/apps/relayer start:prod",
     "start:relayer:dev": "yarn --cwd ./packages/apps/relayer start:dev",
@@ -26,7 +30,6 @@
     "lint": "tslint -c tslint.json --project tsconfig.json",
     "secrets:decrypt": "bash scripts/secrets.sh decrypt",
     "secrets:encrypt": "bash scripts/secrets.sh encrypt",
-    "cli": "yarn --cwd ./packages/apps/cli start",
     "test": "yarn lerna run test",
     "test:cov": "yarn lerna run test:cov",
     "test:e2e": "yarn lerna run test:e2e"

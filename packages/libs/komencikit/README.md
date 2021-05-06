@@ -4,6 +4,7 @@ The KomenciKit library is a wrapper for the Komenci Service API, which is used f
 the consumer to execute fee-less attestations with the help of MetaTransactions.
 
 The main actions that KomenciKit exposes are:
+
 - startSession: Initiate a Komenci session with a solved captcha
 - deployWallet: deploy a MTW for Valora's EOA
 - requestAttestations: request attestations fee-lessly 
