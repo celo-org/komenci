@@ -70,7 +70,6 @@ export class RewardSenderService {
     this.checkingWatchedInvites = true
     try {
       await promiseAllSettled(
-        // TODO: settled
         [...this.watchedInvites].map(async invite => {
           if (await this.wasTxSentSuccesfully(invite.txHash)) {
             this.logger.log(`Completed tx with hash ${invite.txHash}`)
