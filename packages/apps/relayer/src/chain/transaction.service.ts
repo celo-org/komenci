@@ -64,17 +64,13 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private nonce: number
 
   constructor(
-    @Inject(ContractKit)
     private readonly kit: ContractKit,
-    @Inject(KomenciLoggerService)
     private readonly logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) 
     private walletCfg: WalletConfig,
     @Inject(appConfig.KEY) 
     private appCfg: AppConfig,
-    @Inject(BlockchainService)
     private readonly blockchainService: BlockchainService,
-    @Inject(BalanceService)
     private readonly balanceService: BalanceService,
   ) {
     this.watchedTransactions = new Set()

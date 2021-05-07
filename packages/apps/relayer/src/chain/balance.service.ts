@@ -14,13 +14,10 @@ export class BalanceService implements OnModuleInit {
   private timer: NodeJS.Timeout
 
   constructor(
-    @Inject(ContractKit)
     private readonly kit: ContractKit,
-    @Inject(KomenciLoggerService)
     private readonly logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) 
     private walletCfg: WalletConfig,
-    @Inject(MetaTransactionWalletWrapper)
     private readonly metaTxWallet: MetaTransactionWalletWrapper
   ) {}
 
