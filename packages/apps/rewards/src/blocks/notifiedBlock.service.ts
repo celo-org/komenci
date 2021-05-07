@@ -1,5 +1,5 @@
-import { KomenciLoggerService } from '@komenci/logger'
 import { ContractKit } from '@celo/contractkit'
+import { KomenciLoggerService } from '@komenci/logger'
 import { Injectable } from '@nestjs/common'
 import { LessThan } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'

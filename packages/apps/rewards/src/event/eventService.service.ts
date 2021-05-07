@@ -1,5 +1,5 @@
-import { KomenciLoggerService } from '@komenci/logger'
 import { EventLog } from '@celo/connect'
+import { KomenciLoggerService } from '@komenci/logger'
 import { Injectable, Scope } from '@nestjs/common'
 import {
   NotifiedBlockService,
