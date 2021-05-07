@@ -12,11 +12,13 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { Attestation } from '../attestation/attestation.entity'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
+import { appConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
 import { partialEventLog, partialTransaction } from '../utils/testing'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
@@ -65,6 +67,7 @@ describe('InviteRewardService', () => {
         NotifiedBlockService,
         RewardSenderService,
         EventService,
+        AnalyticsService,
         {
           provide: getRepositoryToken(InviteReward),
           useClass: Repository
@@ -87,6 +90,10 @@ describe('InviteRewardService', () => {
             ],
             fornoURL: 'fornoUrl'
           }
+        },
+        {
+          provide: appConfig.KEY,
+          useValue: {}
         }
       ]
     })

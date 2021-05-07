@@ -9,9 +9,11 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
+import { appConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
 import { partialEventLog } from '../utils/testing'
 import { Attestation } from './attestation.entity'
@@ -50,6 +52,7 @@ describe('AttestationService', () => {
         AttestationService,
         NotifiedBlockService,
         EventService,
+        AnalyticsService,
         {
           provide: getRepositoryToken(Attestation),
           useClass: Repository
@@ -57,6 +60,10 @@ describe('AttestationService', () => {
         {
           provide: getRepositoryToken(NotifiedBlock),
           useClass: Repository
+        },
+        {
+          provide: appConfig.KEY,
+          useValue: {}
         }
       ]
     })
