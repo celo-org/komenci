@@ -32,11 +32,13 @@ export enum RelayerCmd {
 @UseFilters(RpcErrorFilter)
 export class AppController {
   constructor(
+    @Inject(OdisService)
     private readonly odisService: OdisService,
+    @Inject(Web3)
     private readonly web3: Web3,
-    private readonly contractKit: ContractKit,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     private metaTxWallet: MetaTransactionWalletWrapper,
+    @Inject(TransactionService)
     private transactionService: TransactionService,
   ) {}
 

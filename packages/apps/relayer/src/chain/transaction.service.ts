@@ -74,6 +74,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     private appCfg: AppConfig,
     @Inject(BlockchainService)
     private readonly blockchainService: BlockchainService,
+    @Inject(BalanceService)
     private readonly balanceService: BalanceService,
   ) {
     this.watchedTransactions = new Set()
