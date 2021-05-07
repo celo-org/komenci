@@ -1,8 +1,6 @@
 import { Address } from '@celo/base'
 import { registerAs } from '@nestjs/config'
 
-const fornoURLForEnv = (env) => "https://"+env+"-forno.celo-testnet.org"
-
 export enum Network {
   alfajores = 'alfajores',
   alfajoresstaging = 'alfajoresstaging',
@@ -93,7 +91,7 @@ const configs: Record<Network, NetworkConfig> = {
       },
       MetaTransactionWalletDeployer: "0x4cda887Bce324109535814D49b74c6a560fAe1D9"
     },
-    fornoURL: fornoURLForEnv('alfajores'),
+    fornoURL: 'https://alfajores-forno.celo-testnet.org',
     odis: {
       publicKey: 'kPoRxWdEdZ/Nd3uQnp3FJFs54zuiS+ksqvOm9x8vY6KHPG8jrfqysvIRU0wtqYsBKA7SoAsICMBv8C/Fb2ZpDOqhSqvr/sZbZoHmQfvbqrzbtDIPvUIrHgRS0ydJCMsA',
       url: 'https://us-central1-celo-phone-number-privacy.cloudfunctions.net'
@@ -108,7 +106,7 @@ const configs: Record<Network, NetworkConfig> = {
       },
       MetaTransactionWalletDeployer: "0x5ee40856c2a73e08B645044B6B8466310640DA9E"
     },
-    fornoURL: fornoURLForEnv('alfajoresstaging'),
+    fornoURL: 'https://alfajoresstaging-forno.celo-testnet.org',
     odis: {
       publicKey: '7FsWGsFnmVvRfMDpzz95Np76wf/1sPaK0Og9yiB+P8QbjiC8FV67NBans9hzZEkBaQMhiapzgMR6CkZIZPvgwQboAxl65JWRZecGe5V3XO4sdKeNemdAZ2TzQuWkuZoA',
       url: 'https://us-central1-celo-phone-number-privacy-stg.cloudfunctions.net'
@@ -123,7 +121,7 @@ const configs: Record<Network, NetworkConfig> = {
       },
       MetaTransactionWalletDeployer: "0x0",
     },
-    fornoURL: fornoURLForEnv('baklava'),
+    fornoURL: 'https://baklava-forno.celo-testnet.org',
     odis: {
       publicKey: "",
       url: ""
@@ -138,7 +136,7 @@ const configs: Record<Network, NetworkConfig> = {
       },
       MetaTransactionWalletDeployer: "0x0",
     },
-    fornoURL: fornoURLForEnv('baklavastaging'),
+    fornoURL: 'https://baklavastaging-forno.celo-testnet.org',
     odis: {
       publicKey: "",
       url: ""
@@ -195,7 +193,7 @@ const configs: Record<Network, NetworkConfig> = {
       },
       MetaTransactionWalletDeployer: "0xbDb92Ca42559adc5adC20a1E4985dC7c476483be"
     },
-    fornoURL: fornoURLForEnv('rc1'),
+    fornoURL: 'https://forno.celo.org',
     odis: {
       publicKey: 'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
       url: 'https://us-central1-celo-pgpnp-mainnet.cloudfunctions.net'
