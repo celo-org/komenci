@@ -2,11 +2,16 @@ import { isAccountConsideredVerified } from '@celo/base/lib'
 import { EventLog } from '@celo/connect'
 import { CeloContract, ContractKit } from '@celo/contractkit'
 import { networkConfig, NetworkConfig } from '@komenci/core'
-import { KomenciLoggerService } from '@komenci/logger'
+import {
+  EventType,
+  InviteNotRewardedReason,
+  KomenciLoggerService
+} from '@komenci/logger'
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'
@@ -33,7 +38,8 @@ export class InviteRewardService {
     private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
-    private readonly logger: KomenciLoggerService
+    private readonly logger: KomenciLoggerService,
+    private readonly analytics: AnalyticsService
   ) {
     this.komenciAddresses = this.networkCfg.relayers.map(
       relayer => relayer.externalAccount
@@ -62,7 +68,17 @@ export class InviteRewardService {
   async fetchWithdrawalEvents(fromBlock: number) {
     const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
     const escrow = await this.contractKit.contracts.getEscrow()
-    return fetchEvents(escrow, WITHDRAWAL_EVENT, fromBlock, lastBlock)
+    const events = await fetchEvents(
+      escrow,
+      WITHDRAWAL_EVENT,
+      fromBlock,
+      lastBlock
+    )
+    this.logger.event(EventType.EscrowWithdrawalEventsFetched, {
+      eventCount: events.length,
+      fromBlock: lastBlock
+    })
+    return events
   }
 
   async handleWithdrawalEvent(withdrawalEvent: EventLog) {
@@ -73,33 +89,50 @@ export class InviteRewardService {
 
     const inviter = to.toLowerCase()
     if (this.cUsdTokenAddress !== token.toLowerCase()) {
+      this.analytics.trackEvent(EventType.InviteNotRewarded, {
+        txHash: transactionHash,
+        inviter,
+        invitee: null,
+        reason: InviteNotRewardedReason.NotCusdInvite
+      })
       return
     }
     const tx = await this.contractKit.web3.eth.getTransaction(transactionHash)
     const invitee = tx.to?.toLowerCase()
     if (!invitee) {
+      this.analytics.trackEvent(EventType.InviteNotRewarded, {
+        txHash: transactionHash,
+        inviter,
+        invitee: null,
+        reason: InviteNotRewardedReason.NoInviteeFound
+      })
       return
     }
     if (!this.isKomenciSender(tx.from)) {
+      this.analytics.trackEvent(EventType.InviteNotRewarded, {
+        txHash: transactionHash,
+        inviter,
+        invitee,
+        reason: InviteNotRewardedReason.NotKomenciRedeem
+      })
       return
     }
-    const conditions = await Promise.all([
-      this.isAddressVerified(inviter),
-      this.isAddressVerifiedWithIdentifier(invitee, identifier),
-      this.inviterHasNotReachedWeeklyLimit(inviter),
-      this.inviteeRewardNotInProgress(invitee)
-    ])
-    if (conditions.every(condition => condition)) {
-      this.logger.log(
-        `Starting to send reward to ${inviter} for inviting ${invitee}`
+    if (
+      await this.inviteRewardConditionsAreMet(
+        inviter,
+        invitee,
+        identifier,
+        transactionHash
       )
+    ) {
       const inviteReward = await this.createInviteReward(
         inviter,
         invitee,
-        identifier
+        identifier,
+        transactionHash
       )
       if (inviteReward) {
-        // The error is handled in the reward sender service, just firing off the 
+        // The error is handled in the reward sender service, just firing off the
         // sending here and catching to apease the linter.
         this.rewardSenderService.sendInviteReward(inviteReward).catch()
       }
@@ -108,6 +141,38 @@ export class InviteRewardService {
 
   isKomenciSender(address: string) {
     return this.komenciAddresses.includes(address.toLowerCase())
+  }
+
+  async inviteRewardConditionsAreMet(
+    inviter: string,
+    invitee: string,
+    identifier: string,
+    txHash: string
+  ) {
+    const conditions = await Promise.all([
+      this.isAddressVerified(inviter),
+      this.isAddressVerifiedWithIdentifier(invitee, identifier),
+      this.inviterHasNotReachedWeeklyLimit(inviter),
+      this.inviteeRewardNotInProgress(invitee)
+    ])
+    const conditionFailedReasons = [
+      InviteNotRewardedReason.InviterNotVerified,
+      InviteNotRewardedReason.InviteeNotVerified,
+      InviteNotRewardedReason.InviterReachedWeeklyLimit,
+      InviteNotRewardedReason.InviteeAlreadyInvited
+    ]
+    for (let i = 0; i < conditions.length; i++) {
+      if (!conditions[i]) {
+        this.analytics.trackEvent(EventType.InviteNotRewarded, {
+          txHash,
+          inviter,
+          invitee,
+          reason: conditionFailedReasons[i]
+        })
+        return false
+      }
+    }
+    return true
   }
 
   async isAddressVerified(address: string) {
@@ -156,7 +221,8 @@ export class InviteRewardService {
   async createInviteReward(
     inviter: string,
     invitee: string,
-    inviteeIdentifier: string
+    inviteeIdentifier: string,
+    txHash: string
   ) {
     try {
       const inviteReward = InviteReward.of({
@@ -167,9 +233,26 @@ export class InviteRewardService {
         state: RewardStatus.Created,
         createdAt: new Date(Date.now()).toISOString()
       })
-      return this.inviteRewardRepository.save(inviteReward)
+      const savedReward = await this.inviteRewardRepository.save(inviteReward)
+      this.analytics.trackEvent(EventType.InviteRewardCreated, {
+        txHash,
+        inviteId: inviteReward.id,
+        inviter,
+        invitee
+      })
+      return savedReward
     } catch (error) {
-      this.logger.log(`Error creating reward: ${error}`)
+      // Ignore expected error
+      if (
+        !error.message.includes(
+          'duplicate key value violates unique constraint'
+        )
+      ) {
+        this.analytics.trackEvent(EventType.UnexpectedError, {
+          origin: `Creating invite reward for tx hash ${txHash}`,
+          error: error
+        })
+      }
     }
   }
 }

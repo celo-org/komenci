@@ -1,6 +1,7 @@
 import { EventLog } from '@celo/connect'
-import { KomenciLoggerService } from '@komenci/logger'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { Injectable, Scope } from '@nestjs/common'
+import { AnalyticsService } from '../analytics/analytics.service'
 import {
   NotifiedBlockService,
   StartingBlock
@@ -14,7 +15,8 @@ export class EventService {
 
   constructor(
     private readonly notifiedBlockService: NotifiedBlockService,
-    private readonly logger: KomenciLoggerService
+    private readonly logger: KomenciLoggerService,
+    private readonly analytics: AnalyticsService
   ) {}
 
   async runEventProcessingPolling(
@@ -24,7 +26,7 @@ export class EventService {
     eventHandler: (event: EventLog) => Promise<void>
   ) {
     if (this.isRunning) {
-      this.logger.log(
+      this.logger.debug(
         `Skipping because previous run of ${key} is still ongoing`
       )
       return
@@ -48,18 +50,18 @@ export class EventService {
     eventFetcher: (fromBlock: number) => Promise<EventLog[]>,
     eventHandler: (event: EventLog) => Promise<void>
   ) {
-    this.logger.log(`Starting to fetch ${key} events from block ${fromBlock}`)
+    this.logger.debug(`Starting to fetch ${key} events from block ${fromBlock}`)
 
     const events = await eventFetcher(fromBlock)
-    this.logger.log(`${key} events received: ${events.length}`)
     let maxBlock = fromBlock
     for (const event of events) {
       try {
         await eventHandler(event)
       } catch (error) {
-        this.logger.error(error, `Error while processing a ${key} event`)
-        // We rethrow the error so that we don't miss blocks if we have unexpected errors in the event handler.
-        // TODO: Throw an alarm when this happens.
+        this.analytics.trackEvent(EventType.UnexpectedError, {
+          origin: `Processing ${key} event: ${JSON.stringify(event)}`,
+          error: error
+        })
         throw error
       }
       maxBlock = Math.max(maxBlock, event.blockNumber)

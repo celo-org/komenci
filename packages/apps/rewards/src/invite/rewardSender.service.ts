@@ -1,10 +1,15 @@
 import { CeloTransactionObject } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
-import { KomenciLoggerService } from '@komenci/logger'
+import {
+  EventType,
+  KomenciLoggerService,
+  RewardSendingStatus
+} from '@komenci/logger'
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import BigNumber from 'bignumber.js'
 import { EntityManager, In, Raw, Repository } from 'typeorm'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { appConfig, AppConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
 import { promiseAllSettled } from '../utils/promiseUtil'
@@ -55,7 +60,8 @@ export class RewardSenderService {
     @Inject(appConfig.KEY)
     private readonly appCfg: AppConfig,
     private readonly contractKit: ContractKit,
-    private readonly logger: KomenciLoggerService
+    private readonly logger: KomenciLoggerService,
+    private readonly analytics: AnalyticsService
   ) {
     this.watchedInvites = new Set()
   }
@@ -83,11 +89,15 @@ export class RewardSenderService {
         [...this.watchedInvites].map(async invite => {
           const txStatus = await this.getTxStatus(invite.txHash)
           if (txStatus === TxStatus.Completed) {
-            this.logger.log(`Completed tx with hash ${invite.txHash}`)
             await this.inviteRewardRepository.update(invite.inviteId, {
               state: RewardStatus.Completed
             })
             this.watchedInvites.delete(invite)
+            this.analytics.trackEvent(EventType.RewardSendingStatus, {
+              status: RewardSendingStatus.Completed,
+              txHash: invite.txHash,
+              inviteId: invite.inviteId
+            })
           } else if (txStatus === TxStatus.Failed) {
             await this.inviteRewardRepository.update(invite.inviteId, {
               state: invite.markAsDeadLetterIfFailed
@@ -95,11 +105,21 @@ export class RewardSenderService {
                 : RewardStatus.Failed
             })
             this.watchedInvites.delete(invite)
+            this.analytics.trackEvent(EventType.RewardSendingStatus, {
+              status: invite.markAsDeadLetterIfFailed
+                ? RewardSendingStatus.DeadLettered
+                : RewardSendingStatus.Failed,
+              txHash: invite.txHash,
+              inviteId: invite.inviteId
+            })
           }
         })
       )
     } catch (error) {
-      this.logger.error(error, 'Error checking watched invites')
+      this.analytics.trackEvent(EventType.UnexpectedError, {
+        origin: `Checking watched invites`,
+        error: error
+      })
     } finally {
       this.checkingWatchedInvites = false
     }
@@ -138,8 +158,8 @@ export class RewardSenderService {
               .limit(MAX_INVITES_PER_QUERY)
               .getMany()
             if (invites.length > 0) {
-              this.logger.log(
-                `Found failed or submitted invites ${invites.length}`
+              this.logger.debug(
+                `Found ${invites.length} failed or submitted invites`
               )
             }
             await promiseAllSettled(
@@ -152,6 +172,11 @@ export class RewardSenderService {
                     state: RewardStatus.Completed
                   })
                 } else if (txStatus === TxStatus.Failed) {
+                  this.analytics.trackEvent(EventType.RewardSendingStatus, {
+                    status: RewardSendingStatus.Completed,
+                    txHash: invite.rewardTxHash,
+                    inviteId: invite.id
+                  })
                   await this.sendInviteReward(invite, true, repository)
                 }
               })
@@ -169,7 +194,10 @@ export class RewardSenderService {
         }
       )
     } catch (error) {
-      this.logger.error(error, 'Error checking failed invites')
+      this.analytics.trackEvent(EventType.UnexpectedError, {
+        origin: `Creating failed invites`,
+        error: error
+      })
     } finally {
       this.checkingFailedInvites = false
     }
@@ -207,15 +235,22 @@ export class RewardSenderService {
 
     const resp = await this.sendTxThroughRelayer(tx, invite.id)
     if (resp.ok === false) {
-      this.logger.error(
-        `Error sending reward for invite ${invite.id}: ${resp.error}`
-      )
+      this.logger.event(EventType.RelayerSendingError, {
+        inviteId: invite.id,
+        error: resp.error.message
+      })
       await repository.update(invite.id, {
         state: isRetry ? RewardStatus.DeadLettered : RewardStatus.Failed
       })
+      this.analytics.trackEvent(EventType.RewardSendingStatus, {
+        status: isRetry
+          ? RewardSendingStatus.DeadLettered
+          : RewardSendingStatus.Failed,
+        txHash: null,
+        inviteId: invite.id
+      })
     } else {
       const txHash = resp.result.payload
-      this.logger.log(`Reward submitted for invite ${invite.id}: ${txHash}`)
       await repository.update(invite.id, {
         state: RewardStatus.Submitted,
         rewardTxHash: txHash
@@ -225,6 +260,11 @@ export class RewardSenderService {
         txHash,
         sentAt: Date.now(),
         markAsDeadLetterIfFailed: isRetry
+      })
+      this.analytics.trackEvent(EventType.RewardSendingStatus, {
+        status: RewardSendingStatus.Submitted,
+        txHash,
+        inviteId: invite.id
       })
     }
   }

@@ -1,9 +1,10 @@
 import { EventLog } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
-import { KomenciLoggerService } from '@komenci/logger'
+import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { v4 as uuidv4 } from 'uuid'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'
 import { fetchEvents } from '../utils/fetchEvents'
@@ -19,7 +20,8 @@ export class AttestationService {
     private readonly attestationRepository: AttestationRepository,
     private readonly eventService: EventService,
     private readonly contractKit: ContractKit,
-    private readonly logger: KomenciLoggerService
+    private readonly logger: KomenciLoggerService,
+    private readonly analytics: AnalyticsService
   ) {}
 
   @Cron(CronExpression.EVERY_30_SECONDS)
@@ -35,12 +37,17 @@ export class AttestationService {
   async fetchAttestationEvents(fromBlock: number) {
     const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
     const attestations = await this.contractKit.contracts.getAttestations()
-    return fetchEvents(
+    const events = await fetchEvents(
       attestations,
       ATTESTATION_COMPLETED_EVENT,
       fromBlock,
       lastBlock
     )
+    this.logger.event(EventType.AttestationEventsFetched, {
+      eventCount: events.length,
+      fromBlock: lastBlock
+    })
+    return events
   }
 
   async handleAttestationRequest(attestationRequest: EventLog) {
@@ -73,12 +80,25 @@ export class AttestationService {
           createdAt: new Date(Date.now()).toISOString()
         })
       )
+      this.logger.event(EventType.AttestationCompleted, {
+        txHash,
+        issuer,
+        address,
+        identifier
+      })
       return attestation
     } catch (error) {
-      this.logger.log(
-        `Error creating attestation for address ${address} 
-        with identifier ${identifier}: ${error}`
-      )
+      // Ignore expected error
+      if (
+        !error.message.includes(
+          'duplicate key value violates unique constraint'
+        )
+      ) {
+        this.analytics.trackEvent(EventType.UnexpectedError, {
+          origin: `Creating attestation for address ${address} with identifier ${identifier}`,
+          error: error
+        })
+      }
     }
   }
 }
