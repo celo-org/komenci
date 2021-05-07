@@ -6,5 +6,5 @@
     "update": "./scripts/update.sh"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
-  "license": "ISC"
+  "license": "Apache-2.0"
 }

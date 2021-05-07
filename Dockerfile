@@ -8,10 +8,9 @@ WORKDIR /komenci
 
 COPY . .
 
-RUN yarn
-RUN yarn build:libs
-RUN yarn build:relayer
-RUN yarn build:api
+
+RUN SKIPPOSTINSTALL=1 yarn
+RUN yarn build
 
 FROM node:10 as release
 
@@ -22,5 +21,4 @@ COPY --from=builder /komenci/packages ./packages
 COPY --from=builder /komenci/package.json ./package.json
 COPY --from=builder /komenci/yarn.lock ./yarn.lock
 
-RUN yarn install --prod
-
+RUN SKIPPOSTINSTALL=1 yarn install --prod

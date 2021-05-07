@@ -22,16 +22,16 @@ jobs:
         if: steps.restore-komenci.outputs.cache-hit != 'true'
       - name: Install Komenci dependencies
         run: yarn
+      - name: Build packages
+        run: yarn build
       - name: Run linters
         run: yarn lint
       - name: Setup testing config
         run: |
-            cp packages/apps/api.env.test.ci packages/apps/api/.env.test
+            cp packages/apps/api/.env.test.ci packages/apps/api/.env.test
             cp packages/apps/api/.env.test.ci packages/apps/api/.env
             cp packages/apps/relayer/.env.test.ci packages/apps/relayer/.env.test
             cp packages/apps/relayer/.env.test.ci packages/apps/relayer/.env
-      - name: Run komencikit tests
-        run: yarn --cwd libs/komencikit test
       - name: Run unit tests
         run: yarn test:cov
       - name: Run postgres for e2e tests

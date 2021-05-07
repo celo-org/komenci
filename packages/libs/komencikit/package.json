@@ -1,6 +1,6 @@
 {
   "name": "@komenci/kit",
-  "version": "0.0.2-dev",
+  "version": "1.0.0",
   "description": "Valora's KomenciKit client to interact with the Komenci meta-tx server",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

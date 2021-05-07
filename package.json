@@ -4,15 +4,20 @@
   "description": "The Komenci monorepo, collection of packages which make up the Komenci backend service and client libraries",
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN SUB-PACKAGES",
   "workspaces": [
     "packages/apps/*",
     "packages/libs/*",
     "packages/*"
   ],
   "scripts": {
-    "build:libs:dev": "yarn build:libs && ./scripts/libs.run.sh build:watch",
+    "postinstall": "test -n \"${SKIPPOSTINSTALL}\" || yarn postinstall:actual",
+    "postinstall:actual": "yarn secrets:decrypt",
     "build:libs": "./scripts/libs.build.sh",
+    "build:libs:dev": "yarn build:libs && ./scripts/libs.run.sh build:watch",
+    "build:cli": "yarn --cwd ./packages/apps/cli build",
+    "build:cli:dev": "yarn --cwd ./packages/apps/cli build:watch",
+    "cli": "yarn --cwd ./packages/apps/cli start",
     "build:relayer": "yarn --cwd ./packages/apps/relayer build",
     "start:relayer:prod": "yarn --cwd ./packages/apps/relayer start:prod",
     "start:relayer:dev": "yarn --cwd ./packages/apps/relayer start:dev",
@@ -22,14 +27,15 @@
     "build:rewards": "yarn --cwd ./packages/apps/rewards build",
     "start:rewards:prod": "yarn --cwd ./packages/apps/rewards start:prod",
     "start:rewards:dev": "yarn --cwd ./packages/apps/rewards start:dev",
+    "build": "yarn lerna run build",
+    "clean": "yarn lerna run clean",
     "format": "prettier --write \"packages/**/*.ts\"",
     "lint": "tslint -c tslint.json --project tsconfig.json",
     "secrets:decrypt": "bash scripts/secrets.sh decrypt",
     "secrets:encrypt": "bash scripts/secrets.sh encrypt",
-    "cli": "yarn --cwd ./packages/apps/cli nest start",
-    "test": "yarn lerna run test",
-    "test:cov": "yarn lerna run test:cov",
-    "test:e2e": "yarn lerna run test:e2e"
+    "test": "yarn lerna run test --parallel",
+    "test:cov": "yarn lerna run test:cov --parallel",
+    "test:e2e": "yarn lerna run test:e2e --parallel"
   },
   "devDependencies": {
     "@celo/typescript": "^0.0.1",

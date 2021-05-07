@@ -19,6 +19,8 @@
     "@celo/connect": "^1.2.0",
     "@celo/contractkit": "^1.2.0",
     "@celo/wallet-hsm-azure": "^1.2.0",
+    "@komenci/core": "^1.0.0",
+    "@komenci/logger": "^1.0.0",
     "@nestjs/common": "^7.6.15",
     "@types/jest": "^26.0.23",
     "bignumber.js": "^9.0.1",
@@ -34,6 +36,7 @@
     "web3-core-helpers": "^1.3.5"
   },
   "devDependencies": {
+    "@komenci/contracts": "^1.0.0",
     "@nestjs/testing": "^7.6.15",
     "@types/jest": "^26.0.23",
     "abort-controller": "^3.0.0",

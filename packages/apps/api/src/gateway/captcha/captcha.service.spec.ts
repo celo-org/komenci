@@ -59,7 +59,7 @@ describe('CaptchaService', () => {
         ConfigModule.forRoot({
           isGlobal: true,
           load: [thirdPartyConfig],
-          envFilePath: ['apps/onboarding/.env.test']
+          envFilePath: ['.env.test']
         }),
         HttpModule
       ],

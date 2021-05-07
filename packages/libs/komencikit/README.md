@@ -4,6 +4,7 @@ The KomenciKit library is a wrapper for the Komenci Service API, which is used f
 the consumer to execute fee-less attestations with the help of MetaTransactions.
 
 The main actions that KomenciKit exposes are:
+
 - startSession: Initiate a Komenci session with a solved captcha
 - deployWallet: deploy a MTW for Valora's EOA
 - requestAttestations: request attestations fee-lessly 
@@ -19,7 +20,7 @@ options which must at least include the URL of the Komenci API to point to.
 
 ```ts
 import { newKit } from '@celo/contractkit'
-import { KomenciKit } from "@celo/komencikit"
+import { KomenciKit } from "@komenci/kit"
 
 const contractkit = newKit('https://alfajores-forno.celo-testnet.org:8545')
 
