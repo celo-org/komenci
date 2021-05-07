@@ -101,7 +101,7 @@ describe('AppController (e2e)', () => {
 
   throttleConfigValue = {
     ttl: 20,
-    limit: 5,
+    limit: 100,
   }
 
   rulesConfigValue = {
@@ -122,7 +122,7 @@ describe('AppController (e2e)', () => {
     },
   }
 
-  describe.only('/v1/ (GET) ready', () => {
+  describe('/v1/ (GET) ready', () => {
     beforeEach(() => {
       jest.useFakeTimers()
     })
@@ -131,7 +131,7 @@ describe('AppController (e2e)', () => {
       jest.useRealTimers()
     })
 
-    it.only('returns ok until the rate limit is met', async () => {
+    it('returns ok until the rate limit is met', async () => {
       const server = app.getHttpServer()
       const captchaToken = "captcha-token"
       const wallet = new LocalWallet()
@@ -148,7 +148,7 @@ describe('AppController (e2e)', () => {
         signature
       }
 
-      await Promise.all(_.times(5).map(async () => {
+      await Promise.all(_.times(100).map(async () => {
         const readyResp = await request(server).get('/v1/ready')
         expect(readyResp.statusCode).toBe(200)
         expect(readyResp.body.status).toBe('Ready')
