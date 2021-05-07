@@ -8,8 +8,6 @@ export const appConfig = registerAs('app', () => ({
   service: process.env.KOMENCI_SERVICE || 'komenci-rewards',
   version: process.env.KOMENCI_VERSION || 'version-missing',
   relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000,
-  transactionTimeoutMs:
-    parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 60000,
   inviteRewardAmountInCusd:
     parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 1
 }))

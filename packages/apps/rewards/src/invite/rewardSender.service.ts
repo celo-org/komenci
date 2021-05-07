@@ -24,6 +24,12 @@ interface WatchedInvite {
   markAsDeadLetterIfFailed: boolean
 }
 
+enum TxStatus {
+  Completed,
+  Failed,
+  Pending
+}
+
 /**
  * Service in charge of sending with retries of rewards. The actual sending of the transaction is done through a relayer.
  * There are three main actions being done in this class:
@@ -54,9 +60,13 @@ export class RewardSenderService {
     this.watchedInvites = new Set()
   }
 
-  async wasTxSentSuccesfully(txHash: string) {
-    const tx = await this.contractKit.web3.eth.getTransaction(txHash)
-    return Boolean(tx.blockHash)
+  async getTxStatus(txHash: string) {
+    const tx = await this.contractKit.web3.eth.getTransactionReceipt(txHash)
+    if (tx === null) {
+      return TxStatus.Pending
+    } else {
+      return tx.status ? TxStatus.Completed : TxStatus.Failed
+    }
   }
 
   @Cron(CronExpression.EVERY_SECOND)
@@ -71,18 +81,14 @@ export class RewardSenderService {
     try {
       await promiseAllSettled(
         [...this.watchedInvites].map(async invite => {
-          if (await this.wasTxSentSuccesfully(invite.txHash)) {
+          const txStatus = await this.getTxStatus(invite.txHash)
+          if (txStatus === TxStatus.Completed) {
             this.logger.log(`Completed tx with hash ${invite.txHash}`)
             await this.inviteRewardRepository.update(invite.inviteId, {
               state: RewardStatus.Completed
             })
             this.watchedInvites.delete(invite)
-          } else if (
-            // TODO: This is timeouting but the reward might still go through. How do we check if the sending
-            // actually failed for whatever reason and the tx is no longer in queue?
-            Date.now() - invite.sentAt >
-            this.appCfg.transactionTimeoutMs
-          ) {
+          } else if (txStatus === TxStatus.Failed) {
             await this.inviteRewardRepository.update(invite.inviteId, {
               state: invite.markAsDeadLetterIfFailed
                 ? RewardStatus.DeadLettered
@@ -138,14 +144,14 @@ export class RewardSenderService {
             }
             await promiseAllSettled(
               invites.map(async invite => {
-                if (
-                  invite.state === RewardStatus.Submitted &&
-                  (await this.wasTxSentSuccesfully(invite.rewardTxHash))
-                ) {
+                const txStatus = invite.rewardTxHash
+                  ? await this.getTxStatus(invite.rewardTxHash)
+                  : TxStatus.Failed
+                if (txStatus === TxStatus.Completed) {
                   await repository.update(invite.id, {
                     state: RewardStatus.Completed
                   })
-                } else {
+                } else if (txStatus === TxStatus.Failed) {
                   await this.sendInviteReward(invite, true, repository)
                 }
               })
