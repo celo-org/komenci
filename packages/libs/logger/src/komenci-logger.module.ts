@@ -12,8 +12,8 @@ export class KomenciLoggerModule {
     return {
       module: KomenciLoggerModule,
       imports: [LoggerModule.forRootAsync(params)],
-      providers: [KomenciLoggerService, RpcErrorFilter, ApiErrorFilter],
-      exports: [KomenciLoggerService, RpcErrorFilter, ApiErrorFilter]
+      providers: [KomenciLoggerService],
+      exports: [KomenciLoggerService]
     }
   }
 
@@ -22,7 +22,6 @@ export class KomenciLoggerModule {
       module: KomenciLoggerModule,
       imports: [LoggerModule.forRoot(params)],
       providers: [KomenciLoggerService],
-      exports: [KomenciLoggerService]
-    }
+      exports: [KomenciLoggerService], }
   }
 }
