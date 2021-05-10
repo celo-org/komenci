@@ -43,7 +43,8 @@ import { buildLoginTypedData } from './login'
 import { retry } from './retry'
 import { verifyWallet } from './verifyWallet'
 import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
-import { ProxyCloneFactory, ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
+import { ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
+const parseReceiptEvents = require('web3-parse-receipt-events')
 
 const TAG = 'KomenciKit'
 
@@ -512,18 +513,10 @@ export class KomenciKit {
     }
 
     const receipt = receiptResult.result
-
-    const deployer = new this.contractKit.connection.web3.eth.Contract(
-      ProxyCloneFactoryABI as any,
-      deployerAddress
-    ) as unknown as ProxyCloneFactory
-
-    const deployProxyLog = (await deployer.getPastEvents("ProxyCloneCreated", {
-      fromBlock: receipt.blockNumber,
-      toBlock: receipt.blockNumber,
-    })).find(
-      (event) => event.transactionHash === receipt.transactionHash
-    ) as unknown as (ProxyCloneCreated | undefined)
+    const receiptWithEvents = parseReceiptEvents(ProxyCloneFactoryABI, deployerAddress, receipt)
+    const deployProxyLog = Object.values(receiptWithEvents.events).find(
+      (log: any) => log.event === "ProxyCloneCreated"
+    ) as (ProxyCloneCreated | undefined)
 
     if (deployProxyLog === undefined) {
       return Err(new TxEventNotFound(txHash, "ProxyCloneCreated"))
