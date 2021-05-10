@@ -514,13 +514,14 @@ export class KomenciKit {
 
     const receipt = receiptResult.result
     const receiptWithEvents = parseReceiptEvents(ProxyCloneFactoryABI, deployerAddress, receipt)
-    const deployProxyLog = Object.values(receiptWithEvents.events).find(
+    const proxyCloneLog = Object.values(receiptWithEvents.events).find(
       (log: any) => log.event === "ProxyCloneCreated"
     ) as (ProxyCloneCreated | undefined)
 
-    if (deployProxyLog === undefined) {
+    if (proxyCloneLog === undefined) {
       return Err(new TxEventNotFound(txHash, "ProxyCloneCreated"))
     } 
-    return Ok(deployProxyLog.returnValues.proxyClone)
+    console.log(proxyCloneLog)
+    return Ok(proxyCloneLog.returnValues.proxyClone)
   }
 }

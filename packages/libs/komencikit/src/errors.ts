@@ -151,6 +151,7 @@ export class KomenciDown extends RootError<KomenciKitErrorTypes.KomenciDown> {
 export enum WalletVerificationErrorTypes {
   InvalidBytecode = 'InvalidBytecode',
   InvalidSigner = 'InvalidSigner',
+  InvalidOwner = 'InvalidOwner',
   InvalidImplementation = 'InvalidImplementation',
   InvalidStorageRoot = 'InvalidStorageRoot',
 }
@@ -162,6 +163,15 @@ export class InvalidBytecode extends RootError<WalletVerificationErrorTypes.Inva
     this.message = 'Invalid wallet bytecode, should be a Proxy'
   }
 }
+
+export class InvalidOwner extends RootError<WalletVerificationErrorTypes.InvalidOwner> {
+  public readonly message: string
+  constructor(public readonly walletAddress: string) {
+    super(WalletVerificationErrorTypes.InvalidOwner)
+    this.message = 'Unexpected proxy owner'
+  }
+}
+
 
 export class InvalidStorageRoot extends RootError<WalletVerificationErrorTypes.InvalidStorageRoot> {
   public readonly message: string
@@ -193,4 +203,4 @@ export class InvalidImplementation extends RootError<WalletVerificationErrorType
   }
 }
 
-export type WalletValidationError = InvalidBytecode | InvalidImplementation | InvalidSigner | InvalidStorageRoot
+export type WalletValidationError = InvalidBytecode | InvalidImplementation | InvalidSigner | InvalidStorageRoot | InvalidOwner
