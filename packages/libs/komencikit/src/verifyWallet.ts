@@ -1,18 +1,18 @@
-import { Address, ensureLeading0x, normalizeAddress, bufferToHex, hexToBuffer, eqAddress } from '@celo/base'
+import { Address, bufferToHex, ensureLeading0x, eqAddress, hexToBuffer, normalizeAddress } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { abi as InitializableProxyABI } from '@komenci/contracts/artefacts/InitializableProxy.json'
+import { abi as ProxyABI } from '@komenci/contracts/artefacts/Proxy.json'
 import { InitializableProxy } from '@komenci/contracts/types/InitializableProxy'
 import { Proxy } from '@komenci/contracts/types/Proxy'
-import { abi as ProxyABI } from '@komenci/contracts/artefacts/Proxy.json'
 import Web3 from 'web3'
 import {
   InvalidBytecode,
   InvalidImplementation,
+  InvalidOwner,
   InvalidSigner,
   InvalidStorageRoot,
   WalletValidationError,
-  InvalidOwner,
 } from './errors'
 
 import { SecureTrie } from 'merkle-patricia-tree'

@@ -11,6 +11,8 @@ import {
   getBlindedPhoneNumber,
   getPhoneNumberIdentifierFromSignature,
 } from '@celo/identity/lib/odis/phone-number-identifier'
+import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
+import { ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
 import {
   checkService,
   checkSession,
@@ -42,8 +44,6 @@ import {
 import { buildLoginTypedData } from './login'
 import { retry } from './retry'
 import { verifyWallet } from './verifyWallet'
-import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
-import { ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
 const parseReceiptEvents = require('web3-parse-receipt-events')
 
 const TAG = 'KomenciKit'
