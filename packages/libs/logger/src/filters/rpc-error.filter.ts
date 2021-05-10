@@ -11,6 +11,7 @@ import { Observable, throwError as _throw } from 'rxjs'
 
 @Catch()
 export class RpcErrorFilter extends BaseRpcExceptionFilter {
+  @Inject()
   protected readonly logger: KomenciLoggerService
 
   catch(err: any, host: ArgumentsHost): Observable<any> {
