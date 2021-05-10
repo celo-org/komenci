@@ -14,9 +14,7 @@ export class BalanceService implements OnModuleInit {
   private timer: NodeJS.Timeout
 
   constructor(
-    @Inject()
     private readonly kit: ContractKit,
-    @Inject()
     private readonly logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) 
     private walletCfg: WalletConfig,

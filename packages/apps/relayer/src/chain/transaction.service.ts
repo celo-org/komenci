@@ -64,9 +64,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
   private nonce: number
 
   constructor(
-    @Inject()
     private readonly kit: ContractKit,
-    @Inject()
     private readonly logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) 
     private walletCfg: WalletConfig,

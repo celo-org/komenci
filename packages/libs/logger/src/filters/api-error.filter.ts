@@ -13,7 +13,7 @@ import { isApiError } from '@komenci/core'
 
 @Catch()
 export class ApiErrorFilter extends BaseExceptionFilter {
-  @Inject(KomenciLoggerService)
+  @Inject()
   protected readonly logger: KomenciLoggerService
 
   handleUnknownError(
