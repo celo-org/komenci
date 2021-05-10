@@ -5,22 +5,23 @@ import { KomenciLoggerModule, loggerConfigFactory } from '@komenci/logger'
 import { ApiErrorFilter } from '@komenci/logger/dist/filters/api-error.filter'
 import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { APP_FILTER } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { appConfig, AppConfig } from './config/app.config'
+import { AttestationModule } from './attestation/attestation.module'
+import { AppConfig, appConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
+import { relayerConfig } from './config/relayer.config'
 import { InviteRewardModule } from './invite/inviteReward.module'
-import { InviteRewardService } from './invite/inviteReward.service'
 
 @Module({
   controllers: [],
   imports: [
     InviteRewardModule,
+    AttestationModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, networkConfig],
+      load: [appConfig, databaseConfig, networkConfig, relayerConfig],
       envFilePath: ['.env.local', '.env']
     }),
     KomenciLoggerModule.forRootAsync({
@@ -50,12 +51,6 @@ import { InviteRewardService } from './invite/inviteReward.service'
       }
     })
   ],
-  providers: [
-    InviteRewardService,
-    {
-      provide: APP_FILTER,
-      useClass: ApiErrorFilter
-    }
-  ]
+  providers: []
 })
 export class AppModule {}

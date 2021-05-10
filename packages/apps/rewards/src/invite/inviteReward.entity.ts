@@ -2,8 +2,10 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 export enum RewardStatus {
   Created = 'Created',
-  Sent = 'Sent',
-  Failed = 'Failed'
+  Submitted = 'Submitted',
+  Completed = 'Completed',
+  Failed = 'Failed',
+  DeadLettered = 'DeadLettered'
 }
 
 @Entity()
