@@ -22,6 +22,7 @@ export class KomenciLoggerModule {
       module: KomenciLoggerModule,
       imports: [LoggerModule.forRoot(params)],
       providers: [KomenciLoggerService],
-      exports: [KomenciLoggerService], }
+      exports: [KomenciLoggerService], 
+    }
   }
 }

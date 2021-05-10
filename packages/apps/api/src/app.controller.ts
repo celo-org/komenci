@@ -84,7 +84,6 @@ export class AppController {
     private readonly networkCfg: NetworkConfig,
     @Inject(appConfig.KEY)
     private readonly appCfg: AppConfig,
-    @Inject()
     private readonly logger: KomenciLoggerService,
     private readonly txParserService: TxParserService
 ) {}
