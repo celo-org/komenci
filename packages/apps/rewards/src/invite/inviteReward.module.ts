@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from '@nestjs/typeorm'
+<<<<<<< HEAD
 import { AnalyticsService } from '../analytics/analytics.service'
+=======
+>>>>>>> master
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
@@ -23,7 +26,10 @@ import { RewardSenderService } from './rewardSender.service'
     RewardSenderService,
     NotifiedBlockService,
     EventService,
+<<<<<<< HEAD
     AnalyticsService,
+=======
+>>>>>>> master
     RelayerProxyService,
     {
       provide: 'RELAYER_SERVICE',

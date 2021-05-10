@@ -6,6 +6,7 @@
     "removeComments": true,
     "experimentalDecorators": true,
     "suppressImplicitAnyIndexErrors": true,
+    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "lib": [
       "es2015",

@@ -1,9 +1,16 @@
 import { ContractKit } from '@celo/contractkit'
+<<<<<<< HEAD
 import { EventType } from '@komenci/logger'
 import { Injectable } from '@nestjs/common'
 import { LessThan } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import { AnalyticsService } from '../analytics/analytics.service'
+=======
+import { KomenciLoggerService } from '@komenci/logger'
+import { Injectable } from '@nestjs/common'
+import { LessThan } from 'typeorm'
+import { v4 as uuidv4 } from 'uuid'
+>>>>>>> master
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 
 export enum StartingBlock {
@@ -16,7 +23,11 @@ export class NotifiedBlockService {
   constructor(
     private readonly notifiedBlockRepository: NotifiedBlockRepository,
     private readonly contractKit: ContractKit,
+<<<<<<< HEAD
     private readonly analytics: AnalyticsService
+=======
+    private readonly logger: KomenciLoggerService
+>>>>>>> master
   ) {}
 
   async runUsingLastNotifiedBlock(
@@ -55,10 +66,16 @@ export class NotifiedBlockService {
         )
       }
     } catch (error) {
+<<<<<<< HEAD
       this.analytics.trackEvent(EventType.UnexpectedError, {
         origin: `block processing for key ${notifiedBlockKey}`,
         error: error
       })
+=======
+      this.logger.error(
+        `Error while processing blocks for key ${notifiedBlockKey}: ${error}`
+      )
+>>>>>>> master
     }
   }
 }

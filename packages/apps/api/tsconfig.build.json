@@ -2,7 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "sourceMap": true,
-    "emitDecoratorMetadata": true,
     "declaration": false,
     "module": "commonjs",
     "outDir": "./dist",
