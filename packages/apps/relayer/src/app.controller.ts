@@ -34,7 +34,6 @@ export class AppController {
   constructor(
     private readonly odisService: OdisService,
     private readonly web3: Web3,
-    private readonly contractKit: ContractKit,
     @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     private metaTxWallet: MetaTransactionWalletWrapper,
     private transactionService: TransactionService,

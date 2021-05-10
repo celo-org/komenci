@@ -72,7 +72,6 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     private walletCfg: WalletConfig,
     @Inject(appConfig.KEY) 
     private appCfg: AppConfig,
-    @Inject(BlockchainService)
     private readonly blockchainService: BlockchainService,
     private readonly balanceService: BalanceService,
   ) {

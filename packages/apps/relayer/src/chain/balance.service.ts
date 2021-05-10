@@ -20,7 +20,6 @@ export class BalanceService implements OnModuleInit {
     private readonly logger: KomenciLoggerService,
     @Inject(walletConfig.KEY) 
     private walletCfg: WalletConfig,
-    @Inject(MetaTransactionWalletWrapper)
     private readonly metaTxWallet: MetaTransactionWalletWrapper
   ) {}
 
