@@ -2617,9 +2617,50 @@
     "name": "solc",
     "version": "0.5.13+commit.5b0b510c.Emscripten.clang"
   },
-  "networks": {},
-  "schemaVersion": "3.0.23",
-  "updatedAt": "2021-05-10T04:32:42.375Z",
+  "networks": {
+    "44787": {
+      "events": {
+        "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        },
+        "0x1637a585e48b00de3c1d6e86f59e82f74ce36f787b2b0d46d7a7bf364fea3d0e": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "proxyClone",
+              "type": "address"
+            }
+          ],
+          "name": "ProxyCloneCreated",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x0208a8906b358f6C42B13A01797D3c5630B31B67",
+      "transactionHash": "0xb5064c1c87cd870ded1877128997b36d11efcab43cf3f6b2fd93119892d3ceb2"
+    }
+  },
+  "schemaVersion": "3.4.0",
+  "updatedAt": "2021-05-10T09:20:20.933Z",
+  "networkType": "ethereum",
   "devdoc": {
     "methods": {
       "deploy(address,bytes)": {

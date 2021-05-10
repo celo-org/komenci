@@ -1,68 +1,70 @@
 {
     "version": "0.2.0",
     "configurations": [
-        {
-          "name": "Run and debug",
-          "type": "node",
-          "request": "launch",
-          "runtimeArgs": [
-            "--inspect-brk",
-            "${workspaceRoot}/node_modules/.bin/nest",
-            "start",
-            "-d"
-          ],
-          "console": "integratedTerminal",
-          "internalConsoleOptions": "neverOpen",
-          "port": 3000,
-          "sourceMaps": true
-        },
-        {
-          "name": "Relayer Unit Tests",
-          "type": "node",
-          "request": "launch",
-          "runtimeArgs": [
-            "--inspect-brk",
-            "${workspaceRoot}/node_modules/.bin/jest",
-            "--rootDir",
-            "${workspaceFolder}",
-            "--runInBand",
-            "${workspaceFolder}/apps/relayer/src/**",
-          ],
-          "console": "integratedTerminal",
-          "internalConsoleOptions": "neverOpen",
-          "port": 9229
-        },
-        {
-          "name": "Onboarding Unit Tests",
-          "type": "node",
-          "request": "launch",
-          "runtimeArgs": [
-            "--inspect-brk",
-            "${workspaceRoot}/node_modules/.bin/jest",
-            "--rootDir",
-            "${workspaceFolder}",
-            "--runInBand",
-            "${workspaceFolder}/apps/onboarding/src/**/*.spec.ts",
-          ],
-          "console": "integratedTerminal",
-          "internalConsoleOptions": "neverOpen",
-          "port": 9229
-        },
-        {
-          "name": "Onboarding E2E Tests",
-          "type": "node",
-          "request": "launch",
-          "runtimeArgs": [
-            "--inspect-brk",
-            "${workspaceRoot}/node_modules/.bin/jest",
-            "--rootDir",
-            "${workspaceFolder}",
-            "--runInBand",
-            "${workspaceFolder}/apps/onboarding/test/**",
-          ],
-          "console": "integratedTerminal",
-          "internalConsoleOptions": "neverOpen",
-          "port": 9229
-        }
+      {
+        "name": "Relayer Unit Tests",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "/home/bowd/.asdf/shims/node",
+        "runtimeArgs": [
+          "--inspect-brk",
+          "${workspaceRoot}/node_modules/.bin/jest",
+          "--rootDir",
+          "${workspaceFolder}/packages/apps/relayer",
+          "--runInBand",
+          "./src/**/*.spec.ts"
+        ],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "port": 9229
+      },
+      {
+        "name": "API Unit Tests",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "/home/bowd/.asdf/shims/node",
+        "runtimeArgs": [
+          "--inspect-brk",
+          "${workspaceRoot}/node_modules/.bin/jest",
+          "--rootDir",
+          "${workspaceFolder}/packages/apps/apiu",
+          "--runInBand",
+          "./src/**/*.spec.ts"
+        ],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "port": 9229
+      },
+      {
+        "name": "Onboarding E2E Tests",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "/home/bowd/.asdf/shims/node",
+        "runtimeArgs": [
+          "--inspect-brk",
+          "${workspaceRoot}/node_modules/.bin/jest",
+          "--rootDir",
+          "${workspaceFolder}",
+          "--runInBand",
+          "${workspaceFolder}/apps/onboarding/test/**"
+        ],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "port": 9229
+      },
+      {
+        "type": "node",
+        "name": "vscode-jest-tests",
+        "request": "launch",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "disableOptimisticBPs": true,
+        "runtimeExecutable": "/home/bowd/.asdf/shims/node",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "cwd": "${workspaceFolder}",
+        "args": [
+          "--runInBand"
+        ]
+      }
     ]
 }

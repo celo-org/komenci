@@ -42,6 +42,8 @@ import {
 import { buildLoginTypedData } from './login'
 import { retry } from './retry'
 import { verifyWallet } from './verifyWallet'
+import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
+import { ProxyCloneFactory, ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
 
 const TAG = 'KomenciKit'
 
@@ -223,7 +225,10 @@ export class KomenciKit {
     const metaTxWalletAddress =
       resp.result.status === 'deployed'
         ? Ok(resp.result.walletAddress)
-        : await this.getAddressFromDeploy(resp.result.txHash)
+        : await this.getAddressFromDeploy(
+            resp.result.txHash,
+            resp.result.deployerAddress
+          )
 
     if (!metaTxWalletAddress.ok) {
       return metaTxWalletAddress
@@ -497,16 +502,32 @@ export class KomenciKit {
    * @param txHash the transaction hash of the wallet deploy tx
    * @private
    */
-  private async getAddressFromDeploy(txHash: string): Promise<Result<string, TxError>> {
+  private async getAddressFromDeploy(
+    txHash: string,
+    deployerAddress: string
+  ): Promise<Result<string, TxError>> {
     const receiptResult = await this.waitForReceipt(txHash)
     if (receiptResult.ok === false) {
       return receiptResult
     }
+
     const receipt = receiptResult.result
-    const deployProxyLog = receipt.logs.find((log) => log.topics[0] === "0x00fffc2da0b561cae30d9826d37709e9421c4725faebc226cbbb7ef5fc5e7349")
+
+    const deployer = new this.contractKit.connection.web3.eth.Contract(
+      ProxyCloneFactoryABI as any,
+      deployerAddress
+    ) as unknown as ProxyCloneFactory
+
+    const deployProxyLog = (await deployer.getPastEvents("ProxyCloneCreated", {
+      fromBlock: receipt.blockNumber,
+      toBlock: receipt.blockNumber,
+    })).find(
+      (event) => event.transactionHash === receipt.transactionHash
+    ) as unknown as (ProxyCloneCreated | undefined)
+
     if (deployProxyLog === undefined) {
-      return Err(new TxEventNotFound(txHash, "ProxyDeployed"))
+      return Err(new TxEventNotFound(txHash, "ProxyCloneCreated"))
     } 
-    return Ok(this.contractKit.web3.eth.abi.decodeParameter("address", deployProxyLog.data) as unknown as string)
+    return Ok(deployProxyLog.returnValues.proxyClone)
   }
 }

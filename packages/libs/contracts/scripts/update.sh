@@ -5,7 +5,14 @@ if [[ -z "$CELO_MONOREPO_PATH" ]]; then
     exit 1
 fi
 
-contracts=(MetaTransactionWallet MetaTransactionWalletDeployer Proxy Signatures Migrations ProxyCloneFactory)
+contracts=(InitializableProxy \
+           MetaTransactionWallet \
+           MetaTransactionWalletDeployer \
+           Migrations \
+           Proxy \
+           ProxyCloneFactory \
+           Signatures \
+           )
 protocol_path="$CELO_MONOREPO_PATH/packages/protocol"
 
 for contract in ${contracts[@]}; do

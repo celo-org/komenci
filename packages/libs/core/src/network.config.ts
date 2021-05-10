@@ -91,7 +91,7 @@ const configs: Record<Network, NetworkConfig> = {
         "0x5C9a6E3c3E862eD306E2E3348EBC8b8310A99e5A": "1.1.0.0-p3"
       },
       MetaTransactionWalletDeployer: "0x4cda887Bce324109535814D49b74c6a560fAe1D9",
-      ProxyCloneFactory: "0x43Bec8C66645c177C7188B7Ce95b67ab02331316"
+      ProxyCloneFactory: "0x0208a8906b358f6C42B13A01797D3c5630B31B67"
     },
     fornoURL: 'https://alfajores-forno.celo-testnet.org',
     odis: {

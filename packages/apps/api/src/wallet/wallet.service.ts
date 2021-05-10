@@ -41,7 +41,6 @@ export class WalletService {
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
     private readonly sessionService: SessionService,
-    private readonly legacyDeployer: MetaTransactionWalletDeployerWrapper,
     private readonly eip1167ProxyDeployer: EIP1167ProxyDeployer,
     private readonly legacyProxyDeployer: LegacyProxyDeployer,
     private readonly web3: Web3,
@@ -143,7 +142,7 @@ export class WalletService {
 
     return Ok({
       txHash: resp.payload,
-      deployerAddress: "0x0"
+      deployerAddress
     })
   }
 

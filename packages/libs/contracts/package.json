@@ -3,8 +3,15 @@
   "version": "1.1.0",
   "description": "Artifacts for smart contracts used in Komenci",
   "scripts": {
-    "update": "./scripts/update.sh"
+    "build": "typechain --target web3-v1 ./artefacts/*.json --out-dir ./types",
+    "clean": "rm -rf ./types",
+    "update": "./scripts/update.sh",
+    "prepublish": "yarn clean && yarn build"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@typechain/web3-v1": "^3.0.0",
+    "typechain": "^5.0.0"
+  }
 }

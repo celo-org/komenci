@@ -63,7 +63,7 @@ export class EIP1167ProxyDeployer implements ProxyDeployer {
     const transaction: RawTransaction = {
       destination: this.deployer.options.address,
       value: "0x0",
-      data: this.deployer.methods.deployV2(implementation, initCallData).encodeABI()
+      data: this.deployer.methods.deploy(implementation, initCallData).encodeABI()
     }
     return {
       transaction,
