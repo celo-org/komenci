@@ -96,6 +96,10 @@ const SERVICE_URL: Record<Env, string> = {
 
 const komenciKit = new KomenciKit(contractKit, account, {
   url: SERVICE_URL[env],
+  allowedDeployers: [
+    "0x0208a8906b358f6C42B13A01797D3c5630B31B67",
+    "0x4cda887Bce324109535814D49b74c6a560fAe1D9",
+  ]
 })
 
 const readline = require('readline')

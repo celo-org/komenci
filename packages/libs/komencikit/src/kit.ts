@@ -40,10 +40,12 @@ import {
   TxEventNotFound,
   TxRevertError,
   TxTimeoutError,
+  WalletDeployError,
+  InvalidDeployer,
 } from './errors'
 import { buildLoginTypedData } from './login'
 import { retry } from './retry'
-import { verifyWallet } from './verifyWallet'
+import { verifyWallet, verifyDeployTransaction } from './verifyWallet'
 const parseReceiptEvents = require('web3-parse-receipt-events')
 
 const TAG = 'KomenciKit'
@@ -53,6 +55,7 @@ interface KomenciOptions {
   token?: string
   txRetryTimeoutMs: number
   txPollingIntervalMs: number
+  allowedDeployers: Address[]
 }
 
 const DEFAULT_OPTIONS: Pick<KomenciOptions, 'txRetryTimeoutMs' | 'txPollingIntervalMs'> = {
@@ -217,7 +220,7 @@ export class KomenciKit {
   })
   public async deployWallet(
     implementationAddress: string
-  ): Promise<Result<string, FetchError | TxError | InvalidWallet>> {
+  ): Promise<Result<string, FetchError | TxError | InvalidWallet | WalletDeployError>> {
     const resp = await this.client.exec(deployWallet({ implementationAddress }))
     if (resp.ok === false) {
       return resp
@@ -506,7 +509,11 @@ export class KomenciKit {
   private async getAddressFromDeploy(
     txHash: string,
     deployerAddress: string
-  ): Promise<Result<string, TxError>> {
+  ): Promise<Result<string, TxError | WalletDeployError>> {
+    if (this.options.allowedDeployers.indexOf(deployerAddress) === -1) {
+      return Err(new InvalidDeployer())
+    }
+
     const receiptResult = await this.waitForReceipt(txHash)
     if (receiptResult.ok === false) {
       return receiptResult
@@ -521,7 +528,9 @@ export class KomenciKit {
     if (proxyCloneLog === undefined) {
       return Err(new TxEventNotFound(txHash, "ProxyCloneCreated"))
     } 
-    console.log(proxyCloneLog)
-    return Ok(proxyCloneLog.returnValues.proxyClone)
+    const wallet = proxyCloneLog.returnValues.proxyClone
+    const txCheck = await verifyDeployTransaction(receipt, this.externalAccount, wallet)
+    if (txCheck.ok === false) return txCheck
+    return Ok(wallet)
   }
 }

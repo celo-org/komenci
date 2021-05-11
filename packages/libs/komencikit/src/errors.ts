@@ -132,6 +132,27 @@ export class LoginSignatureError extends RootError<KomenciKitErrorTypes.LoginSig
   }
 }
 
+export enum WalletDeployErrorTypes {
+  InvalidDeployer = "InvalidDeployer",
+  InvalidDeployTransaction = "InvalidDeployTransaction"
+}
+
+export class InvalidDeployer extends RootError<WalletDeployErrorTypes.InvalidDeployer> {
+  constructor() {
+    super(WalletDeployErrorTypes.InvalidDeployer)
+    this.message = "Deployer is not allowed"
+  }
+}
+
+export class InvalidDeployTransaction extends RootError<WalletDeployErrorTypes.InvalidDeployTransaction> {
+  constructor() {
+    super(WalletDeployErrorTypes.InvalidDeployTransaction)
+    this.message = "Wallet deploy transaction is invalid"
+  }
+}
+
+export type WalletDeployError = InvalidDeployer | InvalidDeployTransaction
+
 export class InvalidWallet extends RootError<KomenciKitErrorTypes.InvalidWallet> {
   public readonly message: string
   constructor(public readonly error: WalletValidationError) {

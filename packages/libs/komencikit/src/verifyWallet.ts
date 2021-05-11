@@ -13,10 +13,16 @@ import {
   InvalidSigner,
   InvalidStorageRoot,
   WalletValidationError,
+  WalletDeployError,
+  InvalidDeployTransaction,
 } from './errors'
+import {abi as MetaTransactionWalletABI} from '@komenci/contracts/artefacts/MetaTransactionWallet.json'
+import { SignerSet } from '@komenci/contracts/types/MetaTransactionWallet'
+const parseReceiptEvents = require('web3-parse-receipt-events')
 
 import { SecureTrie } from 'merkle-patricia-tree'
 import { encode as rlpEncode } from 'rlp'
+import { CeloTxReceipt } from '@celo/connect'
 
 /*
  * It is highly unlikely (but not impossible) that we will ever need
@@ -159,6 +165,31 @@ const verifyLegacyProxy = async (
   const implementation = normalizeAddress(await proxy.methods._getImplementation().call())
   if (allowedImplementations.indexOf(implementation) === -1) {
     return Err(new InvalidImplementation(metaTxWalletAddress, implementation, allowedImplementations))
+  }
+  return Ok(true)
+}
+
+export const verifyDeployTransaction = async (
+  receipt: CeloTxReceipt,
+  signer: string,
+  wallet: string
+): Promise<Result<true, WalletDeployError>> => {
+  const receiptWithEvents = parseReceiptEvents([
+    ...InitializableProxyABI,
+    ...ProxyABI,
+    ...MetaTransactionWalletABI
+  ], wallet, receipt)
+  const singerSetLogs = Object.values(receiptWithEvents.events).filter(
+    (log: any) => log.event === "SignerSet"
+  ) as (SignerSet[])
+
+  if (singerSetLogs.length > 1) {
+    return Err(new InvalidDeployTransaction())
+  }
+
+  const signerSet = singerSetLogs[0]
+  if (!eqAddress(signerSet.returnValues.signer, signer)) {
+    return Err(new InvalidDeployTransaction())
   }
   return Ok(true)
 }
