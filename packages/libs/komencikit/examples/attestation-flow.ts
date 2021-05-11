@@ -98,8 +98,13 @@ const SERVICE_URL: Record<Env, string> = {
 const komenciKit = new KomenciKit(contractKit, account, {
   url: SERVICE_URL[env],
   allowedDeployers: [
+    // alfajores
     "0x0208a8906b358f6C42B13A01797D3c5630B31B67",
     "0x4cda887Bce324109535814D49b74c6a560fAe1D9",
+    // rc1
+    "0xbDb92Ca42559adc5adC20a1E4985dC7c476483be",
+    // TODO: Add the ProxyCloneFactory after deployment
+
   ],
   proxyType: ProxyType.LegacyProxy
 })
