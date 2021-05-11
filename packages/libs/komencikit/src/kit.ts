@@ -11,14 +11,16 @@ import {
   getBlindedPhoneNumber,
   getPhoneNumberIdentifierFromSignature,
 } from '@celo/identity/lib/odis/phone-number-identifier'
-import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
 import { abi as MetaTransactionWalletDeployerABI} from '@komenci/contracts/artefacts/MetaTransactionWalletDeployer.json'
-import { ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
+import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
 import { WalletDeployed } from '@komenci/contracts/types/MetaTransactionWalletDeployer'
+import { ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
 import {
   checkService,
   checkSession,
   CheckSessionResp,
+  deployLegacyProxyWallet,
+  deployLightProxyWallet,
   getDistributedBlindedPepper,
   GetDistributedBlindedPepperResp,
   requestSubsidisedAttestations,
@@ -26,8 +28,6 @@ import {
   StartSessionPayload,
   StartSessionResp,
   submitMetaTransaction,
-  deployLightProxyWallet,
-  deployLegacyProxyWallet,
 } from './actions'
 import { KomenciClient } from './client'
 import {
