@@ -34,6 +34,7 @@ import {
   AuthenticationFailed,
   FetchError,
   FetchErrorTypes,
+  InvalidDeployer,
   InvalidWallet,
   KomenciDown,
   KomenciKitErrorTypes,
@@ -43,10 +44,11 @@ import {
   TxEventNotFound,
   TxRevertError,
   TxTimeoutError,
+  WalletDeployError,
 } from './errors'
 import { buildLoginTypedData } from './login'
 import { retry } from './retry'
-import { verifyWallet } from './verifyWallet'
+import { verifyDeployTransaction, verifyWallet } from './verifyWallet'
 const parseReceiptEvents = require('web3-parse-receipt-events')
 
 const TAG = 'KomenciKit'
@@ -60,6 +62,7 @@ interface KomenciOptions {
   url: string
   token?: string
   txRetryTimeoutMs: number
+  allowedDeployers: Address[]
   txPollingIntervalMs: number,
   proxyType: ProxyType
 }
@@ -227,7 +230,7 @@ export class KomenciKit {
   })
   public async deployWallet(
     implementationAddress: string
-  ): Promise<Result<string, FetchError | TxError | InvalidWallet>> {
+  ): Promise<Result<string, FetchError | TxError | InvalidWallet | WalletDeployError>> {
     const action = this.options.proxyType === ProxyType.LightProxy 
       ? deployLightProxyWallet({ implementationAddress })
       : deployLegacyProxyWallet({ implementationAddress })
@@ -521,7 +524,11 @@ export class KomenciKit {
   private async getAddressFromDeploy(
     txHash: string,
     deployerAddress: string
-  ): Promise<Result<string, TxError>> {
+  ): Promise<Result<string, TxError | WalletDeployError>> {
+    if (this.options.allowedDeployers.indexOf(deployerAddress) === -1) {
+      return Err(new InvalidDeployer())
+    }
+
     const receiptResult = await this.waitForReceipt(txHash)
     if (receiptResult.ok === false) {
       return receiptResult
@@ -548,7 +555,7 @@ export class KomenciKit {
     txHash: string,
     deployerAddress: string,
     receipt: CeloTxReceipt
-  ): Promise<Result<string, TxError>> {
+  ): Promise<Result<string, TxError | WalletDeployError>> {
     const receiptWithEvents = parseReceiptEvents(MetaTransactionWalletDeployerABI, deployerAddress, receipt)
     const walletDeployedLog = Object.values(receiptWithEvents.events).find(
       (log: any) => log.event === "WalletDeployed"
@@ -572,15 +579,18 @@ export class KomenciKit {
     txHash: string,
     deployerAddress: string,
     receipt: CeloTxReceipt
-  ): Promise<Result<string, TxError>> {
+  ): Promise<Result<string, TxError | WalletDeployError>> {
     const receiptWithEvents = parseReceiptEvents(ProxyCloneFactoryABI, deployerAddress, receipt)
-    const deployProxyLog = Object.values(receiptWithEvents.events).find(
+    const proxyCloneLog = Object.values(receiptWithEvents.events).find(
       (log: any) => log.event === "ProxyCloneCreated"
     ) as (ProxyCloneCreated | undefined)
 
-    if (deployProxyLog === undefined) {
+    if (proxyCloneLog === undefined) {
       return Err(new TxEventNotFound(txHash, "ProxyCloneCreated"))
     } 
-    return Ok(deployProxyLog.returnValues.proxyClone)
+    const wallet = proxyCloneLog.returnValues.proxyClone
+    const txCheck = await verifyDeployTransaction(receipt, this.externalAccount, wallet)
+    if (txCheck.ok === false) { return txCheck }
+    return Ok(wallet)
   }
 }

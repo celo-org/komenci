@@ -29,9 +29,11 @@
     "@celo/contractkit": "1.2.0",
     "@celo/identity": "1.2.0",
     "@celo/utils": "1.2.0",
+    "bignumber.js": "^9.0.1",
     "cross-fetch": "3.0.6",
     "fp-ts": "2.8.4",
     "io-ts": "2.2.11",
+    "merkle-patricia-tree": "^4.1.0",
     "web3-parse-receipt-events": "^1.0.2",
     "web3-utils": "1.3.4"
   },
@@ -43,6 +45,6 @@
     "domexception": "^2.0.1",
     "jest-fetch-mock": "^3.0.3",
     "typescript": "3.8.3",
-    "web3": "1.3.4"
+    "web3": "1.3.5"
   }
 }

@@ -132,6 +132,27 @@ export class LoginSignatureError extends RootError<KomenciKitErrorTypes.LoginSig
   }
 }
 
+export enum WalletDeployErrorTypes {
+  InvalidDeployer = "InvalidDeployer",
+  InvalidDeployTransaction = "InvalidDeployTransaction"
+}
+
+export class InvalidDeployer extends RootError<WalletDeployErrorTypes.InvalidDeployer> {
+  constructor() {
+    super(WalletDeployErrorTypes.InvalidDeployer)
+    this.message = "Deployer is not allowed"
+  }
+}
+
+export class InvalidDeployTransaction extends RootError<WalletDeployErrorTypes.InvalidDeployTransaction> {
+  constructor() {
+    super(WalletDeployErrorTypes.InvalidDeployTransaction)
+    this.message = "Wallet deploy transaction is invalid"
+  }
+}
+
+export type WalletDeployError = InvalidDeployer | InvalidDeployTransaction
+
 export class InvalidWallet extends RootError<KomenciKitErrorTypes.InvalidWallet> {
   public readonly message: string
   constructor(public readonly error: WalletValidationError) {
@@ -151,7 +172,9 @@ export class KomenciDown extends RootError<KomenciKitErrorTypes.KomenciDown> {
 export enum WalletVerificationErrorTypes {
   InvalidBytecode = 'InvalidBytecode',
   InvalidSigner = 'InvalidSigner',
+  InvalidOwner = 'InvalidOwner',
   InvalidImplementation = 'InvalidImplementation',
+  InvalidStorageRoot = 'InvalidStorageRoot',
 }
 
 export class InvalidBytecode extends RootError<WalletVerificationErrorTypes.InvalidBytecode> {
@@ -159,6 +182,23 @@ export class InvalidBytecode extends RootError<WalletVerificationErrorTypes.Inva
   constructor(public readonly walletAddress: string) {
     super(WalletVerificationErrorTypes.InvalidBytecode)
     this.message = 'Invalid wallet bytecode, should be a Proxy'
+  }
+}
+
+export class InvalidOwner extends RootError<WalletVerificationErrorTypes.InvalidOwner> {
+  public readonly message: string
+  constructor(public readonly walletAddress: string) {
+    super(WalletVerificationErrorTypes.InvalidOwner)
+    this.message = 'Unexpected proxy owner'
+  }
+}
+
+
+export class InvalidStorageRoot extends RootError<WalletVerificationErrorTypes.InvalidStorageRoot> {
+  public readonly message: string
+  constructor(public readonly proxyAddress: string) {
+    super(WalletVerificationErrorTypes.InvalidStorageRoot)
+    this.message = 'Invalid proxy storage, should have only expected owner and implementation in trie'
   }
 }
 
@@ -184,4 +224,4 @@ export class InvalidImplementation extends RootError<WalletVerificationErrorType
   }
 }
 
-export type WalletValidationError = InvalidBytecode | InvalidImplementation | InvalidSigner
+export type WalletValidationError = InvalidBytecode | InvalidImplementation | InvalidSigner | InvalidStorageRoot | InvalidOwner
