@@ -5,6 +5,7 @@ import { compressedPubKey } from '@celo/utils/lib/dataEncryptionKey'
 import { LocalWallet } from '@celo/wallet-local'
 import { randomHex } from 'web3-utils'
 import { KomenciKit } from '../src'
+import { ProxyType } from '../src/kit'
 
 enum Env {
   local = 'local',
@@ -99,7 +100,8 @@ const komenciKit = new KomenciKit(contractKit, account, {
   allowedDeployers: [
     "0x0208a8906b358f6C42B13A01797D3c5630B31B67",
     "0x4cda887Bce324109535814D49b74c6a560fAe1D9",
-  ]
+  ],
+  proxyType: ProxyType.LegacyProxy
 })
 
 const readline = require('readline')
