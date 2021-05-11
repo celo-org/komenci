@@ -2,27 +2,27 @@ import { Address, bufferToHex, ensureLeading0x, eqAddress, hexToBuffer, normaliz
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { abi as InitializableProxyABI } from '@komenci/contracts/artefacts/InitializableProxy.json'
+import {abi as MetaTransactionWalletABI} from '@komenci/contracts/artefacts/MetaTransactionWallet.json'
 import { abi as ProxyABI } from '@komenci/contracts/artefacts/Proxy.json'
 import { InitializableProxy } from '@komenci/contracts/types/InitializableProxy'
+import { SignerSet } from '@komenci/contracts/types/MetaTransactionWallet'
 import { Proxy } from '@komenci/contracts/types/Proxy'
 import Web3 from 'web3'
 import {
   InvalidBytecode,
+  InvalidDeployTransaction,
   InvalidImplementation,
   InvalidOwner,
   InvalidSigner,
   InvalidStorageRoot,
-  WalletValidationError,
   WalletDeployError,
-  InvalidDeployTransaction,
+  WalletValidationError,
 } from './errors'
-import {abi as MetaTransactionWalletABI} from '@komenci/contracts/artefacts/MetaTransactionWallet.json'
-import { SignerSet } from '@komenci/contracts/types/MetaTransactionWallet'
 const parseReceiptEvents = require('web3-parse-receipt-events')
 
+import { CeloTxReceipt } from '@celo/connect'
 import { SecureTrie } from 'merkle-patricia-tree'
 import { encode as rlpEncode } from 'rlp'
-import { CeloTxReceipt } from '@celo/connect'
 
 /*
  * It is highly unlikely (but not impossible) that we will ever need

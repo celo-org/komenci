@@ -34,6 +34,7 @@ import {
   AuthenticationFailed,
   FetchError,
   FetchErrorTypes,
+  InvalidDeployer,
   InvalidWallet,
   KomenciDown,
   KomenciKitErrorTypes,
@@ -44,11 +45,10 @@ import {
   TxRevertError,
   TxTimeoutError,
   WalletDeployError,
-  InvalidDeployer,
 } from './errors'
 import { buildLoginTypedData } from './login'
 import { retry } from './retry'
-import { verifyWallet, verifyDeployTransaction } from './verifyWallet'
+import { verifyDeployTransaction, verifyWallet } from './verifyWallet'
 const parseReceiptEvents = require('web3-parse-receipt-events')
 
 const TAG = 'KomenciKit'
@@ -590,7 +590,7 @@ export class KomenciKit {
     } 
     const wallet = proxyCloneLog.returnValues.proxyClone
     const txCheck = await verifyDeployTransaction(receipt, this.externalAccount, wallet)
-    if (txCheck.ok === false) return txCheck
+    if (txCheck.ok === false) { return txCheck }
     return Ok(wallet)
   }
 }
