@@ -9,7 +9,8 @@ export class CreateInviteReward1616435724783 implements MigrationInterface {
           {
             name: 'id',
             type: 'uuid',
-            isNullable: false
+            isNullable: false,
+            isPrimary: true
           },
           {
             name: 'inviter',

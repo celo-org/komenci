@@ -5,10 +5,11 @@ export const appConfig = registerAs('app', () => ({
   port: parseInt(process.env.PORT, 10) || 3000,
   jwt_secret: process.env.JWT_SECRET || 'secret123456789',
   log_level: process.env.LOG_LEVEL || 'debug',
-  transactionTimeoutMs:
-    parseInt(process.env.TRANSACTION_TIMEOUT_MS, 10) || 10000,
   service: process.env.KOMENCI_SERVICE || 'komenci-rewards',
   version: process.env.KOMENCI_VERSION || 'version-missing',
+  relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000,
+  inviteRewardAmountInCusd:
+    parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 1,
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>

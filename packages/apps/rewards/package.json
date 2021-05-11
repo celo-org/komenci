@@ -43,6 +43,7 @@
     "@nestjs/typeorm": "^7.1.5",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
+    "fp-ts": "^2.10.4",
     "jest-fetch-mock": "^3.0.3",
     "source-map-support": "^0.5.19",
     "typeorm": "^0.2.32",
