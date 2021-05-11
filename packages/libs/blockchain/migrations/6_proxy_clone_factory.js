@@ -7,5 +7,6 @@ module.exports = async function (deployer, network, addresses) {
       const initializableProxy = await InitializableProxy.deployed()
       const cloneFactory = await ProxyCloneFactory.deployed()
       await cloneFactory.setImplementationAddress(initializableProxy.address)
+      await cloneFactory.renounceOwnership()
   })
 };
