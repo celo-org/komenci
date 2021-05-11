@@ -1,4 +1,4 @@
-import { eqAddress, Err, Ok, Result } from "@celo/base"
+import { eqAddress, Err, Ok, Result, ensureLeading0x } from "@celo/base"
 import { ContractKit } from "@celo/contractkit"
 import { RawTransaction, toRawTransaction } from "@celo/contractkit/lib/wrappers/MetaTransactionWallet"
 import { MetaTransactionWalletDeployerWrapper } from "@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer"
@@ -46,7 +46,11 @@ export class LegacyProxyDeployer implements ProxyDeployer {
     initCallData: string,
   ): {transaction: RawTransaction, deployerAddress: string} {
     const transaction = toRawTransaction(
-      this.deployer.deploy(owner, implementation, initCallData).txo
+      this.deployer.deploy(
+        ensureLeading0x(owner),
+        ensureLeading0x(implementation),
+        initCallData
+       ).txo
     )
     return {
       transaction,

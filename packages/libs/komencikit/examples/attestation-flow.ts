@@ -5,6 +5,7 @@ import { compressedPubKey } from '@celo/utils/lib/dataEncryptionKey'
 import { LocalWallet } from '@celo/wallet-local'
 import { randomHex } from 'web3-utils'
 import { KomenciKit } from '../src'
+import { ProxyType } from '../src/kit'
 
 enum Env {
   local = 'local',
@@ -96,6 +97,7 @@ const SERVICE_URL: Record<Env, string> = {
 
 const komenciKit = new KomenciKit(contractKit, account, {
   url: SERVICE_URL[env],
+  proxyType: ProxyType.LightProxy
 })
 
 const readline = require('readline')

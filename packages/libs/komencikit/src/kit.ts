@@ -12,12 +12,13 @@ import {
   getPhoneNumberIdentifierFromSignature,
 } from '@celo/identity/lib/odis/phone-number-identifier'
 import { abi as ProxyCloneFactoryABI } from '@komenci/contracts/artefacts/ProxyCloneFactory.json'
+import { abi as MetaTransactionWalletDeployerABI} from '@komenci/contracts/artefacts/MetaTransactionWalletDeployer.json'
 import { ProxyCloneCreated } from '@komenci/contracts/types/ProxyCloneFactory'
+import { WalletDeployed } from '@komenci/contracts/types/MetaTransactionWalletDeployer'
 import {
   checkService,
   checkSession,
   CheckSessionResp,
-  deployWallet,
   getDistributedBlindedPepper,
   GetDistributedBlindedPepperResp,
   requestSubsidisedAttestations,
@@ -25,6 +26,8 @@ import {
   StartSessionPayload,
   StartSessionResp,
   submitMetaTransaction,
+  deployLightProxyWallet,
+  deployLegacyProxyWallet,
 } from './actions'
 import { KomenciClient } from './client'
 import {
@@ -48,16 +51,23 @@ const parseReceiptEvents = require('web3-parse-receipt-events')
 
 const TAG = 'KomenciKit'
 
+export enum ProxyType {
+  LightProxy = "LightProxy",
+  LegacyProxy = "LegacyProxy"
+}
+
 interface KomenciOptions {
   url: string
   token?: string
   txRetryTimeoutMs: number
-  txPollingIntervalMs: number
+  txPollingIntervalMs: number,
+  proxyType: ProxyType
 }
 
-const DEFAULT_OPTIONS: Pick<KomenciOptions, 'txRetryTimeoutMs' | 'txPollingIntervalMs'> = {
+const DEFAULT_OPTIONS: Pick<KomenciOptions, 'txRetryTimeoutMs' | 'txPollingIntervalMs' | 'proxyType'> = {
   txRetryTimeoutMs: 20000,
   txPollingIntervalMs: 100,
+  proxyType: ProxyType.LegacyProxy
 }
 
 export type KomenciOptionsInput = Omit<KomenciOptions, keyof typeof DEFAULT_OPTIONS> &
@@ -218,7 +228,11 @@ export class KomenciKit {
   public async deployWallet(
     implementationAddress: string
   ): Promise<Result<string, FetchError | TxError | InvalidWallet>> {
-    const resp = await this.client.exec(deployWallet({ implementationAddress }))
+    const action = this.options.proxyType === ProxyType.LightProxy 
+      ? deployLightProxyWallet({ implementationAddress })
+      : deployLegacyProxyWallet({ implementationAddress })
+
+    const resp = await this.client.exec(action)
     if (resp.ok === false) {
       return resp
     }
@@ -501,6 +515,7 @@ export class KomenciKit {
   /**
    * Wait for the deploy tx and extract the wallet from events
    * @param txHash the transaction hash of the wallet deploy tx
+   * @param deployerAddress the address of the contract that deployed the wallet
    * @private
    */
   private async getAddressFromDeploy(
@@ -513,6 +528,51 @@ export class KomenciKit {
     }
 
     const receipt = receiptResult.result
+    if (this.options.proxyType === ProxyType.LightProxy) {
+      return this.getAddressFromLightProxyDeployer(txHash, deployerAddress, receipt)
+    } else {
+      return this.getAddressFromLegacyDeployer(txHash, deployerAddress, receipt)
+
+    }
+  }
+
+  /**
+   * Parse the deploy transaction for legacy deployments
+   * done via the MetaTransactionWalletDeployer
+   * @param txHash the transaction hash of the wallet deploy tx
+   * @param deployerAddress the address of the contract that deployed the wallet
+   * @param receipt CeloTxReceipt
+   * @private
+   */
+  private async getAddressFromLegacyDeployer(
+    txHash: string,
+    deployerAddress: string,
+    receipt: CeloTxReceipt
+  ): Promise<Result<string, TxError>> {
+    const receiptWithEvents = parseReceiptEvents(MetaTransactionWalletDeployerABI, deployerAddress, receipt)
+    const walletDeployedLog = Object.values(receiptWithEvents.events).find(
+      (log: any) => log.event === "WalletDeployed"
+    ) as (WalletDeployed | undefined)
+
+    if (walletDeployedLog === undefined) {
+      return Err(new TxEventNotFound(txHash, "WalletDeployed"))
+    } 
+    return Ok(walletDeployedLog.returnValues.wallet)
+  }
+
+  /**
+   * Parse the deploy transaction for light proxy
+   * deployments done via ProxyCloneFactory
+   * @param txHash the transaction hash of the wallet deploy tx
+   * @param deployerAddress the address of the contract that deployed the wallet
+   * @param receipt CeloTxReceipt
+   * @private
+   */
+  private async getAddressFromLightProxyDeployer(
+    txHash: string,
+    deployerAddress: string,
+    receipt: CeloTxReceipt
+  ): Promise<Result<string, TxError>> {
     const receiptWithEvents = parseReceiptEvents(ProxyCloneFactoryABI, deployerAddress, receipt)
     const deployProxyLog = Object.values(receiptWithEvents.events).find(
       (log: any) => log.event === "ProxyCloneCreated"
