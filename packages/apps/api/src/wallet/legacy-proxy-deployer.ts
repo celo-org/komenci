@@ -1,4 +1,4 @@
-import { eqAddress, Err, Ok, Result, ensureLeading0x } from "@celo/base"
+import { ensureLeading0x, eqAddress, Err, Ok, Result } from "@celo/base"
 import { ContractKit } from "@celo/contractkit"
 import { RawTransaction, toRawTransaction } from "@celo/contractkit/lib/wrappers/MetaTransactionWallet"
 import { MetaTransactionWalletDeployerWrapper } from "@celo/contractkit/lib/wrappers/MetaTransactionWalletDeployer"
