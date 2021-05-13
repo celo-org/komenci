@@ -1,5 +1,6 @@
 import { ContractKit } from '@celo/contractkit'
-import { KomenciLoggerService } from '@komenci/logger'
+import { AnalyticsService } from '@komenci/analytics'
+import { EventType } from '@komenci/logger'
 import { Injectable } from '@nestjs/common'
 import { LessThan } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
@@ -15,7 +16,7 @@ export class NotifiedBlockService {
   constructor(
     private readonly notifiedBlockRepository: NotifiedBlockRepository,
     private readonly contractKit: ContractKit,
-    private readonly logger: KomenciLoggerService
+    private readonly analytics: AnalyticsService
   ) {}
 
   async runUsingLastNotifiedBlock(
@@ -54,9 +55,10 @@ export class NotifiedBlockService {
         )
       }
     } catch (error) {
-      this.logger.error(
-        `Error while processing blocks for key ${notifiedBlockKey}: ${error}`
-      )
+      this.analytics.trackEvent(EventType.UnexpectedError, {
+        origin: `block processing for key ${notifiedBlockKey}`,
+        error: error
+      })
     }
   }
 }
