@@ -7,7 +7,7 @@ import { EscrowWrapper } from '@celo/contractkit/lib/wrappers/Escrow'
 import { BlockchainModule, NodeProviderType } from '@komenci/blockchain'
 import { WEB3_PROVIDER } from '@komenci/blockchain/dist/blockchain.providers'
 import { buildMockWeb3Provider, networkConfig } from '@komenci/core'
-import { KomenciLoggerModule } from '@komenci/logger'
+import { KomenciLoggerModule, KomenciLoggerService } from '@komenci/logger'
 import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -18,7 +18,7 @@ import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
-import { appConfig } from '../config/app.config'
+import { AppConfig, appConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
 import { partialEventLog, partialTransaction } from '../utils/testing'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
@@ -67,7 +67,13 @@ describe('InviteRewardService', () => {
         NotifiedBlockService,
         RewardSenderService,
         EventService,
-        AnalyticsService,
+        {
+          provide: AnalyticsService,
+          useFactory: (logger: KomenciLoggerService, appConfig: AppConfig) => {
+            return new AnalyticsService(logger, appConfig.bigQueryDataset);
+          },
+          inject: [KomenciLoggerService, appConfig.KEY],
+        },
         {
           provide: getRepositoryToken(InviteReward),
           useClass: Repository
