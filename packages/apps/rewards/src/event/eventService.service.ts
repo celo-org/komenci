@@ -1,7 +1,7 @@
 import { EventLog } from '@celo/connect'
+import { AnalyticsService } from '@komenci/analytics'
 import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { Injectable, Scope } from '@nestjs/common'
-import { AnalyticsService } from '@komenci/analytics'
 import {
   NotifiedBlockService,
   StartingBlock

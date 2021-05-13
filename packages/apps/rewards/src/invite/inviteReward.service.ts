@@ -1,6 +1,7 @@
 import { isAccountConsideredVerified } from '@celo/base/lib'
 import { EventLog } from '@celo/connect'
 import { CeloContract, ContractKit } from '@celo/contractkit'
+import { AnalyticsService } from '@komenci/analytics'
 import { networkConfig, NetworkConfig } from '@komenci/core'
 import {
   EventType,
@@ -11,7 +12,6 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
-import { AnalyticsService } from '@komenci/analytics'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'

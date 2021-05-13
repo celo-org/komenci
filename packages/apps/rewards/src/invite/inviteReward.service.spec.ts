@@ -4,6 +4,7 @@ import {
   AttestationsWrapper
 } from '@celo/contractkit/lib/wrappers/Attestations'
 import { EscrowWrapper } from '@celo/contractkit/lib/wrappers/Escrow'
+import { AnalyticsService } from '@komenci/analytics'
 import { BlockchainModule, NodeProviderType } from '@komenci/blockchain'
 import { WEB3_PROVIDER } from '@komenci/blockchain/dist/blockchain.providers'
 import { buildMockWeb3Provider, networkConfig } from '@komenci/core'
@@ -12,7 +13,6 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
-import { AnalyticsService } from '@komenci/analytics'
 import { Attestation } from '../attestation/attestation.entity'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
@@ -69,8 +69,8 @@ describe('InviteRewardService', () => {
         EventService,
         {
           provide: AnalyticsService,
-          useFactory: (logger: KomenciLoggerService, appConfig: AppConfig) => {
-            return new AnalyticsService(logger, appConfig.bigQueryDataset);
+          useFactory: (logger: KomenciLoggerService, appCfg: AppConfig) => {
+            return new AnalyticsService(logger, appCfg.bigQueryDataset)
           },
           inject: [KomenciLoggerService, appConfig.KEY],
         },

@@ -1,5 +1,6 @@
 import { CeloTransactionObject } from '@celo/connect'
 import { ContractKit } from '@celo/contractkit'
+import { AnalyticsService } from '@komenci/analytics'
 import {
   EventType,
   KomenciLoggerService,
@@ -9,7 +10,6 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import BigNumber from 'bignumber.js'
 import { EntityManager, In, Raw, Repository } from 'typeorm'
-import { AnalyticsService } from '@komenci/analytics'
 import { appConfig, AppConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
 import { promiseAllSettled } from '../utils/promiseUtil'
