@@ -21,6 +21,7 @@ export class AnalyticsService {
     try {
       this.logger.event(event, payload)
       if (!this.appCfg.bigQueryDataset) {
+        this.logger.log('Big Query Dataset is not set')
         return
       }
       this.bigQuery

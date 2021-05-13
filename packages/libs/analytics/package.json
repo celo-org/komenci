@@ -1,0 +1,27 @@
+{
+  "name": "@komenci/analytics",
+  "version": "1.0.0",
+  "description": "Analytics module for Komenci services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "build:watch": "node_modules/.bin/tsc -p tsconfig.build.json -w --preserveWatchOutput",
+    "start:dev": "npm run build:watch",
+    "clean": "rm -rf ./dist",
+    "test": "",
+    "test:watch": ""
+  },
+  "author": "cLabs",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "3.8.3"
+  },
+  "dependencies": {
+    "@celo/base": "^1.2.1",
+    "@komenci/core": "^1.0.0",
+    "@nestjs/cli": "^7.6.0",
+    "@nestjs/core": "^7.6.15",
+    "@nestjs/microservices": "^7.6.15"
+  }
+}
