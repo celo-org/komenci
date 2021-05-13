@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { AnalyticsService } from '../analytics/analytics.service'
+import { AnalyticsService } from '@komenci/analytics'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'

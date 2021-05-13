@@ -1,123 +1,50 @@
-import { isApiError, isMetadataError, isRootError } from '@komenci/core'
-import { isError } from '@nestjs/cli/lib/utils/is-error'
-import { Injectable, LoggerService } from '@nestjs/common'
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
+import { BigQuery } from '@google-cloud/bigquery'
+import { EventPayload, EventType, KomenciLoggerService } from '@komenci/logger'
 
-import { EventPayload } from './events'
+const BIG_QUERY_PROJECT_ID = 'celo-testnet-production'
 
-export interface KomenciLogger extends LoggerService {
-  event: <K extends keyof EventPayload>(eventType: K, payload: EventPayload[K]) => void
-}
+export class AnalyticsService {
+  bigQuery: BigQuery
 
-interface EventContext {
-  traceId: string,
-  labels: {key: string, value: string}[]
-}
-
-@Injectable()
-export class KomenciLoggerService implements KomenciLogger {
-  constructor(@InjectPinoLogger() private readonly logger: PinoLogger) {
+  constructor(
+    private readonly logger: KomenciLoggerService,
+    private readonly bigQueryDataset: string
+  ) {
+    this.bigQuery = new BigQuery({ projectId: `${BIG_QUERY_PROJECT_ID}` })
   }
 
-  log(message: any, context?: any, ...args): void {
-    this.logger.info(message, context, ...args)
-  }
-
-  verbose(message: any, context?: any, ...args): void {
-    this.logger.trace(message, context, ...args)
-  }
-
-  debug(message: any, context?: any, ...args): void {
-    this.logger.debug(message, context, ...args)
-  }
-
-  warn(error: any, trace?: string, context?: any, ...args): void {
-    this.logError('warn', error, trace, context, ...args)
-  }
-
-  error(error: any, trace?: string, context?: any, ...args): void {
-    this.logError('error', error, trace, context, ...args)
-  }
-
-  logError(level: 'error' | 'warn', error: any, trace?: string, context?: any, ...args): void {
-    if (isApiError(error) || isMetadataError(error)) {
-      this.logger[level](
-        { error: error.errorType, ...error.getMetadata() },
-        error.stack,
-      )
-    } else if (isRootError(error)) {
-      this.logger[level](
-        { error: error.errorType, },
-        error.stack,
-      )
-    } else if (isError(error)) {
-      this.logger[level]((error as Error).stack, context, ...args)
-    } else {
-      this.logger[level](trace || error, context, ...args)
+  trackEvent<K extends keyof EventPayload>(event: K, payload: EventPayload[K]) {
+    try {
+      this.logger.event(event, payload)
+      if (!this.bigQueryDataset) {
+        this.logger.log('Big Query Dataset is not set')
+        return
+      }
+      this.bigQuery
+        .dataset(this.bigQueryDataset)
+        .table(this.toTableName(event))
+        .insert({
+          ...payload,
+          timestamp: Date.now() / 1000
+        })
+        .catch(error => {
+          this.logger.error(error, `Error firing BigQuery event ${event}`)
+        })
+    } catch (error) {
+      this.logger.error(error, `Error tracking event ${event}`)
     }
   }
 
-
-  warnWithContext(error: Error, ctx?: EventContext) {
-    this.logWithContext('warn', error, ctx)
-  }
-
-  errorWithContext(error: Error, ctx?: EventContext) {
-    this.logWithContext('error', error, ctx)
-  }
-
-  logWithContext(level: 'error' | 'warn', error: Error, ctx?: EventContext) {
-    const context = ctx ? this.expandContext(ctx) : {}
-    if (isApiError(error) || isMetadataError(error)) {
-      this.logger[level](
-        {
-          error: error.errorType,
-          message: error.message,
-          ...error.getMetadata(),
-          ...context
-        },
-      )
-    } else if (isRootError(error)) {
-      this.logger[level](
-        { 
-          error: error.errorType, 
-          message: error.message,
-          ...context
-        },
-        error.stack,
-      )
-    } else if (isError(error)) {
-      this.logger[level]({
-        message: error.message,
-        ...context
-      }, (error as Error).stack)
-    }
-  }
-
-  logAndThrow(error: any): void {
-    this.error(error)
-    throw(error)
-  }
-
-  event<K extends keyof EventPayload>(
-    eventType: K,
-    payload: EventPayload[K],
-    context?: EventContext,
-  ): void {
-    this.log({
-      event: eventType,
-      ...payload,
-      ...(context ? this.expandContext(context) : {})
-    }, eventType)
-  }
-
-  private expandContext(context: EventContext): Record<string, string> {
-    return {
-      'logging.googleapis.com/trace': context.traceId,
-      ...(context.labels.reduce((acc, l) => {
-        acc[l.key] = l.value
-        return acc
-      }, {}))
-    }
+  /**
+   * The event is in PascalCase and the table name should be in snake_case.
+   * We first replace each capitalized letter and trim to remove the leading space,
+   * then separate the words and join again using underscores.
+   */
+  private toTableName(event: EventType) {
+    const result = event.replace(/([A-Z])/g, ' $1').trim()
+    return result
+      .split(' ')
+      .join('_')
+      .toLowerCase()
   }
 }

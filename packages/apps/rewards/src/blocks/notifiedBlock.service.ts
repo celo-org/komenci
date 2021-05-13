@@ -3,7 +3,7 @@ import { EventType } from '@komenci/logger'
 import { Injectable } from '@nestjs/common'
 import { LessThan } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
-import { AnalyticsService } from '../analytics/analytics.service'
+import { AnalyticsService } from '@komenci/analytics'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 
 export enum StartingBlock {

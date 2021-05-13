@@ -11,7 +11,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
-import { AnalyticsService } from '../analytics/analytics.service'
+import { AnalyticsService } from '@komenci/analytics'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'
@@ -149,30 +149,38 @@ export class InviteRewardService {
     identifier: string,
     txHash: string
   ) {
-    const conditions = await Promise.all([
-      this.isAddressVerified(inviter),
-      this.isAddressVerifiedWithIdentifier(invitee, identifier),
-      this.inviterHasNotReachedWeeklyLimit(inviter),
-      this.inviteeRewardNotInProgress(invitee)
-    ])
-    const conditionFailedReasons = [
-      InviteNotRewardedReason.InviterNotVerified,
-      InviteNotRewardedReason.InviteeNotVerified,
-      InviteNotRewardedReason.InviterReachedWeeklyLimit,
-      InviteNotRewardedReason.InviteeAlreadyInvited
+    const checks = [
+      {
+        condition: this.isAddressVerified(inviter),
+        error: InviteNotRewardedReason.InviterNotVerified
+      },
+      {
+        condition: this.isAddressVerifiedWithIdentifier(invitee, identifier),
+        error: InviteNotRewardedReason.InviteeNotVerified
+      },
+      {
+        condition: this.inviterHasNotReachedWeeklyLimit(inviter),
+        error: InviteNotRewardedReason.InviterReachedWeeklyLimit
+      },
+      {
+        condition: this.inviteeRewardNotInProgress(invitee),
+        error: InviteNotRewardedReason.InviteeAlreadyInvited
+      }
     ]
-    for (let i = 0; i < conditions.length; i++) {
-      if (!conditions[i]) {
+    const results = await Promise.all(checks.map(check => check.condition))
+    let conditionsAreMet = true
+    for (let i = 0; i < results.length; i++) {
+      if (!results[i]) {
         this.analytics.trackEvent(EventType.InviteNotRewarded, {
           txHash,
           inviter,
           invitee,
-          reason: conditionFailedReasons[i]
+          reason: checks[i].error
         })
-        return false
+        conditionsAreMet = false
       }
     }
-    return true
+    return conditionsAreMet
   }
 
   async isAddressVerified(address: string) {
