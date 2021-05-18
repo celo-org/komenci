@@ -1,7 +1,7 @@
 {
-  "name": "@komenci/relayer",
+  "name": "@komenci/funder",
   "version": "1.0.0",
-  "description": "Komenci meta-transaction relayer service",
+  "description": "Komenci service that distributes funds to relayers",
   "main": "dist/index.js",
   "directories": {
     "test": "test"
@@ -24,17 +24,12 @@
     "@nestjs/cli": "^7.6.0",
     "fetch-mock": "^9.11.0",
     "ts-jest": "^26.5.5",
-    "jest-fetch-mock": "^3.0.3",
-    "source-map-support": "^0.5.19"
+    "source-map-support": "^0.5.19",
+    "jest-fetch-mock": "^3.0.3"
   },
   "dependencies": {
-    "@celo/phone-number-privacy-common": "^1.0.32",
     "@komenci/blockchain": "^1.0.0",
     "@komenci/core": "^1.0.0",
-    "@komenci/kit": "^1.0.0",
-    "@komenci/logger": "^1.0.0",
-    "@nestjs/platform-express": "^7.6.15",
-    "class-transformer": "^0.4.0",
-    "class-validator": "^0.13.1"
+    "@komenci/logger": "^1.0.0"
   }
 }

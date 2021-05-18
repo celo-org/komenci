@@ -1,12 +1,12 @@
 import {Inject, Injectable} from '@nestjs/common';
-import {EventType, KomenciLoggerService} from "@app/komenci-logger";
-import {WalletConfig} from "@app/blockchain/config/wallet.config";
+import {EventType, KomenciLoggerService} from "@komenci/logger";
+import {WalletConfig} from "@komenci/blockchain/dist/config/wallet.config";
 import {AppConfig, appConfig} from "../config/app.config";
-import {NetworkConfig, networkConfig, RelayerAccounts} from '@app/utils/config/network.config'
+import {NetworkConfig, networkConfig, RelayerAccounts} from '@komenci/core/dist/network.config'
 import BigNumber from "bignumber.js";
-import {Balance, FundingService, RelayerWithBalance} from "@app/blockchain/funding.service";
+import {Balance, FundingService, RelayerWithBalance} from "@komenci/blockchain/dist/funding.service";
 import {ContractKit} from "@celo/contractkit";
-import {fundConfig} from "../../../tools/src/fund.config";
+import {fundConfig} from "@komenci/cli/dist/fund.config";
 
 @Injectable()
 export class WatcherService {
