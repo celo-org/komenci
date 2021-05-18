@@ -1,5 +1,6 @@
 import { ContractKit } from '@celo/contractkit'
 import { AttestationsWrapper } from '@celo/contractkit/lib/wrappers/Attestations'
+import { AnalyticsService } from '@komenci/analytics'
 import { BlockchainModule } from '@komenci/blockchain'
 import { WEB3_PROVIDER } from '@komenci/blockchain/dist/blockchain.providers'
 import { NodeProviderType } from '@komenci/blockchain/dist/config/node.config'
@@ -12,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
+import { appConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
 import { partialEventLog } from '../utils/testing'
 import { Attestation } from './attestation.entity'
@@ -50,6 +52,7 @@ describe('AttestationService', () => {
         AttestationService,
         NotifiedBlockService,
         EventService,
+        AnalyticsService,
         {
           provide: getRepositoryToken(Attestation),
           useClass: Repository
@@ -57,6 +60,10 @@ describe('AttestationService', () => {
         {
           provide: getRepositoryToken(NotifiedBlock),
           useClass: Repository
+        },
+        {
+          provide: appConfig.KEY,
+          useValue: {}
         }
       ]
     })

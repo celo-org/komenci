@@ -1,3 +1,4 @@
+import { AnalyticsService } from '@komenci/analytics'
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
@@ -11,7 +12,12 @@ import { AttestationService } from './attestation.service'
     TypeOrmModule.forFeature([AttestationRepository]),
     TypeOrmModule.forFeature([NotifiedBlockRepository])
   ],
-  providers: [AttestationService, NotifiedBlockService, EventService],
+  providers: [
+    AttestationService,
+    NotifiedBlockService,
+    EventService,
+    AnalyticsService
+  ],
   exports: [TypeOrmModule]
 })
 export class AttestationModule {}
