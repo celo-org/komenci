@@ -19,7 +19,7 @@ import {
 import { Mutex } from 'async-mutex'
 import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
-import { Transaction } from 'web3-core'
+import { Transaction, TransactionReceipt } from 'web3-core'
 import { BalanceService } from '../chain/balance.service'
 import { 
   ChainErrorTypes, GasPriceBellowMinimum, GasPriceFetchError, 
@@ -45,6 +45,11 @@ interface TxSummary {
   hash: string
   cachedTx: TxCachedData,
   tx?: Transaction,
+}
+
+interface TxSummaryWithReceipt extends TxSummary {
+  receipt: TransactionReceipt
+
 }
 
 enum TxDeadletterReason {
@@ -199,25 +204,53 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
     await Promise.all(gasTooLow.map(item => this.deadLetter(item, TxDeadletterReason.GasTooLow)))
     await Promise.all(expired.map(item => this.deadLetter(item, TxDeadletterReason.Expired)))
-    await Promise.all(completed.map(item => this.finalizeTransaction(item)))
+    await Promise.all((await this.withReceipts(completed)).map(item => this.finalizeTransaction(item)))
+  }
+
+  private async withReceipts(txs: TxSummary[]): Promise<TxSummaryWithReceipt[]> {
+    const batch = new this.kit.web3.BatchRequest()
+    const result = Promise.all(
+      txs.map(async (txSummary) => {
+        return new Promise<TxSummaryWithReceipt>((resolve, reject) => {
+          batch.add(
+            // @ts-ignore
+            this.kit.web3.eth.getTransactionReceipt.request(txSummary.hash, (_err, receipt) => {
+              if (_err != null) { reject(_err) }
+              return resolve({...txSummary, receipt})
+            }),
+          )
+        })
+      })
+    )
+    batch.execute()
+    return result
   }
 
   private async getTxSummaries(): Promise<TxSummary[]> {
-    return Promise.all(
+    const batch = new this.kit.web3.BatchRequest()
+    const result = Promise.all(
       [...this.watchedTransactions].map(async (txHash) => {
-        const cachedTxData = this.transactions.get(txHash)
-        const transaction = await this.kit.web3.eth.getTransaction(txHash)
-        if (transaction === null || transaction === undefined) {
-          const err = new TxNotFoundError(txHash)
-          this.logger.warnWithContext(err, cachedTxData?.traceContext)
-        }
-        if (cachedTxData === null) {
-          this.logger.warn(new TxNotInCache(txHash))
-        }
-        return { hash: txHash, tx: transaction, cachedTx: cachedTxData }
-      }
-      )
+        return new Promise<TxSummary>((resolve, reject) => {
+          const cachedTxData = this.transactions.get(txHash)
+          batch.add(
+            // @ts-ignore
+            this.kit.web3.eth.getTransaction.request(txHash, (_err, transaction) => {
+              if (_err != null) { reject(_err) }
+              if (transaction === null || transaction === undefined) {
+                const err = new TxNotFoundError(txHash)
+                this.logger.warnWithContext(err, cachedTxData?.traceContext)
+              }
+              if (cachedTxData === null) {
+                this.logger.warn(new TxNotInCache(txHash))
+              }
+              resolve({ hash: txHash, tx: transaction, cachedTx: cachedTxData })
+            }),
+          )
+        })
+      })
     )
+    batch.execute()
+    return result
   }
 
   /**
@@ -225,12 +258,11 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
    * @param tx
    * @private
    */
-  private async finalizeTransaction(txs: TxSummary) {
+  private async finalizeTransaction(txs: TxSummaryWithReceipt) {
     const ctx = this.transactions.get(txs.hash)?.traceContext
-    const txReceipt = await this.kit.web3.eth.getTransactionReceipt(txs.hash)
 
     // XXX: receipt can be null in which case we wait for the next cycle to finalize
-    if (txReceipt === null) {
+    if (txs.receipt === null) {
       this.logger.warn(new ReceiptNotFoundError(txs.hash))
       return
     }
@@ -238,12 +270,12 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
     const gasPrice = parseInt(txs.tx.gasPrice, 10)
     this.unwatchTransaction(txs.tx.hash)
     this.logger.event(EventType.TxConfirmed, {
-      status: txReceipt.status === false ? "Reverted" : "Ok",
+      status: txs.receipt.status === false ? "Reverted" : "Ok",
       txHash: txs.tx.hash,
       nonce: txs.tx.nonce,
-      gasUsed: txReceipt.gasUsed,
+      gasUsed: txs.receipt.gasUsed,
       gasPrice: gasPrice,
-      gasCost: gasPrice * txReceipt.gasUsed,
+      gasCost: gasPrice * txs.receipt.gasUsed,
       destination: txs.tx.to
     }, ctx)
   }
