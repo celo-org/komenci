@@ -1,23 +1,21 @@
-import {Inject, Injectable} from '@nestjs/common';
-import {EventType, KomenciLoggerService} from "@komenci/logger";
-import {WalletConfig} from "@komenci/blockchain/dist/config/wallet.config";
-import {AppConfig, appConfig} from "../config/app.config";
+import {ContractKit} from "@celo/contractkit"
+import {WalletConfig} from "@komenci/blockchain/dist/config/wallet.config"
+import {Balance, FundingService, RelayerWithBalance} from "@komenci/blockchain/dist/funding.service"
+import {fundConfig} from "@komenci/cli/dist/fund.config"
 import {NetworkConfig, networkConfig, RelayerAccounts} from '@komenci/core/dist/network.config'
-import BigNumber from "bignumber.js";
-import {Balance, FundingService, RelayerWithBalance} from "@komenci/blockchain/dist/funding.service";
-import {ContractKit} from "@celo/contractkit";
-import {fundConfig} from "@komenci/cli/dist/fund.config";
+import {EventType, KomenciLoggerService} from "@komenci/logger"
+import {Inject, Injectable} from '@nestjs/common'
+import { Cron } from '@nestjs/schedule'
+import BigNumber from "bignumber.js"
+import {AppConfig, appConfig} from "../config/app.config"
+
+
+const EXP = new BigNumber(10).pow(18)
 
 @Injectable()
 export class WatcherService {
-  private readonly relayerAddresses: RelayerAccounts[]
-  private readonly celoThreshold: BigNumber
-  private readonly cUSDThreshold: BigNumber
-  private readonly celoTopUpAmount: BigNumber
-  private readonly cUSDTopUpAmount: BigNumber
-  private readonly exp: BigNumber
-
-  private txTimer: NodeJS.Timeout
+  private readonly relayers: RelayerAccounts[]
+  private readonly exponent: BigNumber
 
   constructor(
     private readonly logger: KomenciLoggerService,
@@ -26,80 +24,93 @@ export class WatcherService {
     @Inject(fundConfig.KEY) private readonly fundCfg: WalletConfig,
     private fundingService: FundingService,
   ) {
-    this.exp = new BigNumber(10).pow(18)
+    const relayersToWatchSet = new Set(appCfg.relayersToWatch)
 
-    this.relayerAddresses = this.networkCfg.relayers
-    this.celoThreshold = new BigNumber(this.appCfg.celoThreshold).times(this.exp)
-    this.cUSDThreshold = new BigNumber(this.appCfg.cUSDThreshold).times(this.exp)
-    this.celoTopUpAmount = new BigNumber(this.appCfg.celoTopUpAmount).times(this.exp)
-    this.cUSDTopUpAmount = new BigNumber(this.appCfg.cUSDTopUpAmount).times(this.exp)
-  }
 
-  async onModuleInit() {
-    this.txTimer = setInterval(
-      () => this.fundRelayers(),
-      this.appCfg.fundingInterval
-    )
+    this.relayers = this.networkCfg.relayers.filter((r) => {
+      return r.externalAccount in relayersToWatchSet
+    })
   }
 
   async getRelayersToSendCelo(balances: RelayerWithBalance[]) {
-    return balances.filter(balance => balance.celo.isLessThan(this.celoThreshold))
+    return balances.filter(balance => balance.celo.isLessThan(this.appCfg.topupThreshold.celo))
   }
   async getRelayersToSendCUSD(balances: RelayerWithBalance[]) {
-    return balances.filter(balance => balance.cUSD.isLessThan(this.cUSDThreshold))
+    return balances.filter(balance => balance.cUSD.isLessThan(this.appCfg.topupThreshold.cUSD))
   }
 
   async fundWithCelo(fundBalance: Balance, relayersToSendCelo: RelayerWithBalance[]) {
-    if (relayersToSendCelo.length === 0) return []
-    if (!this.fundingService.fundHasEnoughCelo(fundBalance, this.celoTopUpAmount, relayersToSendCelo.length)) {
+    if (relayersToSendCelo.length === 0) { return [] }
+    const topupAmountWei = new BigNumber(this.appCfg.topupMaxAmount.celo).times(EXP)
+
+    if (!this.fundingService.fundHasEnoughCelo(
+      fundBalance, 
+      topupAmountWei,
+      relayersToSendCelo.length
+    )) {
       this.logger.event(EventType.InsufficientCelo, {
-        fundCelo: parseFloat(fundBalance.celo.div(this.exp).toFixed()),
-        requiredCelo: parseFloat(this.celoTopUpAmount.div(this.exp).times(relayersToSendCelo.length).toFixed())
+        fundCelo: parseFloat(fundBalance.celo.div(EXP).toFixed()),
+        requiredCelo: this.appCfg.topupMaxAmount.celo * relayersToSendCelo.length
       })
       return []
     }
 
     this.logger.event(EventType.CeloTopUp, {
-      celoPerRelayer: parseFloat(this.celoTopUpAmount.div(this.exp).toFixed()),
-      totalCelo: parseFloat(this.celoTopUpAmount.div(this.exp).times(relayersToSendCelo.length).toFixed()),
+      celoPerRelayer: this.appCfg.topupMaxAmount.celo,
+      totalCelo: this.appCfg.topupMaxAmount.celo * relayersToSendCelo.length,
       relayerAddresses: relayersToSendCelo.map(relayer => relayer.externalAccount)
     })
 
-    return this.fundingService.fundRelayersWithCelo(this.fundCfg.address, relayersToSendCelo, this.celoTopUpAmount)
+    return this.fundingService.fundRelayersWithCelo(
+      this.fundCfg.address, 
+      relayersToSendCelo, 
+      topupAmountWei,
+    )
   }
 
   async fundWithCUSD(fundBalance: Balance, relayersToSendCUSD: RelayerWithBalance[]) {
-    if (relayersToSendCUSD.length === 0) return []
-    if (!this.fundingService.fundHasEnoughCUSD(fundBalance, this.cUSDTopUpAmount, relayersToSendCUSD.length)) {
+    if (relayersToSendCUSD.length === 0) { return [] }
+    const topupAmountWei = new BigNumber(this.appCfg.topupMaxAmount.cUSD).times(EXP)
+
+    if (!this.fundingService.fundHasEnoughCelo(
+      fundBalance, 
+      topupAmountWei,
+      relayersToSendCUSD.length
+    )) {
       this.logger.event(EventType.InsufficientCUSD, {
-        fundCUSD: parseFloat(fundBalance.cUSD.div(this.exp).toFixed()),
-        requiredCUSD: parseFloat(this.cUSDTopUpAmount.div(this.exp).times(relayersToSendCUSD.length).toFixed())
+        fundCUSD: parseFloat(fundBalance.cUSD.div(EXP).toFixed()),
+        requiredCUSD: this.appCfg.topupMaxAmount.celo * relayersToSendCUSD.length
       })
       return []
     }
 
     this.logger.event(EventType.CUSDTopUp, {
-      cUSDPerRelayer: parseFloat(this.cUSDTopUpAmount.div(this.exp).toFixed()),
-      totalCUSD: parseFloat(this.cUSDTopUpAmount.div(this.exp).times(relayersToSendCUSD.length).toFixed()),
+      cUSDPerRelayer: this.appCfg.topupMaxAmount.cUSD,
+      totalCUSD: this.appCfg.topupMaxAmount.cUSD * relayersToSendCUSD.length,
       relayerAddresses: relayersToSendCUSD.map(relayer => relayer.externalAccount)
     })
 
-    return this.fundingService.fundRelayersWithCUSD(this.fundCfg.address, relayersToSendCUSD, this.cUSDTopUpAmount)
+    return this.fundingService.fundRelayersWithCUSD(
+      this.fundCfg.address, 
+      relayersToSendCUSD, 
+      topupAmountWei,
+    )
   }
 
-  async fundRelayers() {
-    const balances = await this.fundingService.getRelayerBalanceList(this.relayerAddresses)
+  @Cron('0 0 * * * *')
+  async watchRelayers() {
+    const balances = await this.fundingService.getRelayerBalanceList(this.relayers)
     const relayersToSendCUSD = await this.getRelayersToSendCUSD(balances)
     const relayersToSendCelo = await this.getRelayersToSendCelo(balances)
     if (relayersToSendCelo.length === 0 && relayersToSendCUSD.length === 0) {
       this.logger.event(EventType.NoRelayersToFund, {})
-      return;
+      return
     }
 
     const fundBalance = await this.fundingService.getFundBalance(this.fundCfg.address)
     this.logger.event(EventType.FundBalance, {
-      cUSD: parseFloat(fundBalance.cUSD.div(this.exp).toFixed()),
-      celo: parseFloat(fundBalance.celo.div(this.exp).toFixed()),
+      cUSD: parseFloat(fundBalance.cUSD.div(EXP).toFixed()),
+      celo: parseFloat(fundBalance.celo.div(EXP).toFixed()),
     })
 
     await Promise.all([
