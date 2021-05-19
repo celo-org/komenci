@@ -1,5 +1,5 @@
 import { CeloTransactionObject } from '@celo/connect'
-import { ContractKit } from '@celo/contractkit'
+import { ContractKit, StableToken } from '@celo/contractkit'
 import { AnalyticsService } from '@komenci/analytics'
 import {
   EventType,
@@ -47,10 +47,6 @@ enum TxStatus {
 @Injectable()
 export class RewardSenderService {
   watchedInvites: Set<WatchedInvite>
-  rewardInCelo = {
-    reward: '',
-    timestamp: 0
-  }
   checkingWatchedInvites = false
   checkingFailedInvites = false
 
@@ -203,34 +199,15 @@ export class RewardSenderService {
     }
   }
 
-  async getRewardInCelo() {
-    if (
-      this.rewardInCelo.timestamp + REWARD_VALUE_CACHE_DURATION >
-      Date.now()
-    ) {
-      return this.rewardInCelo.reward
-    }
-    const rewardInCusdWei = this.appCfg.inviteRewardAmountInCusd * WEI_PER_UNIT
-    const exchange = await this.contractKit.contracts.getExchange()
-    const exchangeRate = await exchange.getGoldExchangeRate(
-      new BigNumber(rewardInCusdWei)
-    )
-    this.rewardInCelo = {
-      timestamp: Date.now(),
-      reward: exchangeRate.multipliedBy(rewardInCusdWei).toFixed(0)
-    }
-    return this.rewardInCelo.reward
-  }
-
   async sendInviteReward(
     invite: InviteReward,
     isRetry: boolean = false,
     repository: Repository<InviteReward> = this.inviteRewardRepository
   ) {
-    const celoToken = await this.contractKit.contracts.getGoldToken()
-    const tx = await celoToken.transfer(
+    const cUsdToken = await this.contractKit.contracts.getStableToken(StableToken.cUSD)
+    const tx = await cUsdToken.transfer(
       invite.inviter,
-      await this.getRewardInCelo()
+      this.appCfg.inviteRewardAmountInCusd
     )
 
     const resp = await this.sendTxThroughRelayer(tx, invite.id)
