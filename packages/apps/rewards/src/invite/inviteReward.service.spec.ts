@@ -99,7 +99,9 @@ describe('InviteRewardService', () => {
         },
         {
           provide: appConfig.KEY,
-          useValue: {}
+          useValue: {
+            shouldSendRewards: true,
+          }
         }
       ]
     })
