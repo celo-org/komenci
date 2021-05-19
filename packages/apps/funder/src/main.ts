@@ -1,10 +1,12 @@
-import {NestApplication, NestFactory} from '@nestjs/core';
-import { AppModule } from './app.module';
-import {ConfigService} from "@nestjs/config";
-import {AppConfig} from "./config/app.config";
-import {Logger} from "nestjs-pino";
-import {ValidationPipe} from "@nestjs/common";
-import {TcpOptions, Transport} from "@nestjs/microservices";
+import 'source-map-support/register'
+
+import {ValidationPipe} from "@nestjs/common"
+import {ConfigService} from "@nestjs/config"
+import {NestApplication, NestFactory} from '@nestjs/core'
+import {TcpOptions, Transport} from "@nestjs/microservices"
+import {Logger} from "nestjs-pino"
+import { AppModule } from './app.module'
+import {AppConfig} from "./config/app.config"
 
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule)
@@ -31,4 +33,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe())
 
 }
-bootstrap();
+
+// tslint:disable-next-line: no-floating-promises
+bootstrap()

@@ -149,6 +149,7 @@ export type EventPayload = {
     token: string;
     tokenAddress: string;
     amount: number;
+    txHash: string;
   },
   [EventType.InsufficientFunds]: {
     token: string;
