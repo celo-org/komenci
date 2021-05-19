@@ -1,4 +1,3 @@
-import {ContractKit} from "@celo/contractkit"
 import {WalletConfig} from "@komenci/blockchain/dist/config/wallet.config"
 import {Balance, FundingService, RelayerWithBalance} from "@komenci/blockchain/dist/funding.service"
 import {fundConfig} from "@komenci/cli/dist/fund.config"
@@ -15,7 +14,8 @@ const EXP = new BigNumber(10).pow(18)
 @Injectable()
 export class WatcherService {
   private readonly relayers: RelayerAccounts[]
-  private readonly exponent: BigNumber
+  private readonly topupThreshold: {celo: BigNumber, cUSD: BigNumber}
+  private readonly topupAmount: {celo: BigNumber, cUSD: BigNumber}
 
   constructor(
     private readonly logger: KomenciLoggerService,
@@ -26,26 +26,34 @@ export class WatcherService {
   ) {
     const relayersToWatchSet = new Set(appCfg.relayersToWatch)
 
-
     this.relayers = this.networkCfg.relayers.filter((r) => {
-      return r.externalAccount in relayersToWatchSet
+      return relayersToWatchSet.has(r.externalAccount)
     })
+
+    this.topupAmount = {
+      celo: new BigNumber(appCfg.topupMaxAmount.celo).times(EXP),
+      cUSD: new BigNumber(appCfg.topupMaxAmount.cUSD).times(EXP)
+    }
+
+    this.topupThreshold = {
+      celo: new BigNumber(appCfg.topupThreshold.celo).times(EXP),
+      cUSD: new BigNumber(appCfg.topupThreshold.cUSD).times(EXP)
+    }
   }
 
   async getRelayersToSendCelo(balances: RelayerWithBalance[]) {
-    return balances.filter(balance => balance.celo.isLessThan(this.appCfg.topupThreshold.celo))
+    return balances.filter(balance => balance.celo.isLessThan(this.topupThreshold.celo))
   }
   async getRelayersToSendCUSD(balances: RelayerWithBalance[]) {
-    return balances.filter(balance => balance.cUSD.isLessThan(this.appCfg.topupThreshold.cUSD))
+    return balances.filter(balance => balance.cUSD.isLessThan(this.topupThreshold.cUSD))
   }
 
   async fundWithCelo(fundBalance: Balance, relayersToSendCelo: RelayerWithBalance[]) {
     if (relayersToSendCelo.length === 0) { return [] }
-    const topupAmountWei = new BigNumber(this.appCfg.topupMaxAmount.celo).times(EXP)
 
     if (!this.fundingService.fundHasEnoughCelo(
       fundBalance, 
-      topupAmountWei,
+      this.topupAmount.celo,
       relayersToSendCelo.length
     )) {
       this.logger.event(EventType.InsufficientCelo, {
@@ -64,17 +72,16 @@ export class WatcherService {
     return this.fundingService.fundRelayersWithCelo(
       this.fundCfg.address, 
       relayersToSendCelo, 
-      topupAmountWei,
+      this.topupAmount.celo
     )
   }
 
   async fundWithCUSD(fundBalance: Balance, relayersToSendCUSD: RelayerWithBalance[]) {
     if (relayersToSendCUSD.length === 0) { return [] }
-    const topupAmountWei = new BigNumber(this.appCfg.topupMaxAmount.cUSD).times(EXP)
 
     if (!this.fundingService.fundHasEnoughCelo(
       fundBalance, 
-      topupAmountWei,
+      this.topupAmount.cUSD,
       relayersToSendCUSD.length
     )) {
       this.logger.event(EventType.InsufficientCUSD, {
@@ -93,7 +100,7 @@ export class WatcherService {
     return this.fundingService.fundRelayersWithCUSD(
       this.fundCfg.address, 
       relayersToSendCUSD, 
-      topupAmountWei,
+      this.topupAmount.cUSD,
     )
   }
 
