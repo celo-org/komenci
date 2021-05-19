@@ -14,6 +14,7 @@ import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
+import { appConfig, AppConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
 import { fetchEvents } from '../utils/fetchEvents'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
@@ -38,6 +39,8 @@ export class InviteRewardService {
     private readonly contractKit: ContractKit,
     @Inject(networkConfig.KEY)
     private readonly networkCfg: NetworkConfig,
+    @Inject(appConfig.KEY)
+    private readonly appCfg: AppConfig,
     private readonly logger: KomenciLoggerService,
     private readonly analytics: AnalyticsService
   ) {
@@ -53,6 +56,9 @@ export class InviteRewardService {
   // create a new row with the same one will fail.
   @Cron(CronExpression.EVERY_10_SECONDS)
   async sendInviteRewards() {
+    if (!this.appCfg.shouldSendRewards) {
+      return
+    }
     this.cUsdTokenAddress = (
       await this.contractKit.registry.addressFor(CeloContract.StableToken)
     ).toLowerCase()

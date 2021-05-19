@@ -11,6 +11,7 @@ export const appConfig = registerAs('app', () => ({
   inviteRewardAmountInCusd:
     parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 1,
   bigQueryDataset: process.env.BIG_QUERY_DATASET,
+  shouldSendRewards: process.env.SHOULD_SEND_REWARDS || false,
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>
