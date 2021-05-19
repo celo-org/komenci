@@ -43,10 +43,12 @@ export class AttestationService {
       fromBlock,
       lastBlock
     )
-    this.logger.event(EventType.AttestationEventsFetched, {
-      eventCount: events.length,
-      fromBlock: lastBlock
-    })
+    if (events.length > 0) {
+      this.logger.event(EventType.AttestationEventsFetched, {
+        eventCount: events.length,
+        fromBlock: lastBlock
+      })
+    }
     return events
   }
 

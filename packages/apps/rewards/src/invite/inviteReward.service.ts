@@ -80,10 +80,12 @@ export class InviteRewardService {
       fromBlock,
       lastBlock
     )
-    this.logger.event(EventType.EscrowWithdrawalEventsFetched, {
-      eventCount: events.length,
-      fromBlock: lastBlock
-    })
+    if (events.length > 0) {
+      this.logger.event(EventType.EscrowWithdrawalEventsFetched, {
+        eventCount: events.length,
+        fromBlock: lastBlock
+      })
+    }
     return events
   }
 
