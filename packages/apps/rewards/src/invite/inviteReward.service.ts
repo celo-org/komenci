@@ -223,7 +223,7 @@ export class InviteRewardService {
       where: {
         inviter,
         state: Not(RewardStatus.Failed),
-        createdAt: Raw(alias => `${alias} >= date_trunc('week', current_date)`)
+        createdAt: Raw(alias => `${alias} >= date_trunc('week', current_date) AT TIME ZONE 'UTC'`)
       }
     })
     return invites < WEEKLY_INVITE_LIMIT
