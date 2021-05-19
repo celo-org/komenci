@@ -33,7 +33,7 @@ export class WatcherService implements OnModuleInit {
     this.topupAmount = new BigNumber(this.appCfg.topupAmount).times(this.exp)
   }
 
-  @Cron('0 * * * * *')
+  @Cron('0 0 * * * *')
   async tick() {
     const addresses = await this.getAddressesUnderBalance()
     if (addresses.length === 0) {
