@@ -6,16 +6,10 @@ export const appConfig = registerAs('app', () => {
     host: process.env.FUNDER_HOST || '0.0.0.0',
     port: intFromEnv("FUNDER_PORT", 3000),
     logLevel: process.env.LOG_LEVEL || 'debug',
-    relayersToWatch: listFromEnv("RELAYERS_TO_WATCH"),
-    // Balance threshold for initiating a top-up
-    topupThreshold: {
-      cUSD: floatFromEnv("CUSD_TOPUP_THRESHOLD", 50),
-      celo: floatFromEnv("CELO_TOPUP_THRESHOLD", 10),
-    },
-    topupMaxAmount: {
-      cUSD: floatFromEnv("CUSD_TOPUP_MAX_AMOUNT", 200),
-      celo: floatFromEnv("CELO_TOPUP_MAX_AMOUNT", 20),
-    }
+    addressesToWatch: listFromEnv("ADDRESSES_TO_WATCH"),
+    token: process.env.TOKEN_ADDRESS,
+    balanceThreshold: floatFromEnv("BALANCE_THRESHOLD"),
+    topupAmount: floatFromEnv("TOPUP_AMOUNT"),
   }
 })
 
