@@ -167,12 +167,12 @@ export class RewardSenderService {
                   await repository.update(invite.id, {
                     state: RewardStatus.Completed
                   })
-                } else if (txStatus === TxStatus.Failed) {
                   this.analytics.trackEvent(EventType.RewardSendingStatus, {
                     status: RewardSendingStatus.Completed,
                     txHash: invite.rewardTxHash,
                     inviteId: invite.id
                   })
+                } else if (txStatus === TxStatus.Failed) {
                   await this.sendInviteReward(invite, true, repository)
                 }
               })
