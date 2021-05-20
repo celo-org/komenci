@@ -263,7 +263,7 @@ export class RewardSenderService {
     tx: CeloTransactionObject<boolean>,
     inviteId: string
   ) {
-    return await this.relayerProxyService.submitTransaction(
+    return this.relayerProxyService.submitTransaction(
       {
         transaction: {
           destination: tx.txo._parent.options.address,
