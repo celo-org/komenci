@@ -57,6 +57,7 @@ export class InviteRewardService {
   @Cron(CronExpression.EVERY_10_SECONDS)
   async sendInviteRewards() {
     if (!this.appCfg.shouldSendRewards) {
+      this.logger.log('Skipping sending reward because SHOULD_SEND_REWARDS env var is false')
       return
     }
     this.cUsdTokenAddress = (
