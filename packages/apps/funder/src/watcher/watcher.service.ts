@@ -4,6 +4,7 @@ import { SchedulerRegistry } from '@nestjs/schedule'
 import { CronJob } from "cron"
 import {AppConfig, appConfig} from "../config/app.config"
 import { TokenService } from './token.service'
+import { Mutex } from 'async-mutex'
 
 
 @Injectable()
@@ -19,9 +20,12 @@ export class WatcherService implements OnModuleInit {
   async onModuleInit() {
     this.tokens = await Promise.all(this.appCfg.tokens.map(async (tokenConfig) => {
       const tokenService = await this.moduleRef.create(TokenService)
+      const mutex = new Mutex()
       await tokenService.init(tokenConfig)
       const job = new CronJob(tokenConfig.cron, async () => {
-        return tokenService.tick()
+        return mutex.runExclusive(async () => {
+          return tokenService.tick()
+        })
       })
       this.schedulerRegistry.addCronJob(`token_${tokenConfig.token}_job`, job)
       job.start()
