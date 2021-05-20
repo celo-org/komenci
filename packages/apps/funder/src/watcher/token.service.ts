@@ -34,7 +34,7 @@ export class TokenService  {
   }
 
   async tick() {
-    const addresses = await this.getAddressesUnderBalance()
+    const addresses = await this.getAddressesUnderThreshold()
     if (addresses.length === 0) {
       return
     }
@@ -71,19 +71,14 @@ export class TokenService  {
     }))
   }
 
-  private async getAddressesUnderBalance() {
-    const addressesWithBalance = await Promise.all(
+  private async getAddressesUnderThreshold() {
+    const addressIsUnderThreshold = await Promise.all(
       this.config.addressesToWatch.map(async (addr) => {
-        return {
-          address: addr,
-          balance: await this.balanceOf(addr)
-        }
+        return (await this.balanceOf(addr)).lt(this.balanceThreshold)
       })
     )
 
-    return addressesWithBalance.filter(({balance}) => {
-      return balance.lt(this.balanceThreshold)
-    }).map(({address}) => address)
+    return this.config.addressesToWatch.filter((_, index) => addressIsUnderThreshold[index])
   }
 
   private async balanceOf(addr: string): Promise<BigNumber> {
