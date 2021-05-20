@@ -68,6 +68,9 @@ export class OdisService {
       OdisQueryErrorTypes.Unknown
     ],
     tries: 2,
+    onRetry: ([input], error, _attempt) => {
+      this.logger.warnWithContext(error, input.context)
+    }
   })
   async getPhoneNumberSignature(
     input: GetPhoneNumberSignatureDto,
@@ -83,12 +86,8 @@ export class OdisService {
       timeout
     ])
 
-    if (res.ok === false) {
-      this.logger.log(res.error.message, input.context)
-      if (res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
-        this.logger.errorWithContext(res.error, input.context)
-        await replenishQuota(this.walletCfg.address, this.contractKit)
-      }
+    if (res.ok === false && res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
+      await replenishQuota(this.walletCfg.address, this.contractKit)
     }
 
     return res
