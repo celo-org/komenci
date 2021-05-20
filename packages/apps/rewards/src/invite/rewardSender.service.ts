@@ -205,9 +205,10 @@ export class RewardSenderService {
     repository: Repository<InviteReward> = this.inviteRewardRepository
   ) {
     const cUsdToken = await this.contractKit.contracts.getStableToken(StableToken.cUSD)
-    const tx = await cUsdToken.transfer(
+    const tx = await cUsdToken.transferWithComment(
       invite.inviter,
-      this.appCfg.inviteRewardAmountInCusd
+      this.appCfg.inviteRewardAmountInCusd,
+      invite.inviteeIdentifier
     )
 
     const resp = await this.sendTxThroughRelayer(tx, invite.id)
