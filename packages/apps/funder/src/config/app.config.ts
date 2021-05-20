@@ -1,4 +1,4 @@
-import { floatFromEnv, intFromEnv, listFromEnv, envVarWithIndex, objectArrayFromEnv } from '@komenci/core/dist/env'
+import { envVarWithIndex, floatFromEnv, intFromEnv, listFromEnv, objectArrayFromEnv } from '@komenci/core/dist/env'
 import { ConfigType, registerAs } from '@nestjs/config'
 
 export interface TokenConfig {
