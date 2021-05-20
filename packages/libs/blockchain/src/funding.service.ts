@@ -148,45 +148,4 @@ export class FundingService {
 
     return true
   }
-
-  public fundHasEnoughCelo(fundBalance: Balance, amount: BigNumber, relayerCount: number): boolean {
-    return fundBalance.celo.isGreaterThanOrEqualTo(amount.times(relayerCount))
-  }
-  public fundHasEnoughCUSD(fundBalance: Balance, amount: BigNumber, relayerCount: number): boolean {
-    return fundBalance.cUSD.isGreaterThanOrEqualTo(amount.times(relayerCount))
-  }
-
-
-  public async fundRelayersWithCelo(
-    fund: Address,
-    relayersToFund: RelayerAccounts[],
-    topUpAmount: BigNumber
-  ) {
-
-    const celo = await this.contractKit.contracts.getGoldToken()
-
-    return Promise.all(
-      relayersToFund.map(async (relayer) =>
-        // @ts-ignore
-        celo.transfer(relayer.externalAccount, topUpAmount.toFixed()).send({
-          from: fund,
-        }))
-    )
-  }
-
-  public async fundRelayersWithCUSD(
-    fund: Address,
-    relayersToFund: RelayerAccounts[],
-    topUpAmount: BigNumber
-  ) {
-    const cUSD = await this.contractKit.contracts.getStableToken()
-
-    return Promise.all(
-      relayersToFund.map(async (relayer) =>
-        // @ts-ignore
-        cUSD.transfer(relayer.metaTransactionWallet, topUpAmount.toFixed()).send({
-          from: fund,
-        }))
-    )
-  }
 }
