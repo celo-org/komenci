@@ -2,6 +2,7 @@ import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { OdisUtils } from '@celo/identity'
 import { AuthSigner, ServiceContext } from '@celo/identity/lib/odis/query'
+import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
 import { networkConfig, NetworkConfig } from '@komenci/core'
 import { retry } from '@komenci/kit/lib/retry'
@@ -83,13 +84,10 @@ export class OdisService {
     ])
 
     if (res.ok === false) {
-      this.logger.errorWithContext(res.error, input.context)
+      this.logger.log(res.error.message, input.context)
       if (res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
-        // Cody TODO: Reinstate once merge with mono is ready
-        // await replenishQuota(this.walletCfg.address, this.contractKit)
-        const goldToken = await this.contractKit.contracts.getGoldToken()
-        const selfTransferTx = goldToken.transfer(this.walletCfg.address, 1)
-        await selfTransferTx.sendAndWaitForReceipt({from: this.walletCfg.address})
+        this.logger.errorWithContext(res.error, input.context)
+        await replenishQuota(this.walletCfg.address, this.contractKit)
       }
     }
 
