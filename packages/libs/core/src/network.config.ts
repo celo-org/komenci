@@ -200,7 +200,7 @@ const configs: Record<Network, NetworkConfig> = {
     fornoURL: 'https://forno.celo.org',
     odis: {
       publicKey: 'FvreHfLmhBjwxHxsxeyrcOLtSonC9j7K3WrS4QapYsQH6LdaDTaNGmnlQMfFY04Bp/K4wAvqQwO9/bqPVCKf8Ze8OZo8Frmog4JY4xAiwrsqOXxug11+htjEe1pj4uMA',
-      url: 'https://us-central1-celo-pgpnp-mainnet.cloudfunctions.net'
+      url: 'https://mainnet-komenci.azurefd.net'
     }
   },
 }
