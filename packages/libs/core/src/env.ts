@@ -42,3 +42,20 @@ export const floatFromEnv = (key: string, defaultValue: number = 0): number => {
   const value = parseFloat(process.env[key])
   return isNaN(value) ? defaultValue: value
 }
+
+type ObjectDefinition<T extends Record<string, any>, K extends keyof T> = Record<K, (index: number) => T[K]>
+
+export const objectArrayFromEnv = <T extends Record<string, any>>(def: ObjectDefinition<T, keyof T>, hasIndex: (index: number) => boolean): T[] => {
+  const objects: T[] = []
+  for (let i = 0; hasIndex(i); i++) {
+    objects.push(
+      Object.keys(def).reduce((acc, key: keyof T) => {
+        acc[key] = def[key](i)
+        return acc
+      }, {} as T)
+    )
+  }
+  return objects
+}
+
+export const envVarWithIndex= (key: string, index: number) => `${key}__${index}`
