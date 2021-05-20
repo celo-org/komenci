@@ -10,13 +10,7 @@
     "build": "npx nest build",
     "clean": "rm -rf ./dist",
     "start:dev": "npx nest start --watch",
-    "start:prod": "node dist/main.js",
-    "test": "jest --runInBand",
-    "test:watch": "jest --runInBand --watch",
-    "test:cov": "jest --coverage --runInBand",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config jest.config.e2e.js --runInBand",
-    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest.config.e2e.js --runInBand"
+    "start:prod": "node dist/main.js"
   },
   "author": "Bogdan Dumitru <bogdan@clabs.co>",
   "license": "Apache-2.0",
