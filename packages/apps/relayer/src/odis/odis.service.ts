@@ -25,6 +25,7 @@ export class OdisOutOfQuotaError extends RootError<OdisQueryErrorTypes.OutOfQuot
 export class OdisUnknownError extends RootError<OdisQueryErrorTypes.Unknown> {
   constructor(public odisError: Error) {
     super(OdisQueryErrorTypes.Unknown)
+    this.message = `Odis unknown error: ${odisError.message}`
   }
 }
 
