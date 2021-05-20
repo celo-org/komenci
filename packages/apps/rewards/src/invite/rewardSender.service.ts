@@ -12,7 +12,7 @@ import BigNumber from 'bignumber.js'
 import { EntityManager, In, Raw, Repository } from 'typeorm'
 import { appConfig, AppConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
-import { promiseAllSettled } from '../utils/promiseUtil'
+import { promiseAllSettled, PromiseStatus } from '../utils/promiseUtil'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 
@@ -158,7 +158,7 @@ export class RewardSenderService {
                 `Found ${invites.length} failed or submitted invites`
               )
             }
-            await promiseAllSettled(
+            const invitesResults = await promiseAllSettled(
               invites.map(async invite => {
                 const txStatus = invite.rewardTxHash
                   ? await this.getTxStatus(invite.rewardTxHash)
@@ -177,6 +177,14 @@ export class RewardSenderService {
                 }
               })
             )
+            for (const inviteResult of invitesResults) {
+              if (inviteResult.status === PromiseStatus.Rejected) {
+                this.analytics.trackEvent(EventType.UnexpectedError, {
+                  origin: `Resending failed invites`,
+                  error: inviteResult.error
+                })
+              }
+            }
           } catch (error) {
             // If the caught error is that the lock is in use, ignore it since it's expected.
             if (
@@ -191,7 +199,7 @@ export class RewardSenderService {
       )
     } catch (error) {
       this.analytics.trackEvent(EventType.UnexpectedError, {
-        origin: `Creating failed invites`,
+        origin: `Resending failed invites`,
         error: error
       })
     } finally {
@@ -204,10 +212,14 @@ export class RewardSenderService {
     isRetry: boolean = false,
     repository: Repository<InviteReward> = this.inviteRewardRepository
   ) {
-    const cUsdToken = await this.contractKit.contracts.getStableToken(StableToken.cUSD)
+    const cUsdToken = await this.contractKit.contracts.getStableToken(
+      StableToken.cUSD
+    )
     const tx = await cUsdToken.transferWithComment(
       invite.inviter,
-      this.appCfg.inviteRewardAmountInCusd,
+      new BigNumber(this.appCfg.inviteRewardAmountInCusd)
+        .multipliedBy(WEI_PER_UNIT)
+        .toFixed(0),
       invite.inviteeIdentifier
     )
 
@@ -251,7 +263,7 @@ export class RewardSenderService {
     tx: CeloTransactionObject<boolean>,
     inviteId: string
   ) {
-    return this.relayerProxyService.submitTransaction(
+    return await this.relayerProxyService.submitTransaction(
       {
         transaction: {
           destination: tx.txo._parent.options.address,
