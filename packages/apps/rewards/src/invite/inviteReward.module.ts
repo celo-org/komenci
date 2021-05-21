@@ -10,11 +10,13 @@ import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
 import { AppConfig, appConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
+import { InviteRewardController } from './inviteReward.controller'
 import { InviteRewardRepository } from './inviteReward.repository'
 import { InviteRewardService } from './inviteReward.service'
 import { RewardSenderService } from './rewardSender.service'
 
 @Module({
+  controllers: [InviteRewardController],
   imports: [
     TypeOrmModule.forFeature([InviteRewardRepository]),
     TypeOrmModule.forFeature([AttestationRepository]),
