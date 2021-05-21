@@ -1,12 +1,5 @@
 name: Deploy to AKS Cluster
-on:
-  pull_request:
-    branches:
-    - master
-  push:
-    branches:
-    - master
-
+on: [push]
 
 jobs:
   build:
