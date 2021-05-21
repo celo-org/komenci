@@ -1,10 +1,10 @@
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
+import { Mutex } from 'async-mutex'
 import { CronJob } from "cron"
 import {AppConfig, appConfig} from "../config/app.config"
 import { TokenService } from './token.service'
-import { Mutex } from 'async-mutex'
 
 
 @Injectable()
