@@ -82,7 +82,7 @@ export class RewardSenderService {
     this.checkingWatchedInvites = true
     try {
       await promiseAllSettled(
-        [...this.watchedInvites].map(async invite => {
+        [...this.watchedInvites].map(async (invite) => {
           const txStatus = await this.getTxStatus(invite.txHash)
           if (txStatus === TxStatus.Completed) {
             await this.inviteRewardRepository.update(invite.inviteId, {
@@ -147,7 +147,7 @@ export class RewardSenderService {
                   RewardStatus.Failed
                 ]),
                 createdAt: Raw(
-                  alias =>
+                  (alias) =>
                     `${alias} <= current_timestamp - (30 ||' minutes')::interval`
                 )
               })
@@ -159,7 +159,7 @@ export class RewardSenderService {
               )
             }
             const invitesResults = await promiseAllSettled(
-              invites.map(async invite => {
+              invites.map(async (invite) => {
                 const txStatus = invite.rewardTxHash
                   ? await this.getTxStatus(invite.rewardTxHash)
                   : TxStatus.Failed
@@ -215,12 +215,11 @@ export class RewardSenderService {
     const cUsdToken = await this.contractKit.contracts.getStableToken(
       StableToken.cUSD
     )
-    const tx = await cUsdToken.transferWithComment(
+    const tx = await cUsdToken.transfer(
       invite.inviter,
       new BigNumber(this.appCfg.inviteRewardAmountInCusd)
         .multipliedBy(WEI_PER_UNIT)
-        .toFixed(0),
-      invite.inviteeIdentifier
+        .toFixed(0)
     )
 
     const resp = await this.sendTxThroughRelayer(tx, invite.id)
