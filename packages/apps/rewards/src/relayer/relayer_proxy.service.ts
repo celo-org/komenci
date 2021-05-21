@@ -54,7 +54,7 @@ class RelayerInternalError extends MetadataError<
 
   constructor(readonly internalError: InternalErrorPayload) {
     super(RelayerErrorTypes.RelayerInternalError)
-    this.message = `Relayer encountered an error`
+    this.message = `Relayer encountered an error: ${internalError.errorType} ${internalError.message}`
   }
 }
 
