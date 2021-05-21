@@ -2,16 +2,18 @@ import { EventPayload, EventType, KomenciLoggerService } from '@komenci/logger'
 import Analytics from 'analytics-node'
 
 export class AnalyticsService {
-  analytics: Analytics
+  analytics: Analytics | undefined
 
   constructor(private readonly logger: KomenciLoggerService, apiKey: string) {
-    this.analytics = new Analytics(apiKey, { flushAt: 1 })
+    if (apiKey) {
+      this.analytics = new Analytics(apiKey)
+    }
   }
 
   trackEvent<K extends keyof EventPayload>(event: K, payload: EventPayload[K]) {
     try {
       this.logger.event(event, payload)
-      this.analytics.track({
+      this.analytics?.track({
         anonymousId: 'rewards-service',
         event: this.toTableName(event),
         properties: {
