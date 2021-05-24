@@ -2,9 +2,7 @@ import { Controller, Get, Query, Req } from '@nestjs/common'
 import { InviteReward } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 
-@Controller({
-  path: 'v1',
-})
+@Controller()
 export class InviteRewardController {
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
