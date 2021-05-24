@@ -109,11 +109,13 @@ export type EventPayload = {
     inviteId: string
     inviter: string
     invitee: string
+    paymentId: string;
   }
   [EventType.InviteNotRewarded]: {
     txHash: string
     inviter: string
     invitee: string | null
+    paymentId: string;
     reason: InviteNotRewardedReason
   }
   [EventType.RewardSendingStatus]: {
