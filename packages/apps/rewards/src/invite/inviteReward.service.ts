@@ -93,7 +93,7 @@ export class InviteRewardService {
   async handleWithdrawalEvent(withdrawalEvent: EventLog) {
     const {
       transactionHash,
-      returnValues: { identifier, token, to }
+      returnValues: { identifier, token, to, paymentId }
     } = withdrawalEvent
 
     const inviter = to.toLowerCase()
@@ -102,6 +102,7 @@ export class InviteRewardService {
         txHash: transactionHash,
         inviter,
         invitee: null,
+        paymentId,
         reason: InviteNotRewardedReason.NotCusdInvite
       })
       return
@@ -113,6 +114,7 @@ export class InviteRewardService {
         txHash: transactionHash,
         inviter,
         invitee: null,
+        paymentId,
         reason: InviteNotRewardedReason.NoInviteeFound
       })
       return
@@ -122,6 +124,7 @@ export class InviteRewardService {
         txHash: transactionHash,
         inviter,
         invitee,
+        paymentId,
         reason: InviteNotRewardedReason.NotKomenciRedeem
       })
       return
@@ -131,6 +134,7 @@ export class InviteRewardService {
         inviter,
         invitee,
         identifier,
+        paymentId,
         transactionHash
       )
     ) {
@@ -138,6 +142,7 @@ export class InviteRewardService {
         inviter,
         invitee,
         identifier,
+        paymentId,
         transactionHash
       )
       if (inviteReward) {
@@ -156,6 +161,7 @@ export class InviteRewardService {
     inviter: string,
     invitee: string,
     identifier: string,
+    paymentId: string,
     txHash: string
   ) {
     const checks = [
@@ -184,6 +190,7 @@ export class InviteRewardService {
           txHash,
           inviter,
           invitee,
+          paymentId,
           reason: checks[i].error
         })
         conditionsAreMet = false
@@ -239,6 +246,7 @@ export class InviteRewardService {
     inviter: string,
     invitee: string,
     inviteeIdentifier: string,
+    paymentId: string,
     txHash: string
   ) {
     try {
@@ -255,7 +263,8 @@ export class InviteRewardService {
         txHash,
         inviteId: inviteReward.id,
         inviter,
-        invitee
+        invitee,
+        paymentId,
       })
       return savedReward
     } catch (error) {
