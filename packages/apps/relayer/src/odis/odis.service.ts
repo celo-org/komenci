@@ -69,7 +69,7 @@ export class OdisService {
     ],
     tries: 2,
     onRetry: ([input], error, _attempt) => {
-      this.logger.warnWithContext(error, input.context)
+      console.warn(`getPhoneNumberSignature attempt#${_attempt} error: `, error)
     }
   })
   async getPhoneNumberSignature(
@@ -87,6 +87,7 @@ export class OdisService {
     ])
 
     if (res.ok === false && res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
+      this.logger.log("Replenishing quota", input.context)
       await replenishQuota(this.walletCfg.address, this.contractKit)
     }
 
