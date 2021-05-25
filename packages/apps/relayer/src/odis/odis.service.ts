@@ -2,7 +2,6 @@ import { Err, Ok, Result, RootError } from '@celo/base/lib/result'
 import { ContractKit } from '@celo/contractkit'
 import { OdisUtils } from '@celo/identity'
 import { AuthSigner, ServiceContext } from '@celo/identity/lib/odis/query'
-import { replenishQuota } from '@celo/phone-number-privacy-common/lib/test/utils'
 import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wallet.config'
 import { networkConfig, NetworkConfig } from '@komenci/core'
 import { retry } from '@komenci/kit/lib/retry'
@@ -34,6 +33,12 @@ export class OdisTimeoutError extends RootError<OdisQueryErrorTypes.Timeout> {
   constructor() {
     super(OdisQueryErrorTypes.Timeout)
   }
+}
+
+export async function replenishQuota(account: string, contractKit: any) {
+  const goldToken = await contractKit.contracts.getGoldToken()
+  const selfTransferTx = goldToken.transfer(account, 1)
+  await selfTransferTx.sendAndWaitForReceipt({ from: account })
 }
 
 export type OdisQueryError = OdisOutOfQuotaError | OdisUnknownError | OdisTimeoutError
