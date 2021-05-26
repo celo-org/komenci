@@ -1,12 +1,11 @@
 import {
   ArgumentsHost,
   Catch,
-  HttpServer,
   Inject,
 } from '@nestjs/common'
 import { BaseExceptionFilter } from '@nestjs/core'
-import { KomenciLoggerService } from '../komenci-logger.service'
 import { throwError as _throw } from 'rxjs'
+import { KomenciLoggerService } from '../komenci-logger.service'
 
 @Catch()
 export class AllExceptionFilter extends BaseExceptionFilter {
@@ -15,7 +14,7 @@ export class AllExceptionFilter extends BaseExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     this.logger.error(exception)
-    super.catch(exception, host);
+    super.catch(exception, host)
   }
 }
 

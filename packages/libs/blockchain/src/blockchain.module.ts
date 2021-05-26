@@ -1,4 +1,6 @@
+import { AllExceptionFilter } from '@komenci/logger/dist/filters/global-error.filter'
 import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
+import { APP_FILTER } from '@nestjs/core'
 import {
   BLOCKCHAIN_MODULE_OPTIONS,
   contractKitDef,
@@ -6,11 +8,9 @@ import {
   web3Def,
   web3ProviderDef,
 } from './blockchain.providers'
-import { APP_FILTER } from '@nestjs/core';
 import { BlockchainService } from './blockchain.service'
 import { NodeConfig } from './config/node.config'
 import { WalletConfig, } from './config/wallet.config'
-import { AllExceptionFilter } from '@komenci/logger/dist/filters/global-error.filter'
 
 export interface BlockchainOptions {
   node: NodeConfig
