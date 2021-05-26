@@ -1,20 +1,16 @@
-import {
-  ArgumentsHost,
-  Catch,
-  Inject,
-} from '@nestjs/common'
-import { BaseExceptionFilter } from '@nestjs/core'
+
+import { ArgumentsHost, Catch, ExceptionFilter,  HttpException, Inject } from '@nestjs/common'
 import { throwError as _throw } from 'rxjs'
 import { KomenciLoggerService } from '../komenci-logger.service'
 
 @Catch()
-export class AllExceptionFilter extends BaseExceptionFilter {
+export class AllExceptionFilter implements ExceptionFilter {
   @Inject()
   protected readonly logger: KomenciLoggerService
 
   catch(exception: unknown, host: ArgumentsHost) {
-    this.logger.error(exception)
-    super.catch(exception, host)
+    this.logger.log(exception)
+    // super.catch(exception, host)
   }
 }
 

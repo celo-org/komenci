@@ -1,6 +1,4 @@
-import { AllExceptionFilter } from '@komenci/logger/dist/filters/global-error.filter'
 import { DynamicModule, Module, ModuleMetadata } from '@nestjs/common'
-import { APP_FILTER } from '@nestjs/core'
 import {
   BLOCKCHAIN_MODULE_OPTIONS,
   contractKitDef,
@@ -38,11 +36,7 @@ export class BlockchainModule {
           inject: options.inject || [],
         },
         BlockchainService,
-        ...providers,
-        { 
-          provide: APP_FILTER,
-          useClass: AllExceptionFilter,
-        }
+        ...providers
       ],
       exports: [
         BlockchainService,
