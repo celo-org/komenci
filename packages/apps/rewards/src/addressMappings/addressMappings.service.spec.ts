@@ -55,7 +55,7 @@ describe('AddressMappingsService', () => {
         AnalyticsService,
         {
           provide: getRepositoryToken(AddressMappings),
-          useClass: Repository
+          useFactory: () => new AddressMappingsRepository()
         },
         {
           provide: getRepositoryToken(NotifiedBlock),
@@ -71,8 +71,8 @@ describe('AddressMappingsService', () => {
       .useValue(buildMockWeb3Provider(() => null))
       .compile()
 
-    repository = module.get<Repository<AddressMappings>>(
-      getRepositoryToken(AddressMappings)
+    repository = module.get<AddressMappingsRepository>(
+      AddressMappingsRepository
     )
     notifiedBlockRepository = module.get<Repository<NotifiedBlock>>(
       getRepositoryToken(NotifiedBlockRepository)
