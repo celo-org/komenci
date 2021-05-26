@@ -223,12 +223,13 @@ describe('InviteRewardService', () => {
       getRawMany: () =>
         Promise.resolve(
           addressIdentifiers[address]?.map((identifier) => ({
+            address,
             identifier
           })) ?? []
         )
     })
     const whereFn: any = {
-      where: ({ address }) => getRawManyFn(address)
+      where: ({ address }) => getRawManyFn(address.value[0])
     }
     const selectFn: any = { select: () => whereFn }
     jest
@@ -240,9 +241,9 @@ describe('InviteRewardService', () => {
     [walletAddress: string]: string | undefined
   }) => {
     jest
-      .spyOn(addressMappingsRepository, 'findAccountAddress')
+      .spyOn(addressMappingsRepository, 'findAccountAddresses')
       .mockImplementation((walletAddress) =>
-        Promise.resolve(addressMapping[walletAddress])
+        Promise.resolve([addressMapping[walletAddress]])
       )
   }
 

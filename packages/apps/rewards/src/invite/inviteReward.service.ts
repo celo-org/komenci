@@ -10,7 +10,7 @@ import {
 } from '@komenci/logger'
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { Not, Raw } from 'typeorm'
+import { In, Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import { AddressMappingsRepository } from '../addressMappings/addressMappings.repository'
 import { AttestationRepository } from '../attestation/attestation.repository'
@@ -194,21 +194,21 @@ export class InviteRewardService {
   }
 
   async isAddressVerified(address: string) {
-    const accountAddress = await this.addressMappingsRepository.findAccountAddress(
+    const accountAddresses = await this.addressMappingsRepository.findAccountAddresses(
       address
     )
-    const identifierResult = await this.attestationRepository
+    const attestations = await this.attestationRepository
       .createQueryBuilder()
-      .select('DISTINCT identifier')
-      .where({ address: accountAddress })
+      .select('DISTINCT identifier, address')
+      .where({ address: In(accountAddresses) })
       .getRawMany()
-    const identifiers = identifierResult.map(
-      (identifierContainer) => identifierContainer.identifier
-    )
     // TODO: Use Promise.any once it's available to do this in parallel.
-    for (const identifier of identifiers) {
+    for (const attestation of attestations) {
       if (
-        await this.isAddressVerifiedWithIdentifier(accountAddress, identifier)
+        await this.isAddressVerifiedWithIdentifier(
+          attestation.address,
+          attestation.identifier
+        )
       ) {
         return true
       }
