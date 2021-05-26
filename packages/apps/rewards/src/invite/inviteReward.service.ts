@@ -16,7 +16,6 @@ import { AttestationRepository } from '../attestation/attestation.repository'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { appConfig, AppConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
-import { fetchEvents } from '../utils/fetchEvents'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 import { RewardSenderService } from './rewardSender.service'
@@ -45,7 +44,7 @@ export class InviteRewardService {
     private readonly analytics: AnalyticsService
   ) {
     this.komenciAddresses = this.networkCfg.relayers.map(
-      relayer => relayer.externalAccount
+      (relayer) => relayer.externalAccount
     )
   }
 
@@ -57,7 +56,9 @@ export class InviteRewardService {
   @Cron(CronExpression.EVERY_10_SECONDS)
   async sendInviteRewards() {
     if (!this.appCfg.shouldSendRewards) {
-      this.logger.log('Skipping sending reward because SHOULD_SEND_REWARDS env var is false')
+      this.logger.log(
+        'Skipping sending reward because SHOULD_SEND_REWARDS env var is false'
+      )
       return
     }
     this.cUsdTokenAddress = (
@@ -66,28 +67,19 @@ export class InviteRewardService {
 
     await this.eventService.runEventProcessingPolling(
       NOTIFIED_BLOCK_KEY,
+      await this.contractKit.contracts.getEscrow(),
+      WITHDRAWAL_EVENT,
       StartingBlock.Latest,
-      this.fetchWithdrawalEvents.bind(this),
-      this.handleWithdrawalEvent.bind(this)
+      this.handleWithdrawalEvent.bind(this),
+      this.logEventsReceived.bind(this)
     )
   }
 
-  async fetchWithdrawalEvents(fromBlock: number) {
-    const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
-    const escrow = await this.contractKit.contracts.getEscrow()
-    const events = await fetchEvents(
-      escrow,
-      WITHDRAWAL_EVENT,
-      fromBlock,
-      lastBlock
-    )
-    if (events.length > 0) {
-      this.logger.event(EventType.EscrowWithdrawalEventsFetched, {
-        eventCount: events.length,
-        fromBlock: lastBlock
-      })
-    }
-    return events
+  logEventsReceived(fromBlock: number, eventCount: number) {
+    this.logger.event(EventType.EscrowWithdrawalEventsFetched, {
+      eventCount,
+      fromBlock
+    })
   }
 
   async handleWithdrawalEvent(withdrawalEvent: EventLog) {
@@ -182,7 +174,7 @@ export class InviteRewardService {
         error: InviteNotRewardedReason.InviteeAlreadyInvited
       }
     ]
-    const results = await Promise.all(checks.map(check => check.condition))
+    const results = await Promise.all(checks.map((check) => check.condition))
     let conditionsAreMet = true
     for (let i = 0; i < results.length; i++) {
       if (!results[i]) {
@@ -206,7 +198,7 @@ export class InviteRewardService {
       .where({ address })
       .getRawMany()
     const identifiers = identifierResult.map(
-      identifierContainer => identifierContainer.identifier
+      (identifierContainer) => identifierContainer.identifier
     )
     // TODO: Use Promise.any once it's available to do this in parallel.
     for (const identifier of identifiers) {
@@ -231,7 +223,10 @@ export class InviteRewardService {
       where: {
         inviter,
         state: Not(RewardStatus.Failed),
-        createdAt: Raw(alias => `${alias} >= date_trunc('week', current_date) AT TIME ZONE 'UTC'`)
+        createdAt: Raw(
+          (alias) =>
+            `${alias} >= date_trunc('week', current_date) AT TIME ZONE 'UTC'`
+        )
       }
     })
     return invites < WEEKLY_INVITE_LIMIT
@@ -264,7 +259,7 @@ export class InviteRewardService {
         inviteId: inviteReward.id,
         inviter,
         invitee,
-        paymentId,
+        paymentId
       })
       return savedReward
     } catch (error) {
