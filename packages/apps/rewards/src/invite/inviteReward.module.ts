@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { AddressMappingsRepository } from '../addressMappings/addressMappings.repository'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
@@ -20,6 +21,7 @@ import { RewardSenderService } from './rewardSender.service'
   imports: [
     TypeOrmModule.forFeature([InviteRewardRepository]),
     TypeOrmModule.forFeature([AttestationRepository]),
+    TypeOrmModule.forFeature([AddressMappingsRepository]),
     TypeOrmModule.forFeature([NotifiedBlockRepository])
   ],
   providers: [

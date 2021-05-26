@@ -27,7 +27,9 @@ export enum EventType {
   RewardSendingStatus = 'RewardSendingStatus',
   RelayerSendingError = 'RelayerSendingError',
   AttestationEventsFetched = 'AttestationEventsFetched',
-  AttestationCompleted = 'AttestationCompleted'
+  AttestationCompleted = 'AttestationCompleted',
+  AddressMappingsEventsFetched = 'AddressMappingsEventsFetched',
+  AccountWalletAddressSet = 'AccountWalletAddressSet'
 }
 
 export type EventPayload = {
@@ -109,13 +111,13 @@ export type EventPayload = {
     inviteId: string
     inviter: string
     invitee: string
-    paymentId: string;
+    paymentId: string
   }
   [EventType.InviteNotRewarded]: {
     txHash: string
     inviter: string
     invitee: string | null
-    paymentId: string;
+    paymentId: string
     reason: InviteNotRewardedReason
   }
   [EventType.RewardSendingStatus]: {
@@ -136,6 +138,15 @@ export type EventPayload = {
     issuer: string
     address: string
     identifier: string
+  }
+  [EventType.AddressMappingsEventsFetched]: {
+    eventCount: number
+    fromBlock: number
+  }
+  [EventType.AccountWalletAddressSet]: {
+    txHash: string
+    walletAddress: string
+    accountAddress: string
   }
 }
 
