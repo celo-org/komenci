@@ -1,11 +1,13 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
-@Entity()
+@Entity({
+  name: 'account_wallet_mapping'
+})
 export class AddressMappings {
   public static of(params: Partial<AddressMappings>): AddressMappings {
-    const attestation = new AddressMappings()
-    Object.assign(attestation, params)
-    return attestation
+    const addressMapping = new AddressMappings()
+    Object.assign(addressMapping, params)
+    return addressMapping
   }
 
   @PrimaryGeneratedColumn('uuid')

@@ -61,7 +61,7 @@ export class EventService {
   async fetchAndProcessEvents(
     key: string,
     contract: BaseWrapper<any>,
-    event: string,
+    eventName: string,
     fromBlock: number,
     eventHandler: (event: EventLog) => Promise<void>,
     eventsReceivedLogger: (block: number, eventCount: number) => void
@@ -74,7 +74,7 @@ export class EventService {
     let maxBlock = fromBlock
     let currentFromBlock = fromBlock
     while (currentFromBlock < lastBlock) {
-      const events = await contract.getPastEvents(event, {
+      const events = await contract.getPastEvents(eventName, {
         fromBlock: currentFromBlock,
         toBlock: Math.min(currentFromBlock + batchSize, lastBlock)
       })

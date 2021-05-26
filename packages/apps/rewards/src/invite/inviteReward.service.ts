@@ -12,6 +12,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { AddressMappingsRepository } from '../addressMappings/addressMappings.repository'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { appConfig, AppConfig } from '../config/app.config'
@@ -33,6 +34,7 @@ export class InviteRewardService {
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
     private readonly attestationRepository: AttestationRepository,
+    private readonly addressMappingsRepository: AddressMappingsRepository,
     private readonly rewardSenderService: RewardSenderService,
     private readonly eventService: EventService,
     private readonly contractKit: ContractKit,
@@ -192,17 +194,22 @@ export class InviteRewardService {
   }
 
   async isAddressVerified(address: string) {
+    const accountAddress = await this.addressMappingsRepository.findAccountAddress(
+      address
+    )
     const identifierResult = await this.attestationRepository
       .createQueryBuilder()
       .select('DISTINCT identifier')
-      .where({ address })
+      .where({ address: accountAddress })
       .getRawMany()
     const identifiers = identifierResult.map(
       (identifierContainer) => identifierContainer.identifier
     )
     // TODO: Use Promise.any once it's available to do this in parallel.
     for (const identifier of identifiers) {
-      if (await this.isAddressVerifiedWithIdentifier(address, identifier)) {
+      if (
+        await this.isAddressVerifiedWithIdentifier(accountAddress, identifier)
+      ) {
         return true
       }
     }
