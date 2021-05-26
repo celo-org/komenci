@@ -1,11 +1,13 @@
 import { AnalyticsService } from '@komenci/analytics'
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { KomenciLoggerService } from '@komenci/logger'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'
 import { AddressMappingsRepository } from './addressMappings.repository'
 import { AddressMappingsService } from './addressMappings.service'
+import { appConfig, AppConfig } from '../config/app.config'
 
 @Module({
   imports: [
@@ -16,7 +18,13 @@ import { AddressMappingsService } from './addressMappings.service'
     AddressMappingsService,
     NotifiedBlockService,
     EventService,
-    AnalyticsService
+    {
+      provide: AnalyticsService,
+      useFactory: (logger: KomenciLoggerService, appCfg: AppConfig) => {
+        return new AnalyticsService(logger, appCfg.bigQueryDataset)
+      },
+      inject: [KomenciLoggerService, appConfig.KEY]
+    }
   ],
   exports: [TypeOrmModule]
 })

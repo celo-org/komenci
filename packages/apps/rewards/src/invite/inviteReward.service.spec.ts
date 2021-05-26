@@ -240,9 +240,9 @@ describe('InviteRewardService', () => {
     [walletAddress: string]: string | undefined
   }) => {
     jest
-      .spyOn(addressMappingsRepository, 'findAccountAddress')
+      .spyOn(addressMappingsRepository, 'findAccountAddresses')
       .mockImplementation((walletAddress) =>
-        Promise.resolve(addressMapping[walletAddress])
+        Promise.resolve([addressMapping[walletAddress]])
       )
   }
 
