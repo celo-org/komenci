@@ -11,4 +11,3 @@ export class AllExceptionFilter implements ExceptionFilter {
     this.logger.error(exception)
   }
 }
-
