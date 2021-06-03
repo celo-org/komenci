@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common'
 import { Mutex } from 'async-mutex'
 import BigNumber from 'bignumber.js'
+import { metrics } from './metrics'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
 import { BalanceService } from '../chain/balance.service'
@@ -32,6 +33,8 @@ import { RelayerTraceContext } from '../dto/RelayerCommandDto'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
 const GWEI_PER_UNIT = 1e9
+const gasUsedByAccount: Map<string, number> = new Map()
+
 
 interface TxCachedData {
   nonce: number,
@@ -55,6 +58,13 @@ interface TxSummaryWithReceipt extends TxSummary {
 enum TxDeadletterReason {
   GasTooLow = "GasTooLow",
   Expired = "Expired"
+}
+
+export async function getGas() {
+  const totalGas =  Object.values(gasUsedByAccount).reduce((a, b) => a + b, 0)
+  const gasByOnboarding = (totalGas/gasUsedByAccount.keys.length!) || 0 
+  gasUsedByAccount.clear()
+  return gasByOnboarding  
 }
 
 @Injectable()
@@ -269,6 +279,8 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
     const gasPrice = parseInt(txs.tx.gasPrice, 10)
     this.unwatchTransaction(txs.tx.hash)
+    gasUsedByAccount.set(txs.receipt.to, txs.receipt.gasUsed)
+    metrics.setTotalGasCostUserOnboarding(txs.receipt.gasUsed)
     this.logger.event(EventType.TxConfirmed, {
       status: txs.receipt.status === false ? "Reverted" : "Ok",
       txHash: txs.tx.hash,

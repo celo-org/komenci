@@ -1,5 +1,4 @@
 import { normalizeAddress, throwIfError, trimLeading0x } from '@celo/base'
-import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { NetworkConfig, networkConfig } from '@komenci/core'
 import { EventType, KomenciLoggerService } from '@komenci/logger'
@@ -8,7 +7,6 @@ import { Throttle, ThrottlerGuard } from '@komenci/throttler'
 import { ActionCounts, TrackedAction } from './config/quota.config'
 import { DeployWalletDto } from './dto/DeployWalletDto'
 import { RequestAttestationsDto } from './dto/RequestAttestationsDto'
-import { metrics } from './metrics'
 import { WalletService } from './wallet/wallet.service'
 
 import {
@@ -67,14 +65,6 @@ interface StartSessionResponse {
   token: string
   callbackUrl: string
 }
-
-const gasUsedByAccount: Map<string, number> = new Map()
-setInterval(() => {
-  const totalGas =  Object.values(gasUsedByAccount).reduce((a, b) => a + b, 0)
-  const gasByOnboarding = totalGas/gasUsedByAccount.keys.length! || 0 
-  metrics.setTotalGasCostUserOnboarding(gasByOnboarding)
-  gasUsedByAccount.clear()
-}, 300000)
 
 @Controller({
   path: "v1",
@@ -299,7 +289,6 @@ export class AppController {
       TrackedAction.SubmitMetaTransaction
     )
 
-    gasUsedByAccount.set(metaTx.destination, (gasUsedByAccount.get(metaTx.destination) || 0) + resp.result.gasUsed)
     return {
       txHash: resp.payload
     }
