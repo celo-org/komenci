@@ -18,7 +18,6 @@ import {
 } from '@nestjs/common'
 import { Mutex } from 'async-mutex'
 import BigNumber from 'bignumber.js'
-import { metrics } from './metrics'
 import Web3 from 'web3'
 import { Transaction, TransactionReceipt } from 'web3-core'
 import { BalanceService } from '../chain/balance.service'
@@ -30,6 +29,7 @@ import {
 import { AppConfig, appConfig } from '../config/app.config'
 import { RawTransactionDto } from '../dto/RawTransactionDto'
 import { RelayerTraceContext } from '../dto/RelayerCommandDto'
+import { metrics } from './metrics'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
 const GWEI_PER_UNIT = 1e9
