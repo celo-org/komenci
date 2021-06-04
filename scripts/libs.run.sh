@@ -6,4 +6,5 @@ yarn lerna run --parallel \
                --scope @komenci/throttler \
                --scope @komenci/kit \
                --scope @komenci/blockchain \
+               --scope @komenci/analytics \
                $@

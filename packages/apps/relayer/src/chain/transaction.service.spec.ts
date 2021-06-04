@@ -24,9 +24,17 @@ describe('TransactionService', () => {
   const contractKit = new ContractKit()
   // @ts-ignore
   contractKit.web3 = {
+    BatchRequest: jest.fn(() => ({
+      add: jest.fn(),
+      execute: jest.fn()
+    })),
     eth: {
-      getTransaction: jest.fn(),
-      getTransactionReceipt: jest.fn()
+      getTransaction: {
+        request: jest.fn(),
+      },
+      getTransactionReceipt: {
+        request: jest.fn()
+      }
     }
   }
   // @ts-ignore
@@ -222,9 +230,11 @@ describe('TransactionService', () => {
         // @ts-ignore
         const checkTransactions = jest.spyOn(service, 'checkTransactions')
         // Simulate pending tx
-        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction')
-        const txPromise = Promise.resolve(tx)
-        getTransaction.mockReturnValue(txPromise)
+        const getTransaction = jest.spyOn(contractKit.web3.eth.getTransaction, 'request')
+        getTransaction.mockImplementation((...args: any) => {
+          const callback = args[args.length - 1]
+          callback(null, tx)
+        })
 
         const rawTx = {
           destination: tx.to,
@@ -250,7 +260,6 @@ describe('TransactionService', () => {
 
         // Ensure the checkTransactions method is called
         jest.runOnlyPendingTimers()
-        await txPromise
         expect(checkTransactions).toHaveBeenCalled()
 
         // Shouldn't remove it from the unwatch list until it's finalized
@@ -263,18 +272,23 @@ describe('TransactionService', () => {
         completedTx.hash = tx.hash
         completedTx.blockHash = "notNull"
         const completedTxPromise = Promise.resolve(completedTx)
-        getTransaction.mockReturnValue(completedTxPromise)
+        getTransaction.mockImplementation((...args: any) => {
+          const callback = args[args.length - 1]
+          callback(null, completedTx)
+        })
 
-        const getTransactionReceipt = jest.spyOn(contractKit.web3.eth, 'getTransactionReceipt')
-        const txReceiptPromise = Promise.resolve(txReceiptFixture())
-        getTransactionReceipt.mockReturnValue(txReceiptPromise)
+        const getTransactionReceipt = jest.spyOn(contractKit.web3.eth.getTransactionReceipt, 'request')
+        const txReceipt = txReceiptFixture()
+        getTransactionReceipt.mockImplementation((...args: any) => {
+          const callback = args[args.length - 1]
+          callback(null, txReceipt)
+        })
 
         const getTotalBalance = jest.spyOn(contractKit, 'getTotalBalance')
         const relayerBalancePromise = Promise.resolve(relayerBalanceFixture())
         getTotalBalance.mockReturnValue(relayerBalancePromise)
 
         await completedTxPromise
-        await txReceiptPromise
         await relayerBalancePromise
         // @ts-ignore
         await service.checkTransactions()
@@ -311,7 +325,11 @@ describe('TransactionService', () => {
         // @ts-ignore
         const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
         const txPromise = Promise.resolve(tx)
-        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
+        const getTransaction = jest.spyOn(contractKit.web3.eth.getTransaction, 'request')
+        getTransaction.mockImplementation((...args: any) => {
+          const callback = args[args.length - 1]
+          callback(null, tx)
+        })
         // @ts-ignore
         const deadLetter = jest.spyOn(service, 'deadLetter')
         // @ts-ignore
@@ -393,7 +411,11 @@ describe('TransactionService', () => {
         // @ts-ignore
         const unwatchTransaction = jest.spyOn(service, 'unwatchTransaction')
         const txPromise = Promise.resolve(tx)
-        const getTransaction = jest.spyOn(contractKit.web3.eth, 'getTransaction').mockReturnValue(txPromise)
+        const getTransaction = jest.spyOn(contractKit.web3.eth.getTransaction, 'request')
+        getTransaction.mockImplementation((...args: any) => {
+          const callback = args[args.length - 1]
+          callback(null, tx)
+        })
         // @ts-ignore
         const deadLetter = jest.spyOn(service, 'deadLetter')
         // @ts-ignore
