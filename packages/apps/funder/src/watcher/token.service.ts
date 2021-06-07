@@ -36,8 +36,13 @@ export class TokenService  {
   async tick() {
     const addresses = await this.getAddressesUnderThreshold()
     if (addresses.length === 0) {
+      this.logger.debug({
+          token: await this.token.methods.symbol().call(),
+          tokenAddress: this.token.options.address,
+      }, "No addresses to fund")
       return
     }
+
     const balance = await this.balanceOf(this.fundCfg.address) 
     const balanceNeeded = this.topupAmount.times(addresses.length)
     if (balanceNeeded.gt(balance)) {
@@ -61,6 +66,7 @@ export class TokenService  {
         addr,
         this.topupAmount
       ).send()
+
       this.logger.event(EventType.Topup, {
         destination: addr,
         token: await this.token.methods.symbol().call(),

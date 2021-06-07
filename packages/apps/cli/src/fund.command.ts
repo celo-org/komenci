@@ -174,9 +174,9 @@ export class FundCommand {
     const resp = this.networkCfg.relayers.reduce<any>(
       (acc, r, idx) => {
         acc[r.externalAccount] = {
-          "celo": balanceSummary[r.externalAccount].celo.div(exp).toFixed(),
+          "celo": balanceSummary[r.externalAccount].celoBalance.div(exp).toFixed(),
           [r.metaTransactionWallet]: {
-            "cUSD": balanceSummary[r.externalAccount].cUSD.div(exp).toFixed()
+            "cUSD": balanceSummary[r.externalAccount].cUSDBalance.div(exp).toFixed()
           }
         }
         return acc

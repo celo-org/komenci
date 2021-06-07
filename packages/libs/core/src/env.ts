@@ -45,7 +45,10 @@ export const floatFromEnv = (key: string, defaultValue: number = 0): number => {
 
 type ObjectDefinition<T extends Record<string, any>, K extends keyof T> = Record<K, (index: number) => T[K]>
 
-export const objectArrayFromEnv = <T extends Record<string, any>>(def: ObjectDefinition<T, keyof T>, hasIndex: (index: number) => boolean): T[] => {
+export const objectArrayFromEnv = <T extends Record<string, any>>(
+  def: ObjectDefinition<T, keyof T>, 
+  hasIndex: (index: number) => boolean
+): T[] => {
   const objects: T[] = []
   for (let i = 0; hasIndex(i); i++) {
     objects.push(

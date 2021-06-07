@@ -1,7 +1,6 @@
 import {BlockchainModule, ContractsModule} from "@komenci/blockchain"
 import {NodeProviderType} from "@komenci/blockchain/dist/config/node.config"
 import {WalletConfig} from "@komenci/blockchain/dist/config/wallet.config"
-import {FundingService} from "@komenci/blockchain/dist/funding.service"
 import {fundConfig} from "@komenci/cli/dist/fund.config"
 import {NetworkConfig, networkConfig} from "@komenci/core"
 import {KomenciLoggerModule} from "@komenci/logger"
@@ -60,6 +59,6 @@ import {WatcherService} from './watcher/watcher.service'
       }
     }),
   ],
-  providers: [FundingService, WatcherService],
+  providers: [WatcherService],
 })
 export class AppModule {}

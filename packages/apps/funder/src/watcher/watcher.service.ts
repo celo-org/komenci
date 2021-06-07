@@ -1,3 +1,4 @@
+import { KomenciLoggerService } from '@komenci/logger'
 import {Inject, Injectable, OnModuleInit} from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
 import { SchedulerRegistry } from '@nestjs/schedule'
@@ -6,7 +7,6 @@ import { CronJob } from "cron"
 import {AppConfig, appConfig} from "../config/app.config"
 import { TokenService } from './token.service'
 
-
 @Injectable()
 export class WatcherService implements OnModuleInit {
   private tokens: TokenService[]
@@ -14,7 +14,8 @@ export class WatcherService implements OnModuleInit {
   constructor(
     @Inject(appConfig.KEY) private appCfg: AppConfig,
     private moduleRef: ModuleRef,
-    private schedulerRegistry: SchedulerRegistry
+    private schedulerRegistry: SchedulerRegistry,
+    private logger: KomenciLoggerService
   ) {}
 
   async onModuleInit() {
@@ -22,6 +23,7 @@ export class WatcherService implements OnModuleInit {
       const tokenService = await this.moduleRef.create(TokenService)
       const mutex = new Mutex()
       await tokenService.init(tokenConfig)
+      this.logger.log(tokenConfig, "Registering token")
       const job = new CronJob(tokenConfig.cron, async () => {
         return mutex.runExclusive(async () => {
           return tokenService.tick()
