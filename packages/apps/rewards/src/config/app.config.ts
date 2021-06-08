@@ -10,7 +10,7 @@ export const appConfig = registerAs('app', () => ({
   relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000,
   inviteRewardAmountInCusd:
     parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 0.001,
-  bigQueryDataset: process.env.BIG_QUERY_DATASET,
+  segmentApiKey: process.env.SEGMENT_API_KEY,
   shouldSendRewards: process.env.SHOULD_SEND_REWARDS || false,
 }))
 
