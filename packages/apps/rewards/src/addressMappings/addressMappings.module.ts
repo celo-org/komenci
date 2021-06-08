@@ -21,7 +21,7 @@ import { AddressMappingsService } from './addressMappings.service'
     {
       provide: AnalyticsService,
       useFactory: (logger: KomenciLoggerService, appCfg: AppConfig) => {
-        return new AnalyticsService(logger, appCfg.bigQueryDataset)
+        return new AnalyticsService(logger, appCfg.segmentApiKey)
       },
       inject: [KomenciLoggerService, appConfig.KEY]
     }
