@@ -9,8 +9,9 @@ export const appConfig = registerAs('app', () => ({
   version: process.env.KOMENCI_VERSION || 'version-missing',
   relayerRpcTimeoutMs: parseInt(process.env.RELAYER_RPC_TIMEOUT_MS, 10) || 5000,
   inviteRewardAmountInCusd:
-    parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 1,
-  bigQueryDataset: process.env.BIG_QUERY_DATASET,
+    parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 0.001,
+  segmentApiKey: process.env.SEGMENT_API_KEY,
+  shouldSendRewards: process.env.SHOULD_SEND_REWARDS || false,
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>
