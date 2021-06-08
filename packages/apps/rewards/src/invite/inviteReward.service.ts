@@ -10,13 +10,13 @@ import {
 } from '@komenci/logger'
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { Not, Raw } from 'typeorm'
+import { In, Not, Raw } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { AddressMappingsRepository } from '../addressMappings/addressMappings.repository'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { appConfig, AppConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
-import { fetchEvents } from '../utils/fetchEvents'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 import { RewardSenderService } from './rewardSender.service'
@@ -34,6 +34,7 @@ export class InviteRewardService {
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
     private readonly attestationRepository: AttestationRepository,
+    private readonly addressMappingsRepository: AddressMappingsRepository,
     private readonly rewardSenderService: RewardSenderService,
     private readonly eventService: EventService,
     private readonly contractKit: ContractKit,
@@ -45,7 +46,7 @@ export class InviteRewardService {
     private readonly analytics: AnalyticsService
   ) {
     this.komenciAddresses = this.networkCfg.relayers.map(
-      relayer => relayer.externalAccount
+      (relayer) => relayer.externalAccount
     )
   }
 
@@ -57,7 +58,9 @@ export class InviteRewardService {
   @Cron(CronExpression.EVERY_10_SECONDS)
   async sendInviteRewards() {
     if (!this.appCfg.shouldSendRewards) {
-      this.logger.log('Skipping sending reward because SHOULD_SEND_REWARDS env var is false')
+      this.logger.log(
+        'Skipping sending reward because SHOULD_SEND_REWARDS env var is false'
+      )
       return
     }
     this.cUsdTokenAddress = (
@@ -66,28 +69,19 @@ export class InviteRewardService {
 
     await this.eventService.runEventProcessingPolling(
       NOTIFIED_BLOCK_KEY,
+      await this.contractKit.contracts.getEscrow(),
+      WITHDRAWAL_EVENT,
       StartingBlock.Latest,
-      this.fetchWithdrawalEvents.bind(this),
-      this.handleWithdrawalEvent.bind(this)
+      this.handleWithdrawalEvent.bind(this),
+      this.logEventsReceived.bind(this)
     )
   }
 
-  async fetchWithdrawalEvents(fromBlock: number) {
-    const lastBlock = await this.contractKit.web3.eth.getBlockNumber()
-    const escrow = await this.contractKit.contracts.getEscrow()
-    const events = await fetchEvents(
-      escrow,
-      WITHDRAWAL_EVENT,
-      fromBlock,
-      lastBlock
-    )
-    if (events.length > 0) {
-      this.logger.event(EventType.EscrowWithdrawalEventsFetched, {
-        eventCount: events.length,
-        fromBlock: lastBlock
-      })
-    }
-    return events
+  logEventsReceived(fromBlock: number, eventCount: number) {
+    this.logger.event(EventType.EscrowWithdrawalEventsFetched, {
+      eventCount,
+      fromBlock
+    })
   }
 
   async handleWithdrawalEvent(withdrawalEvent: EventLog) {
@@ -182,7 +176,7 @@ export class InviteRewardService {
         error: InviteNotRewardedReason.InviteeAlreadyInvited
       }
     ]
-    const results = await Promise.all(checks.map(check => check.condition))
+    const results = await Promise.all(checks.map((check) => check.condition))
     let conditionsAreMet = true
     for (let i = 0; i < results.length; i++) {
       if (!results[i]) {
@@ -200,17 +194,22 @@ export class InviteRewardService {
   }
 
   async isAddressVerified(address: string) {
-    const identifierResult = await this.attestationRepository
-      .createQueryBuilder()
-      .select('DISTINCT identifier')
-      .where({ address })
-      .getRawMany()
-    const identifiers = identifierResult.map(
-      identifierContainer => identifierContainer.identifier
+    const accountAddresses = await this.addressMappingsRepository.findAccountAddresses(
+      address
     )
+    const attestations = await this.attestationRepository
+      .createQueryBuilder()
+      .select('DISTINCT identifier, address')
+      .where({ address: In(accountAddresses) })
+      .getRawMany()
     // TODO: Use Promise.any once it's available to do this in parallel.
-    for (const identifier of identifiers) {
-      if (await this.isAddressVerifiedWithIdentifier(address, identifier)) {
+    for (const attestation of attestations) {
+      if (
+        await this.isAddressVerifiedWithIdentifier(
+          attestation.address,
+          attestation.identifier
+        )
+      ) {
         return true
       }
     }
@@ -231,7 +230,10 @@ export class InviteRewardService {
       where: {
         inviter,
         state: Not(RewardStatus.Failed),
-        createdAt: Raw(alias => `${alias} >= date_trunc('week', current_date) AT TIME ZONE 'UTC'`)
+        createdAt: Raw(
+          (alias) =>
+            `${alias} >= date_trunc('week', current_date) AT TIME ZONE 'UTC'`
+        )
       }
     })
     return invites < WEEKLY_INVITE_LIMIT
@@ -264,7 +266,7 @@ export class InviteRewardService {
         inviteId: inviteReward.id,
         inviter,
         invitee,
-        paymentId,
+        paymentId
       })
       return savedReward
     } catch (error) {

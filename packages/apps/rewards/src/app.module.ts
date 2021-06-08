@@ -6,6 +6,7 @@ import { HttpModule, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { ScheduleModule } from '@nestjs/schedule'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { AddressMappingsModule } from './addressMappings/addressMappings.module'
 import { AttestationModule } from './attestation/attestation.module'
 import { AppConfig, appConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
@@ -17,6 +18,7 @@ import { InviteRewardModule } from './invite/inviteReward.module'
   imports: [
     InviteRewardModule,
     AttestationModule,
+    AddressMappingsModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
