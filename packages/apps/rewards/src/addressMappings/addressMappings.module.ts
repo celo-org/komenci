@@ -6,16 +6,16 @@ import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
 import { appConfig, AppConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
-import { AttestationRepository } from './attestation.repository'
-import { AttestationService } from './attestation.service'
+import { AddressMappingsRepository } from './addressMappings.repository'
+import { AddressMappingsService } from './addressMappings.service'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AttestationRepository]),
+    TypeOrmModule.forFeature([AddressMappingsRepository]),
     TypeOrmModule.forFeature([NotifiedBlockRepository])
   ],
   providers: [
-    AttestationService,
+    AddressMappingsService,
     NotifiedBlockService,
     EventService,
     {
@@ -28,4 +28,4 @@ import { AttestationService } from './attestation.service'
   ],
   exports: [TypeOrmModule]
 })
-export class AttestationModule {}
+export class AddressMappingsModule {}

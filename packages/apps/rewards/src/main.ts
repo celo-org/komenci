@@ -7,6 +7,7 @@ import { appConfig } from './config/app.config'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule)
+  app.setGlobalPrefix('rewards/v1')
   const logger = app.get(Logger)
   app.useLogger(logger)
   const cfg = app.get(ConfigService).get<ConfigType<typeof appConfig>>('app')
