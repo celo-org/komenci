@@ -33,7 +33,7 @@ import { metrics } from './metrics'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
 const GWEI_PER_UNIT = 1e9
-let gasUsedByAccount: [[string, number]]
+const gasUsedByAccount: [string, number][] = []
 
 
 interface TxCachedData {
