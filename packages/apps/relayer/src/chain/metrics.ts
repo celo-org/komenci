@@ -18,9 +18,5 @@ export class ApiMetrics {
 
   }
 
-  setTotalGasCostUserOnboarding(gas: number) {
-    this.totalGasCostUserOnboarding.set(gas)
-  }
-
 }
 export const metrics = new ApiMetrics()
