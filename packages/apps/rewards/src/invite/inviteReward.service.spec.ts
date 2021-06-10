@@ -13,6 +13,8 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import { AddressMappings } from '../addressMappings/addressMappings.entity'
+import { AddressMappingsRepository } from '../addressMappings/addressMappings.repository'
 import { Attestation } from '../attestation/attestation.entity'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
@@ -31,6 +33,7 @@ RewardSenderService.prototype.sendInviteReward = () => Promise.resolve()
 
 const inviteeAddress = '0x001'
 const inviterAddress = '0x002'
+const inviterAccountAddress = '0x102'
 const komenciAddress = '0x003'
 const inviteTxHash = '0x004'
 const cUsdTokenAddress = '0x005'
@@ -40,6 +43,7 @@ describe('InviteRewardService', () => {
   let service: InviteRewardService
   let repository: InviteRewardRepository
   let attestationRepository: AttestationRepository
+  let addressMappingsRepository: AddressMappingsRepository
   let notifiedBlockRepository: NotifiedBlockRepository
   let rewardSenderService: RewardSenderService
   let contractKit: ContractKit
@@ -70,9 +74,9 @@ describe('InviteRewardService', () => {
         {
           provide: AnalyticsService,
           useFactory: (logger: KomenciLoggerService, appCfg: AppConfig) => {
-            return new AnalyticsService(logger, appCfg.bigQueryDataset)
+            return new AnalyticsService(logger, appCfg.segmentApiKey)
           },
-          inject: [KomenciLoggerService, appConfig.KEY],
+          inject: [KomenciLoggerService, appConfig.KEY]
         },
         {
           provide: getRepositoryToken(InviteReward),
@@ -81,6 +85,10 @@ describe('InviteRewardService', () => {
         {
           provide: getRepositoryToken(Attestation),
           useClass: Repository
+        },
+        {
+          provide: getRepositoryToken(AddressMappings),
+          useFactory: () => new AddressMappingsRepository()
         },
         {
           provide: getRepositoryToken(NotifiedBlock),
@@ -99,7 +107,9 @@ describe('InviteRewardService', () => {
         },
         {
           provide: appConfig.KEY,
-          useValue: {}
+          useValue: {
+            shouldSendRewards: true
+          }
         }
       ]
     })
@@ -112,6 +122,9 @@ describe('InviteRewardService', () => {
     )
     attestationRepository = module.get<Repository<Attestation>>(
       getRepositoryToken(Attestation)
+    )
+    addressMappingsRepository = module.get<AddressMappingsRepository>(
+      AddressMappingsRepository
     )
     notifiedBlockRepository = module.get<Repository<NotifiedBlock>>(
       getRepositoryToken(NotifiedBlockRepository)
@@ -145,7 +158,7 @@ describe('InviteRewardService', () => {
   ): jest.SpyInstance => {
     return jest.spyOn(escrow, 'getPastEvents').mockImplementation(() =>
       Promise.resolve(
-        events.map(metadata =>
+        events.map((metadata) =>
           partialEventLog({
             transactionHash: metadata.txHash,
             blockNumber: metadata.blockNumber,
@@ -177,7 +190,7 @@ describe('InviteRewardService', () => {
   const mockGetTransaction = (txData: { [txHash: string]: TxData }) => {
     jest
       .spyOn(contractKit.web3.eth, 'getTransaction')
-      .mockImplementation(txHash => {
+      .mockImplementation((txHash) => {
         const { from, to } = txData[txHash]
         return Promise.resolve(
           partialTransaction({
@@ -209,18 +222,29 @@ describe('InviteRewardService', () => {
     const getRawManyFn = (address: string) => ({
       getRawMany: () =>
         Promise.resolve(
-          addressIdentifiers[address]?.map(identifier => ({
+          addressIdentifiers[address]?.map((identifier) => ({
+            address,
             identifier
           })) ?? []
         )
     })
     const whereFn: any = {
-      where: ({ address }) => getRawManyFn(address)
+      where: ({ address }) => getRawManyFn(address.value[0])
     }
     const selectFn: any = { select: () => whereFn }
     jest
       .spyOn(attestationRepository, 'createQueryBuilder')
       .mockImplementation(() => selectFn)
+  }
+
+  const mockAddresMappingRepository = (addressMapping: {
+    [walletAddress: string]: string | undefined
+  }) => {
+    jest
+      .spyOn(addressMappingsRepository, 'findAccountAddresses')
+      .mockImplementation((walletAddress) =>
+        Promise.resolve([addressMapping[walletAddress]])
+      )
   }
 
   const mockInviterCount = (invitersCount: { [inviter: string]: number }) => {
@@ -243,7 +267,7 @@ describe('InviteRewardService', () => {
 
   describe('#sendInviteRewards', () => {
     const updateBlockMock = jest.fn()
-    const saveInviteRewardMock = jest.fn(reward => Promise.resolve(reward))
+    const saveInviteRewardMock = jest.fn((reward) => Promise.resolve(reward))
     let notifiedBlockId
 
     beforeEach(() => {
@@ -262,11 +286,14 @@ describe('InviteRewardService', () => {
         [inviteTxHash]: { from: komenciAddress, to: inviteeAddress }
       })
       mockAttestationStats({
-        [inviterAddress]: { completed: 3, total: 3 },
+        [inviterAccountAddress]: { completed: 3, total: 3 },
         [inviteeAddress]: { completed: 3, total: 3 }
       })
       mockAttestationRepository({
-        [inviterAddress]: ['inviterIdentifier']
+        [inviterAccountAddress]: ['inviterIdentifier']
+      })
+      mockAddresMappingRepository({
+        [inviterAddress]: inviterAccountAddress
       })
       mockInviterCount({ [inviterAddress]: 0 })
       mockFindInviteeReward({ [inviteeAddress]: undefined })

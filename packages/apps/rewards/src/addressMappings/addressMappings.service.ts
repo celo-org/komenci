@@ -7,16 +7,16 @@ import { Cron, CronExpression } from '@nestjs/schedule'
 import { v4 as uuidv4 } from 'uuid'
 import { StartingBlock } from '../blocks/notifiedBlock.service'
 import { EventService } from '../event/eventService.service'
-import { Attestation } from './attestation.entity'
-import { AttestationRepository } from './attestation.repository'
+import { AddressMappings } from './addressMappings.entity'
+import { AddressMappingsRepository } from './addressMappings.repository'
 
-const NOTIFIED_BLOCK_KEY = 'attestation'
-const ATTESTATION_COMPLETED_EVENT = 'AttestationCompleted'
+const NOTIFIED_BLOCK_KEY = 'addressMappings'
+const ADDRESS_MAPPINGS_EVENT = 'AccountWalletAddressSet'
 
 @Injectable()
-export class AttestationService {
+export class AddressMappingsService {
   constructor(
-    private readonly attestationRepository: AttestationRepository,
+    private readonly addressMappingsRepository: AddressMappingsRepository,
     private readonly eventService: EventService,
     private readonly contractKit: ContractKit,
     private readonly logger: KomenciLoggerService,
@@ -24,61 +24,57 @@ export class AttestationService {
   ) {}
 
   @Cron(CronExpression.EVERY_30_SECONDS)
-  async fetchAttestations() {
+  async fetchAddressMappings() {
     await this.eventService.runEventProcessingPolling(
       NOTIFIED_BLOCK_KEY,
-      await this.contractKit.contracts.getAttestations(),
-      ATTESTATION_COMPLETED_EVENT,
+      await this.contractKit.contracts.getAccounts(),
+      ADDRESS_MAPPINGS_EVENT,
       StartingBlock.Genesis,
-      this.handleAttestationRequest.bind(this),
+      this.handleAddressMappingsEvent.bind(this),
       this.logEventsReceived.bind(this)
     )
   }
 
   logEventsReceived(fromBlock: number, eventCount: number) {
-    this.logger.event(EventType.AttestationEventsFetched, {
+    this.logger.event(EventType.AddressMappingsEventsFetched, {
       eventCount,
       fromBlock
     })
   }
 
-  async handleAttestationRequest(attestationRequest: EventLog) {
+  async handleAddressMappingsEvent(addressMappingEvent: EventLog) {
     const {
       transactionHash,
-      returnValues: { identifier, issuer, account }
-    } = attestationRequest
-    await this.createAttestation(
+      returnValues: { account, walletAddress }
+    } = addressMappingEvent
+    await this.createAddressMapping(
       transactionHash,
-      issuer,
       account.toLowerCase(),
-      identifier
+      walletAddress.toLowerCase()
     )
   }
 
-  async createAttestation(
+  async createAddressMapping(
     txHash: string,
-    issuer: string,
-    address: string,
-    identifier: string
+    accountAddress: string,
+    walletAddress: string
   ) {
     try {
-      const attestation = await this.attestationRepository.save(
-        Attestation.of({
+      const addressMapping = await this.addressMappingsRepository.save(
+        AddressMappings.of({
           id: uuidv4(),
           txHash,
-          issuer,
-          address,
-          identifier,
+          accountAddress,
+          walletAddress,
           createdAt: new Date(Date.now()).toISOString()
         })
       )
-      this.logger.event(EventType.AttestationCompleted, {
+      this.logger.event(EventType.AccountWalletAddressSet, {
         txHash,
-        issuer,
-        address,
-        identifier
+        accountAddress,
+        walletAddress
       })
-      return attestation
+      return addressMapping
     } catch (error) {
       // Ignore expected error
       if (
@@ -87,7 +83,7 @@ export class AttestationService {
         )
       ) {
         this.analytics.trackEvent(EventType.UnexpectedError, {
-          origin: `Creating attestation for address ${address} with identifier ${identifier}`,
+          origin: `Creating address mapping for account ${accountAddress} with wallet address ${walletAddress}`,
           error: error
         })
       }
