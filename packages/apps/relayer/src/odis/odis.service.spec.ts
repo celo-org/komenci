@@ -80,6 +80,7 @@ describe('OdisService', () => {
     
     const odisErrorUnknown = new Error("unknown")
     const odisErrorOutOfQuota = new Error("odisQuotaError")
+    const odisRetryError = new Error("odisRetryError")
 
     it('queries ODIS for the phone number identifier', async () => {
       const getBlindedPhoneNumberSignature = jest.spyOn(
@@ -157,7 +158,6 @@ describe('OdisService', () => {
         // expect(replenishQuota).toHaveBeenCalled()
         expect(getBlindedPhoneNumberSignature).toHaveBeenCalledTimes(2)
       })
-    })
 
     describe('when un unhandled error occurs', () => {
       it('wraps and returns the error', async () => {
@@ -184,5 +184,21 @@ describe('OdisService', () => {
         expect(getBlindedPhoneNumberSignature).toHaveBeenCalledTimes(1)
       })
     })
+
+    describe("when fail more than two times", ()=> {
+      it('retry more than two times fail', async() => {
+        const getBlindedPhoneNumberSignature = jest.spyOn(
+          OdisUtils.PhoneNumberIdentifier,
+          'getBlindedPhoneNumberSignature'
+        ).mockRejectedValueOnce(odisErrorOutOfQuota)
+        .mockRejectedValueOnce(odisErrorOutOfQuota)
+        .mockRejectedValue(odisRetryError)
+          await expect(getBlindedPhoneNumberSignature).rejects.toEqual(odisErrorOutOfQuota)
+          await expect(getBlindedPhoneNumberSignature).rejects.toEqual(odisErrorOutOfQuota)
+          await expect(getBlindedPhoneNumberSignature).rejects.toEqual(odisRetryError)
+          expect(getBlindedPhoneNumberSignature).toHaveBeenCalledTimes(3)
+        })
+    })
   })
+})
 })
