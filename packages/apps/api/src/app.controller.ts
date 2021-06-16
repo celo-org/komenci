@@ -1,5 +1,4 @@
 import { normalizeAddress, throwIfError, trimLeading0x } from '@celo/base'
-import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { NetworkConfig, networkConfig } from '@komenci/core'
 import { EventType, KomenciLoggerService } from '@komenci/logger'

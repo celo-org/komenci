@@ -29,9 +29,12 @@ import {
 import { AppConfig, appConfig } from '../config/app.config'
 import { RawTransactionDto } from '../dto/RawTransactionDto'
 import { RelayerTraceContext } from '../dto/RelayerCommandDto'
+import { metrics } from './metrics'
 
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000'
 const GWEI_PER_UNIT = 1e9
+const gasUsedByAccount: [string, number][] = []
+
 
 interface TxCachedData {
   nonce: number,
@@ -55,6 +58,14 @@ interface TxSummaryWithReceipt extends TxSummary {
 enum TxDeadletterReason {
   GasTooLow = "GasTooLow",
   Expired = "Expired"
+}
+
+export async function getGas() {
+  const totalGas = gasUsedByAccount.map(x => x[1]).reduce((a, b) => a + b, 0)
+  const totalUsers = gasUsedByAccount.map(x => x[0]).filter((item, i, ar) => ar.indexOf(item) === i).length
+  const gasByOnboarding = (totalGas/totalUsers!) || 0 
+  gasUsedByAccount.splice(0, gasUsedByAccount.length -1)
+  return gasByOnboarding  
 }
 
 @Injectable()
@@ -269,6 +280,7 @@ export class TransactionService implements OnModuleInit, OnModuleDestroy {
 
     const gasPrice = parseInt(txs.tx.gasPrice, 10)
     this.unwatchTransaction(txs.tx.hash)
+    gasUsedByAccount.push([txs.receipt.to, txs.receipt.gasUsed])
     this.logger.event(EventType.TxConfirmed, {
       status: txs.receipt.status === false ? "Reverted" : "Ok",
       txHash: txs.tx.hash,

@@ -4,6 +4,6 @@
     "downlevelIteration": true,
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../api/src/metrics.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
