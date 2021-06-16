@@ -1,0 +1,35 @@
+{
+  "name": "@komenci/funder",
+  "version": "1.0.0",
+  "description": "Komenci service that distributes funds to relayers",
+  "main": "dist/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "npx nest build",
+    "clean": "rm -rf ./dist",
+    "start:dev": "npx nest start --watch",
+    "start:prod": "node dist/main.js"
+  },
+  "author": "Bogdan Dumitru <bogdan@clabs.co>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@nestjs/cli": "^7.6.0",
+    "@types/cron": "^1.7.2",
+    "fetch-mock": "^9.11.0",
+    "jest-fetch-mock": "^3.0.3",
+    "source-map-support": "^0.5.19",
+    "ts-jest": "^26.5.5"
+  },
+  "dependencies": {
+    "@komenci/blockchain": "^1.0.0",
+    "@komenci/cli": "^1.0.0",
+    "@komenci/core": "^1.0.0",
+    "@komenci/logger": "^1.0.0",
+    "async-mutex": "^0.3.1",
+    "cron": "^1.8.2",
+    "erc-20-abi": "^1.0.0",
+    "web3-eth-contract": "1.3.5"
+  }
+}

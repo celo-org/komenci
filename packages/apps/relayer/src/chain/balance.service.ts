@@ -6,18 +6,21 @@ import { WalletConfig, walletConfig } from '@komenci/blockchain/dist/config/wall
 import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import BigNumber from 'bignumber.js'
+import {appConfig, AppConfig} from "../config/app.config"
 
 @Injectable()
 export class BalanceService implements OnModuleInit {
   private cUSD: StableTokenWrapper
   private celo: GoldTokenWrapper
   private timer: NodeJS.Timeout
+  private currentCeloBalance: BigNumber
+  private currentCUSDBalance: BigNumber
 
   constructor(
     private readonly kit: ContractKit,
     private readonly logger: KomenciLoggerService,
-    @Inject(walletConfig.KEY) 
-    private walletCfg: WalletConfig,
+    @Inject(appConfig.KEY) private appCfg: AppConfig,
+    @Inject(walletConfig.KEY) private walletCfg: WalletConfig,
     private readonly metaTxWallet: MetaTransactionWalletWrapper
   ) {}
 
@@ -33,13 +36,18 @@ export class BalanceService implements OnModuleInit {
    * - celo held by the relayer EOA
    */
   public async logBalance() {
-    const cUSDBalance = await this.cUSD.balanceOf(this.metaTxWallet.address)
-    const celoBalance = await this.celo.balanceOf(this.walletCfg.address)
+    this.currentCeloBalance = await this.cUSD.balanceOf(this.metaTxWallet.address)
+    this.currentCUSDBalance = await this.celo.balanceOf(this.walletCfg.address)
     const exp = new BigNumber(10).pow(18)
 
     this.logger.event(EventType.RelayerBalance, {
-      cUSD: parseFloat(cUSDBalance.div(exp).toFixed()),
-      celo: parseFloat(celoBalance.div(exp).toFixed()),
+      cUSD: parseFloat(this.currentCeloBalance.div(exp).toFixed()),
+      celo: parseFloat(this.currentCUSDBalance.div(exp).toFixed()),
     })
+  }
+
+  public async hasMinimumBalance() {
+    return (this.currentCeloBalance.isGreaterThanOrEqualTo(this.appCfg.minCeloBalance)) &&
+      (this.currentCUSDBalance.isGreaterThanOrEqualTo(this.appCfg.minCUSDBalance))
   }
 }

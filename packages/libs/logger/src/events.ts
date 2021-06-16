@@ -29,7 +29,11 @@ export enum EventType {
   AttestationEventsFetched = 'AttestationEventsFetched',
   AttestationCompleted = 'AttestationCompleted',
   AddressMappingsEventsFetched = 'AddressMappingsEventsFetched',
-  AccountWalletAddressSet = 'AccountWalletAddressSet'
+  AccountWalletAddressSet = 'AccountWalletAddressSet',
+  // Funder Service events
+  FundBalance = 'FundBalance',
+  Topup = 'Topup',
+  InsufficientFunds = 'InsufficientFunds'
 }
 
 export type EventPayload = {
@@ -138,6 +142,24 @@ export type EventPayload = {
     issuer: string
     address: string
     identifier: string
+  },
+  [EventType.FundBalance]: {
+    token: string;
+    tokenAddress: string;
+    balance: number;
+  },
+  [EventType.Topup]: {
+    destination: string;
+    token: string;
+    tokenAddress: string;
+    amount: number;
+    txHash: string;
+  },
+  [EventType.InsufficientFunds]: {
+    token: string;
+    tokenAddress: string;
+    balance: number;
+    balanceNeeded: number;
   }
   [EventType.AddressMappingsEventsFetched]: {
     eventCount: number
