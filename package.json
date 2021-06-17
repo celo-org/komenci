@@ -27,6 +27,7 @@
     "build:rewards": "yarn --cwd ./packages/apps/rewards build",
     "start:rewards:prod": "yarn --cwd ./packages/apps/rewards start:prod",
     "start:rewards:dev": "yarn --cwd ./packages/apps/rewards start:dev",
+    "prun": "./scripts/prun.js",
     "build": "yarn lerna run build",
     "clean": "yarn lerna run clean",
     "format": "prettier --write \"packages/**/*.ts\"",

@@ -1,14 +1,13 @@
 import { normalizeAddress, throwIfError, trimLeading0x } from '@celo/base'
-import { ContractKit } from '@celo/contractkit'
 import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { NetworkConfig, networkConfig } from '@komenci/core'
 import { EventType, KomenciLoggerService } from '@komenci/logger'
 import { RelayerResponse } from '@komenci/relayer/dist/app.controller'
 import { Throttle, ThrottlerGuard } from '@komenci/throttler'
-import { ActionCounts, TrackedAction } from './config/quota.config'
-import { DeployWalletDto } from './dto/DeployWalletDto'
-import { RequestAttestationsDto } from './dto/RequestAttestationsDto'
-import { WalletService } from './wallet/wallet.service'
+import { ActionCounts, TrackedAction } from '../config/quota.config'
+import { DeployWalletDto } from '../dto/DeployWalletDto'
+import { RequestAttestationsDto } from '../dto/RequestAttestationsDto'
+import { WalletProxyType, WalletService } from '../wallet/wallet.service'
 
 import {
   Body,
@@ -23,22 +22,22 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { SubmitMetaTransactionDto } from './dto/SubmitMetaTransactionDto'
-import { RelayerProxyService } from './relayer/relayer_proxy.service'
-import { QuotaAction } from './session/quota.decorator'
-import { QuotaGuard } from './session/quota.guard'
-import { Session as SessionEntity } from './session/session.entity'
-import { SessionService } from './session/session.service'
-import { SubsidyService } from './subsidy/subsidy.service'
-import { WalletErrorType } from './wallet/errors'
-import { TransactionWithMetadata } from './wallet/method-filter'
-import { TxParserService } from './wallet/tx-parser.service'
+import { SubmitMetaTransactionDto } from '../dto/SubmitMetaTransactionDto'
+import { RelayerProxyService } from '../relayer/relayer_proxy.service'
+import { QuotaAction } from '../session/quota.decorator'
+import { QuotaGuard } from '../session/quota.guard'
+import { Session as SessionEntity } from '../session/session.entity'
+import { SessionService } from '../session/session.service'
+import { SubsidyService } from '../subsidy/subsidy.service'
+import { WalletErrorType } from '../wallet/errors'
+import { TransactionWithMetadata } from '../wallet/method-filter'
+import { TxParserService } from '../wallet/tx-parser.service'
 
-import { AuthService } from './auth/auth.service'
-import { appConfig, AppConfig } from './config/app.config'
-import { DistributedBlindedPepperDto } from './dto/DistributedBlindedPepperDto'
-import { StartSessionDto } from './dto/StartSessionDto'
-import { GatewayService } from './gateway/gateway.service'
+import { AuthService } from '../auth/auth.service'
+import { appConfig, AppConfig } from '../config/app.config'
+import { DistributedBlindedPepperDto } from '../dto/DistributedBlindedPepperDto'
+import { StartSessionDto } from '../dto/StartSessionDto'
+import { GatewayService } from '../gateway/gateway.service'
 
 interface GetPhoneNumberIdResponse {
   combinedSignature: string
@@ -72,7 +71,7 @@ interface StartSessionResponse {
   // RelayerProxyService & WalletService are Request scoped
   scope: Scope.REQUEST
 })
-export class AppController {
+export class V1AppController {
   constructor(
     private readonly relayerProxyService: RelayerProxyService,
     private readonly gatewayService: GatewayService,
@@ -177,15 +176,16 @@ export class AppController {
       throw getResp.error
     }
 
-    const txHash = throwIfError(await this.walletService.deployWallet(
+    const { txHash, deployerAddress } = throwIfError(await this.walletService.deployWallet(
       session,
-      deployWalletDto.implementationAddress
+      deployWalletDto.implementationAddress,
+      WalletProxyType.Legacy
     ))
 
     return {
       status: 'in-progress',
-      txHash: txHash,
-      deployerAddress: this.networkCfg.contracts.MetaTransactionWalletDeployer
+      txHash,
+      deployerAddress
     }
   }
 

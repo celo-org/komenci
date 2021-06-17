@@ -9,7 +9,8 @@ import { APP_FILTER } from '@nestjs/core'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { TypeOrmModule } from "@nestjs/typeorm"
-import { AppController } from './app.controller'
+import { V1AppController } from './api/v1.controller'
+import { V2AppController } from './api/v2.controller'
 import { AuthModule } from './auth/auth.module'
 import { appConfig, AppConfig } from './config/app.config'
 import { DatabaseConfig, databaseConfig } from './config/database.config'
@@ -23,11 +24,13 @@ import { RelayerProxyService } from './relayer/relayer_proxy.service'
 import { SessionModule } from './session/session.module'
 import { SessionService } from './session/session.service'
 import { SubsidyService } from './subsidy/subsidy.service'
+import { EIP1167ProxyDeployer } from './wallet/eip1167-proxy-deployer'
+import { LegacyProxyDeployer } from './wallet/legacy-proxy-deployer'
 import { TxParserService } from './wallet/tx-parser.service'
 import { WalletService } from './wallet/wallet.service'
 
 @Module({
-  controllers: [AppController],
+  controllers: [V1AppController, V2AppController],
   imports: [
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
@@ -86,6 +89,8 @@ import { WalletService } from './wallet/wallet.service'
   providers: [
     SubsidyService,
     WalletService,
+    LegacyProxyDeployer,
+    EIP1167ProxyDeployer,
     TxParserService,
     SessionService,
     RelayerProxyService,

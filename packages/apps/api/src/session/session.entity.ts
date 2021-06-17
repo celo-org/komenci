@@ -1,12 +1,15 @@
 import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
 import { ActionCounts, TrackedAction } from '../config/quota.config'
+import { WalletProxyType } from "../wallet/wallet.service"
 
 
-interface SessionMetadata {
+export interface SessionMetadata {
     walletDeploy?: {
         startedAt: number,
         txHash: string,
-        implementationAddress: string
+        implementationAddress: string,
+        deployerAddress: string,
+        proxyType: WalletProxyType
     }
     callCount: ActionCounts
 }

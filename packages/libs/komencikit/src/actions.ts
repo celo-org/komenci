@@ -149,7 +149,14 @@ export interface DeployWalletPayload {
   implementationAddress: string
 }
 
-export const deployWallet = action<ActionTypes.DeployWallet, DeployWalletPayload, DeployWalletResp>(
+export const deployLightProxyWallet = action<ActionTypes.DeployWallet, DeployWalletPayload, DeployWalletResp>(
+  ActionTypes.DeployWallet,
+  RequestMethod.POST,
+  'v2/deployWallet',
+  DeployWalletResp
+)
+
+export const deployLegacyProxyWallet = action<ActionTypes.DeployWallet, DeployWalletPayload, DeployWalletResp>(
   ActionTypes.DeployWallet,
   RequestMethod.POST,
   'v1/deployWallet',
