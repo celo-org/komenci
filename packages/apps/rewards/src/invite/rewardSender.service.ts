@@ -1,5 +1,5 @@
 import { CeloTransactionObject } from '@celo/connect'
-import { ContractKit } from '@celo/contractkit'
+import { ContractKit, StableToken } from '@celo/contractkit'
 import { AnalyticsService } from '@komenci/analytics'
 import {
   EventType,
@@ -12,7 +12,7 @@ import BigNumber from 'bignumber.js'
 import { EntityManager, In, Raw, Repository } from 'typeorm'
 import { appConfig, AppConfig } from '../config/app.config'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
-import { promiseAllSettled } from '../utils/promiseUtil'
+import { promiseAllSettled, PromiseStatus } from '../utils/promiseUtil'
 import { InviteReward, RewardStatus } from './inviteReward.entity'
 import { InviteRewardRepository } from './inviteReward.repository'
 
@@ -47,10 +47,6 @@ enum TxStatus {
 @Injectable()
 export class RewardSenderService {
   watchedInvites: Set<WatchedInvite>
-  rewardInCelo = {
-    reward: '',
-    timestamp: 0
-  }
   checkingWatchedInvites = false
   checkingFailedInvites = false
 
@@ -86,7 +82,7 @@ export class RewardSenderService {
     this.checkingWatchedInvites = true
     try {
       await promiseAllSettled(
-        [...this.watchedInvites].map(async invite => {
+        [...this.watchedInvites].map(async (invite) => {
           const txStatus = await this.getTxStatus(invite.txHash)
           if (txStatus === TxStatus.Completed) {
             await this.inviteRewardRepository.update(invite.inviteId, {
@@ -151,7 +147,7 @@ export class RewardSenderService {
                   RewardStatus.Failed
                 ]),
                 createdAt: Raw(
-                  alias =>
+                  (alias) =>
                     `${alias} <= current_timestamp - (30 ||' minutes')::interval`
                 )
               })
@@ -162,8 +158,8 @@ export class RewardSenderService {
                 `Found ${invites.length} failed or submitted invites`
               )
             }
-            await promiseAllSettled(
-              invites.map(async invite => {
+            const invitesResults = await promiseAllSettled(
+              invites.map(async (invite) => {
                 const txStatus = invite.rewardTxHash
                   ? await this.getTxStatus(invite.rewardTxHash)
                   : TxStatus.Failed
@@ -171,16 +167,24 @@ export class RewardSenderService {
                   await repository.update(invite.id, {
                     state: RewardStatus.Completed
                   })
-                } else if (txStatus === TxStatus.Failed) {
                   this.analytics.trackEvent(EventType.RewardSendingStatus, {
                     status: RewardSendingStatus.Completed,
                     txHash: invite.rewardTxHash,
                     inviteId: invite.id
                   })
+                } else if (txStatus === TxStatus.Failed) {
                   await this.sendInviteReward(invite, true, repository)
                 }
               })
             )
+            for (const inviteResult of invitesResults) {
+              if (inviteResult.status === PromiseStatus.Rejected) {
+                this.analytics.trackEvent(EventType.UnexpectedError, {
+                  origin: `Resending failed invites`,
+                  error: inviteResult.error
+                })
+              }
+            }
           } catch (error) {
             // If the caught error is that the lock is in use, ignore it since it's expected.
             if (
@@ -195,7 +199,7 @@ export class RewardSenderService {
       )
     } catch (error) {
       this.analytics.trackEvent(EventType.UnexpectedError, {
-        origin: `Creating failed invites`,
+        origin: `Resending failed invites`,
         error: error
       })
     } finally {
@@ -203,34 +207,19 @@ export class RewardSenderService {
     }
   }
 
-  async getRewardInCelo() {
-    if (
-      this.rewardInCelo.timestamp + REWARD_VALUE_CACHE_DURATION >
-      Date.now()
-    ) {
-      return this.rewardInCelo.reward
-    }
-    const rewardInCusdWei = this.appCfg.inviteRewardAmountInCusd * WEI_PER_UNIT
-    const exchange = await this.contractKit.contracts.getExchange()
-    const exchangeRate = await exchange.getGoldExchangeRate(
-      new BigNumber(rewardInCusdWei)
-    )
-    this.rewardInCelo = {
-      timestamp: Date.now(),
-      reward: exchangeRate.multipliedBy(rewardInCusdWei).toFixed(0)
-    }
-    return this.rewardInCelo.reward
-  }
-
   async sendInviteReward(
     invite: InviteReward,
     isRetry: boolean = false,
     repository: Repository<InviteReward> = this.inviteRewardRepository
   ) {
-    const celoToken = await this.contractKit.contracts.getGoldToken()
-    const tx = await celoToken.transfer(
+    const cUsdToken = await this.contractKit.contracts.getStableToken(
+      StableToken.cUSD
+    )
+    const tx = await cUsdToken.transfer(
       invite.inviter,
-      await this.getRewardInCelo()
+      new BigNumber(this.appCfg.inviteRewardAmountInCusd)
+        .multipliedBy(WEI_PER_UNIT)
+        .toFixed(0)
     )
 
     const resp = await this.sendTxThroughRelayer(tx, invite.id)

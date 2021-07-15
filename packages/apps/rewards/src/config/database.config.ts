@@ -1,4 +1,5 @@
 import { ConfigType, registerAs } from '@nestjs/config'
+import { AddressMappings } from '../addressMappings/addressMappings.entity'
 import { Attestation } from '../attestation/attestation.entity'
 import { NotifiedBlock } from '../blocks/notifiedBlock.entity'
 import { InviteReward } from '../invite/inviteReward.entity'
@@ -10,7 +11,7 @@ export const databaseConfig = registerAs('database', () => ({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'docker',
   database: process.env.DB_DATABASE || 'postgres',
-  entities: [InviteReward, NotifiedBlock, Attestation],
+  entities: [InviteReward, NotifiedBlock, Attestation, AddressMappings],
   migrations: ['../migrations/*.ts'],
   migrationsTableName: 'migrations_typeorm',
   migrationsRun: process.env.DB_MIGRATIONS === 'true',

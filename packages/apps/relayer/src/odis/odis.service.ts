@@ -35,6 +35,12 @@ export class OdisTimeoutError extends RootError<OdisQueryErrorTypes.Timeout> {
   }
 }
 
+export async function replenishQuota(account: string, contractKit: any) {
+  const goldToken = await contractKit.contracts.getGoldToken()
+  const selfTransferTx = goldToken.transfer(account, 1)
+  await selfTransferTx.sendAndWaitForReceipt({ from: account })
+}
+
 export type OdisQueryError = OdisOutOfQuotaError | OdisUnknownError | OdisTimeoutError
 
 @Injectable()
@@ -67,6 +73,9 @@ export class OdisService {
       OdisQueryErrorTypes.Unknown
     ],
     tries: 2,
+    onRetry: ([input], error, _attempt) => {
+      console.warn(`getPhoneNumberSignature attempt#${_attempt} error: `, error)
+    }
   })
   async getPhoneNumberSignature(
     input: GetPhoneNumberSignatureDto,
@@ -82,15 +91,9 @@ export class OdisService {
       timeout
     ])
 
-    if (res.ok === false) {
-      this.logger.errorWithContext(res.error, input.context)
-      if (res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
-        // Cody TODO: Reinstate once merge with mono is ready
-        // await replenishQuota(this.walletCfg.address, this.contractKit)
-        const goldToken = await this.contractKit.contracts.getGoldToken()
-        const selfTransferTx = goldToken.transfer(this.walletCfg.address, 1)
-        await selfTransferTx.sendAndWaitForReceipt({from: this.walletCfg.address})
-      }
+    if (res.ok === false && res.error.errorType === OdisQueryErrorTypes.OutOfQuota) {
+      this.logger.log("Replenishing quota", input.context)
+      await replenishQuota(this.walletCfg.address, this.contractKit)
     }
 
     return res

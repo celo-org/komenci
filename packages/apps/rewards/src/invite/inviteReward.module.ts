@@ -4,20 +4,24 @@ import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ClientProxyFactory, TcpClientOptions } from '@nestjs/microservices'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { AddressMappingsRepository } from '../addressMappings/addressMappings.repository'
 import { AttestationRepository } from '../attestation/attestation.repository'
 import { NotifiedBlockRepository } from '../blocks/notifiedBlock.repository'
 import { NotifiedBlockService } from '../blocks/notifiedBlock.service'
 import { AppConfig, appConfig } from '../config/app.config'
 import { EventService } from '../event/eventService.service'
 import { RelayerProxyService } from '../relayer/relayer_proxy.service'
+import { InviteRewardController } from './inviteReward.controller'
 import { InviteRewardRepository } from './inviteReward.repository'
 import { InviteRewardService } from './inviteReward.service'
 import { RewardSenderService } from './rewardSender.service'
 
 @Module({
+  controllers: [InviteRewardController],
   imports: [
     TypeOrmModule.forFeature([InviteRewardRepository]),
     TypeOrmModule.forFeature([AttestationRepository]),
+    TypeOrmModule.forFeature([AddressMappingsRepository]),
     TypeOrmModule.forFeature([NotifiedBlockRepository])
   ],
   providers: [
@@ -37,7 +41,7 @@ import { RewardSenderService } from './rewardSender.service'
     {
       provide: AnalyticsService,
       useFactory: (logger: KomenciLoggerService, appCfg: AppConfig) => {
-        return new AnalyticsService(logger, appCfg.bigQueryDataset)
+        return new AnalyticsService(logger, appCfg.segmentApiKey)
       },
       inject: [KomenciLoggerService, appConfig.KEY]
     }
