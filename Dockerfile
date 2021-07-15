@@ -1,7 +1,5 @@
 FROM node:10 as builder
 
-ARG KOMENCI_VERSION
-
 RUN mkdir /komenci
 WORKDIR /komenci
 
