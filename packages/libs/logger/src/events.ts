@@ -174,7 +174,7 @@ export type SessionTxEvent = SessionEvent & {
 }
 
 export enum InviteNotRewardedReason {
-  NotCusdInvite = 'NotCusdInvite',
+  NotStableTokenInvite = 'NotStableTokenInvite',
   NotKomenciRedeem = 'NotKomenciRedeem',
   NoInviteeFound = 'NoInviteeFound',
   InviterNotVerified = 'InviterNotVerified',
