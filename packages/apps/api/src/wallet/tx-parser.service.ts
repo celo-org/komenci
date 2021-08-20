@@ -1,5 +1,5 @@
 import { Err, normalizeAddress, Ok, Result } from '@celo/base'
-import { CeloContract, ContractKit } from '@celo/contractkit'
+import { CeloContract, ContractKit, StableToken } from '@celo/contractkit'
 import { BaseWrapper } from '@celo/contractkit/lib/wrappers/BaseWrapper'
 import { MetaTransactionWalletWrapper, RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { extractMethodId, normalizeMethodId } from '@komenci/core'
@@ -32,6 +32,10 @@ export class TxParserService implements OnModuleInit {
     ).addContract(
       CeloContract.StableToken,
       await this.contractKit.contracts.getStableToken(),
+      ["approve", "transfer"]
+    ).addContract(
+      CeloContract.StableTokenEUR,
+      await this.contractKit.contracts.getStableToken(StableToken.cEUR),
       ["approve", "transfer"]
     ).addContract(
       CeloContract.Escrow,

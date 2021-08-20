@@ -30,6 +30,7 @@ export class InviteRewardService {
   isRunning = false
   komenciAddresses = []
   cUsdTokenAddress = null
+  cEurTokenAddress = null
 
   constructor(
     private readonly inviteRewardRepository: InviteRewardRepository,
@@ -66,6 +67,9 @@ export class InviteRewardService {
     this.cUsdTokenAddress = (
       await this.contractKit.registry.addressFor(CeloContract.StableToken)
     ).toLowerCase()
+    this.cEurTokenAddress = (
+      await this.contractKit.registry.addressFor(CeloContract.StableTokenEUR)
+    ).toLowerCase()
 
     await this.eventService.runEventProcessingPolling(
       NOTIFIED_BLOCK_KEY,
@@ -91,13 +95,13 @@ export class InviteRewardService {
     } = withdrawalEvent
 
     const inviter = to.toLowerCase()
-    if (this.cUsdTokenAddress !== token.toLowerCase()) {
+    if (![this.cUsdTokenAddress, this.cEurTokenAddress].includes(token.toLowerCase())) {
       this.analytics.trackEvent(EventType.InviteNotRewarded, {
         txHash: transactionHash,
         inviter,
         invitee: null,
         paymentId,
-        reason: InviteNotRewardedReason.NotCusdInvite
+        reason: InviteNotRewardedReason.NotStableTokenInvite
       })
       return
     }
