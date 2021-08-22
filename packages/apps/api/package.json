@@ -58,7 +58,7 @@
     "axios": "^0.21.1",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
-    "ethereum-input-data-decoder": "^0.3.2",
+    "ethereum-input-data-decoder": "^0.3.4",
     "fastify": "^3.15.0",
     "fp-ts": "^2.10.4",
     "http": "^0.0.1-security",
