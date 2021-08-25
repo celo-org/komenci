@@ -93,6 +93,7 @@ export class InviteRewardService {
       transactionHash,
       returnValues: { identifier, token, to, paymentId }
     } = withdrawalEvent
+    this.logger.log(`Invite event received ${transactionHash} ${JSON.stringify(withdrawalEvent.returnValues)}`)
 
     const inviter = to.toLowerCase()
     if (![this.cUsdTokenAddress, this.cEurTokenAddress].includes(token.toLowerCase())) {
@@ -274,17 +275,10 @@ export class InviteRewardService {
       })
       return savedReward
     } catch (error) {
-      // Ignore expected error
-      if (
-        !error.message.includes(
-          'duplicate key value violates unique constraint'
-        )
-      ) {
-        this.analytics.trackEvent(EventType.UnexpectedError, {
-          origin: `Creating invite reward for tx hash ${txHash}`,
-          error: error
-        })
-      }
+      this.analytics.trackEvent(EventType.UnexpectedError, {
+        origin: `Creating invite reward for tx hash ${txHash}`,
+        error: error
+      })
     }
   }
 }
