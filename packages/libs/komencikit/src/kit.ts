@@ -6,6 +6,7 @@ import { ContractEventLog } from '@celo/contractkit/lib/generated/types'
 import {
   MetaTransactionWalletWrapper,
   toRawTransaction,
+  toRawTransactionWithRefund
 } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import { BlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
 import {
@@ -24,6 +25,7 @@ import {
   StartSessionPayload,
   StartSessionResp,
   submitMetaTransaction,
+  submitMetaTransactionWithRefund
 } from './actions'
 import { KomenciClient } from './client'
 import {
@@ -423,6 +425,49 @@ export class KomenciKit {
 
     const txHash = resp.result.txHash
     console.debug(`${TAG}/submitMetaTransaction Waiting for transaction receipt: ${txHash}`)
+    return this.waitForReceipt(txHash)
+  }
+
+  /**
+   * submitMetaTransactionWithRefund: uses the /v1/submitMetaTransaction endpoint
+   * It receives a wallet address and transaction (as a CeloTransactionObject)
+   * and creates a signature and passes everything to Komenci for execution
+   *
+   * @param metaTxWalletAddress - the MTW that will execute the transaction
+   * @param tx - the transaction to be executed
+   * @param nonce - optional nonce to be used for signing the meta-tx
+   */
+   @retry({
+    tries: 3,
+    bailOnErrorTypes: [
+      FetchErrorTypes.Unauthorised,
+      FetchErrorTypes.ServiceUnavailable,
+      FetchErrorTypes.QuotaExceededError,
+      TxErrorTypes.Revert,
+    ],
+    onRetry: (_args, error, attempt) => {
+      console.debug(`${TAG}/submitMetaTransactionWithRefund attempt#${attempt} error: `, error)
+    },
+  })
+  public async submitMetaTransactionWithRefund(
+    metaTxWalletAddress: string,
+    tx: CeloTransactionObject<any>,
+    maxGasPrice: number,
+    gasLimit: number,
+    metaGasLimit: number,
+    nonce?: number
+  ): Promise<Result<CeloTxReceipt, FetchError | TxError>> {
+    const wallet = await this.getWallet(metaTxWalletAddress)
+    const signature = await wallet.signMetaTransactionWithRefund(tx.txo, maxGasPrice, gasLimit, metaGasLimit, nonce)
+    const rawMetaTx = toRawTransactionWithRefund(wallet.executeMetaTransactionWithRefund(tx.txo, signature, maxGasPrice, gasLimit, metaGasLimit).txo, maxGasPrice, gasLimit, metaGasLimit)
+
+    const resp = await this.client.exec(submitMetaTransactionWithRefund(rawMetaTx))
+    if (resp.ok === false) {
+      return resp
+    }
+
+    const txHash = resp.result.txHash
+    console.debug(`${TAG}/submitMetaTransactionWithRefund Waiting for transaction receipt: ${txHash}`)
     return this.waitForReceipt(txHash)
   }
 

@@ -1,4 +1,4 @@
-import { RawTransaction } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
+import { RawTransaction, RawTransactionWithRefund } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import * as t from 'io-ts'
 
 export enum ActionTypes {
@@ -6,6 +6,7 @@ export enum ActionTypes {
   DeployWallet = 'DeployWallet',
   DistributedBlindedPepper = 'DistributedBlindedPepper',
   SubmitMetaTransaction = 'SubmitMetaTransaction',
+  SubmitMetaTransactionWithRefund = 'SubmitMetaTransactionWithRefund',
   RequestSubsidisedAttestation = 'RequestSubsidisedAttestation',
   CheckService = 'CheckService',
   CheckSession = 'CheckSession',
@@ -167,6 +168,19 @@ export const submitMetaTransaction = action<ActionTypes, RawTransaction, SubmitM
   RequestMethod.POST,
   'v1/submitMetaTransaction',
   SubmitMetaTransactionResp
+)
+
+export const SubmitMetaTransactionWithRefundResp = t.type({
+  txHash: t.string,
+})
+
+export type SubmitMetaTransactionWithRefundResp = t.TypeOf<typeof SubmitMetaTransactionWithRefundResp>
+
+export const submitMetaTransactionWithRefund = action<ActionTypes, RawTransactionWithRefund, SubmitMetaTransactionWithRefundResp>(
+  ActionTypes.SubmitMetaTransactionWithRefund,
+  RequestMethod.POST,
+  'v1/submitMetaTransactionWithRefund',
+  SubmitMetaTransactionWithRefundResp
 )
 
 export interface RequestSubsidisedAttestationsPayload {
