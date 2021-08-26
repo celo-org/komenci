@@ -1,3 +1,5 @@
+// Note: has changes relating to Komenci Refund Project, this branch of Komenci will not build
+
 import { Address, normalizeAddressWith0x, serializeSignature, sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { CeloTransactionObject, CeloTxReceipt } from '@celo/connect'

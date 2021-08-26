@@ -1,3 +1,5 @@
+// Note: has changes relating to Komenci Refund Project, this branch of Komenci will not build
+
 import { RawTransaction, RawTransactionWithRefund } from '@celo/contractkit/lib/wrappers/MetaTransactionWallet'
 import * as t from 'io-ts'
 
