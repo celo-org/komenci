@@ -1,8 +1,5 @@
 FROM node:10 as builder
 
-ARG KOMENCI_VERSION
-ENV KOMENCI_VERSION=$KOMENCI_VERSION
-
 RUN mkdir /komenci
 WORKDIR /komenci
 
@@ -13,6 +10,9 @@ RUN SKIPPOSTINSTALL=1 yarn
 RUN yarn build
 
 FROM node:10 as release
+
+ARG KOMENCI_VERSION
+ENV KOMENCI_VERSION=$KOMENCI_VERSION
 
 RUN mkdir /komenci
 WORKDIR /komenci
