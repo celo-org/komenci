@@ -431,12 +431,15 @@ export class KomenciKit {
   }
 
   /**
-   * submitMetaTransactionWithRefund: uses the /v1/submitMetaTransaction endpoint
+   * submitMetaTransactionWithRefund: uses the /v1/submitMetaTransactionWithRefund endpoint
    * It receives a wallet address and transaction (as a CeloTransactionObject)
    * and creates a signature and passes everything to Komenci for execution
    *
    * @param metaTxWalletAddress - the MTW that will execute the transaction
    * @param tx - the transaction to be executed
+   * @param maxGasPrice - maximum gas price the user is willing to pay in the transaction
+   * @param gasLimit - maximum gas the user is willing for the entire transaction to use
+   * @param metaGasLimit - maximum gas the user is willing for the meta-transaction to use
    * @param nonce - optional nonce to be used for signing the meta-tx
    */
    @retry({
