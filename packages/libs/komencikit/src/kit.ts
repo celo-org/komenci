@@ -1,7 +1,7 @@
 import { Address, normalizeAddressWith0x, serializeSignature, sleep } from '@celo/base'
 import { Err, Ok, Result } from '@celo/base/lib/result'
 import { CeloTransactionObject, CeloTxReceipt } from '@celo/connect'
-import { ContractKit } from '@celo/contractkit'
+import { ContractKit, StableToken } from '@celo/contractkit'
 import { ContractEventLog } from '@celo/contractkit/lib/generated/types'
 import {
   MetaTransactionWalletWrapper,
@@ -384,6 +384,32 @@ export class KomenciKit {
       metaTxWalletAddress,
       accounts.setAccount(name, dataEncryptionKey, walletAddress, proofOfPossession)
     )
+  }
+
+  public rescueFundsFromMTW = async (
+    metaTxWalletAddress: string,
+    walletAddress: Address
+  ): Promise<string> => {
+
+    const batch: any[] = []
+    const cUSD = await this.contractKit.contracts.getStableToken(StableToken.cUSD)
+    const cUSDBalance = await cUSD.balanceOf(metaTxWalletAddress)
+    batch.push(toRawTransaction(cUSD.transfer(walletAddress, cUSDBalance.toFixed()).txo))
+
+    const cEUR = await this.contractKit.contracts.getStableToken(StableToken.cEUR)
+    const cEURBalance = await cEUR.balanceOf(metaTxWalletAddress)
+    batch.push(toRawTransaction(cEUR.transfer(walletAddress, cEURBalance.toFixed()).txo))
+
+    const celo = await this.contractKit.contracts.getGoldToken()
+    const celoBalance = await celo.balanceOf(metaTxWalletAddress)
+    batch.push(toRawTransaction(celo.transfer(walletAddress, celoBalance.toFixed()).txo))
+    
+    const tx = toRawTransaction(this._wallet!.executeTransactions(batch).txo)
+    const result = await this.contractKit.sendTransaction(tx)
+    result.waitReceipt().then().catch((e) => {
+      console.error(e)
+    })
+    return result.getHash()
   }
 
   /**
