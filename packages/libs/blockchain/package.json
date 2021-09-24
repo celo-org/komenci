@@ -21,7 +21,7 @@
     "@celo/wallet-hsm-azure": "^1.2.0",
     "@komenci/core": "^1.0.0",
     "@komenci/logger": "^1.0.0",
-    "@nestjs/common": "^7.6.15",
+    "@nestjs/common": "^8.0.7",
     "@types/jest": "^26.0.23",
     "bignumber.js": "^9.0.1",
     "bip32": "^2.0.6",
