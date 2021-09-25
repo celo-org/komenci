@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@celo/base": "^1.2.1",
-    "@nestjs/common": "^7.0.0",
+    "@nestjs/common": "^8.0.7",
     "@nestjs/config": "^0.6.3",
     "@nestjs/core": "^7.6.15",
     "@nestjs/microservices": "^7.6.15",
