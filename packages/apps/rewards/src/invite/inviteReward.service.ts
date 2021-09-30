@@ -1,6 +1,6 @@
 import { isAccountConsideredVerified } from '@celo/base/lib'
 import { EventLog } from '@celo/connect'
-import { CeloContract, ContractKit } from '@celo/contractkit'
+import { CeloContract, ContractKit, StableToken } from '@celo/contractkit'
 import { AnalyticsService } from '@komenci/analytics'
 import { networkConfig, NetworkConfig } from '@komenci/core'
 import {
@@ -95,7 +95,8 @@ export class InviteRewardService {
     } = withdrawalEvent
 
     const inviter = to.toLowerCase()
-    if (![this.cUsdTokenAddress, this.cEurTokenAddress].includes(token.toLowerCase())) {
+    const inviteToken = this.getInviteToken(token.toLowerCase())
+    if (inviteToken === null) {
       this.analytics.trackEvent(EventType.InviteNotRewarded, {
         txHash: transactionHash,
         inviter,
@@ -141,6 +142,7 @@ export class InviteRewardService {
         invitee,
         identifier,
         paymentId,
+        inviteToken,
         transactionHash
       )
       if (inviteReward) {
@@ -149,6 +151,15 @@ export class InviteRewardService {
         this.rewardSenderService.sendInviteReward(inviteReward).catch()
       }
     }
+  }
+
+  getInviteToken(token: string) {
+    if (this.cUsdTokenAddress === token) {
+      return StableToken.cUSD
+    } else if (this.cEurTokenAddress === token) {
+      return StableToken.cEUR
+    }
+    return null
   }
 
   isKomenciSender(address: string) {
@@ -253,6 +264,7 @@ export class InviteRewardService {
     invitee: string,
     inviteeIdentifier: string,
     paymentId: string,
+    inviteToken: StableToken,
     txHash: string
   ) {
     try {
@@ -261,6 +273,7 @@ export class InviteRewardService {
         inviter,
         invitee,
         inviteeIdentifier,
+        inviteToken,
         state: RewardStatus.Created,
         createdAt: new Date(Date.now()).toISOString()
       })

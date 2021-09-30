@@ -1,3 +1,4 @@
+import { StableToken } from '@celo/contractkit'
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 export enum RewardStatus {
@@ -33,6 +34,9 @@ export class InviteReward {
 
   @Column({ unique: true })
   rewardTxHash: string
+
+  @Column()
+  inviteToken: StableToken
 
   @Column('timestamp')
   createdAt: string
