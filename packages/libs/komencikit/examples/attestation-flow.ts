@@ -5,6 +5,7 @@ import { compressedPubKey } from '@celo/utils/lib/dataEncryptionKey'
 import { LocalWallet } from '@celo/wallet-local'
 import { randomHex } from 'web3-utils'
 import { KomenciKit } from '../src'
+import { Stopwatch } from "ts-stopwatch";
 
 enum Env {
   local = 'local',
@@ -108,34 +109,44 @@ const run = async () => {
   const attestations = await contractKit.contracts.getAttestations()
   console.log('Attestations: ', attestations.address)
   console.log('Starting')
+  const stopwatch = new Stopwatch();
+  stopwatch.start();
   const startSession = await komenciKit.startSession(captchaToken)
 
   console.log('StartSession: ', startSession)
+  console.log(stopwatch.getTime())
   if (!startSession.ok) {
     return
   }
   const checkSession = await komenciKit.checkSession()
   console.log(checkSession)
+  console.log(stopwatch.getTime())
   if (!checkSession.ok) {
     return
   }
-  const deployWallet = await komenciKit.deployWallet(WALLET_IMPLEMENTATION_ADDRESS)
-  console.log('DeployWallet: ', deployWallet)
-  if (!deployWallet.ok) {
-    return
-  }
-  const walletAddress = deployWallet.result
+  
   // cached:
   const phoneNumber = '+105551234'
   // const identifier = '0x59c637d9c774d242dc36bdb0445e29fa79c69b74ef70b6d1a5c407c1db6b4110'
 
   const blsBlindingClient = new WasmBlsBlindingClient(ODIS_PUB_KEY)
-  const getIdentifier = await komenciKit.getDistributedBlindedPepper(
-    phoneNumber,
-    'komenci-test',
-    blsBlindingClient
-  )
+  const [deployWallet, getIdentifier] = await Promise.all([
+    komenciKit.deployWallet(WALLET_IMPLEMENTATION_ADDRESS),
+    komenciKit.getDistributedBlindedPepper(
+      phoneNumber,
+      'komenci-test',
+      blsBlindingClient
+    )
+  ]);
+  console.log('DeployWallet: ', deployWallet)
+  console.log(stopwatch.getTime())
+  if (!deployWallet.ok) {
+    return
+  }
+  const walletAddress = deployWallet.result
+  
   console.log('GetIdentifier: ', getIdentifier)
+  console.log(stopwatch.getTime())
   if (!getIdentifier.ok) {
     return
   }
@@ -151,6 +162,7 @@ const run = async () => {
   console.log('Registering DEK with setAccount')
   const setAccount = await komenciKit.setAccount(walletAddress, '', dekPublicKey, account)
   console.log('setAccount: ', setAccount)
+  console.log(stopwatch.getTime())
   if (!setAccount.ok) {
     return
   }
@@ -163,6 +175,7 @@ const run = async () => {
   console.log('After ===== ')
   console.log(statsAfter)
   console.log('RequestAttestations: ', requestAttestations)
+  console.log(stopwatch.getTime())
   if (!requestAttestations.ok) {
     return
   }
@@ -174,6 +187,8 @@ const run = async () => {
   console.log(events)
 
   const selectIssuers = await komenciKit.selectIssuers(walletAddress, identifier)
+  console.log('SelectIssuers: ', selectIssuers)
+  console.log(stopwatch.getTime())
   if (!selectIssuers.ok) {
     return
   }

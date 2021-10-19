@@ -18388,6 +18388,11 @@ ts-node@^8.4.1:
     source-map-support "^0.5.17"
     yn "3.1.1"
 
+ts-stopwatch@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/ts-stopwatch/-/ts-stopwatch-0.0.4.tgz#9bf07edbd1d3d16c48a1b6deccd0dd2f11e68b9e"
+  integrity sha512-YUAV6lT4YiCrLckGkUsUp12Eo77NX3DK7HzFuFeDV702g/+Jz/IU80s7Boq+JhrqlocLELdgmpH+/y5XGBxLCQ==
+
 tsconfig-paths-webpack-plugin@3.5.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/tsconfig-paths-webpack-plugin/-/tsconfig-paths-webpack-plugin-3.5.1.tgz#e4dbf492a20dca9caab60086ddacb703afc2b726"
