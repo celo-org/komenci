@@ -3,9 +3,9 @@ import { newKit } from '@celo/contractkit'
 import { WasmBlsBlindingClient } from '@celo/identity/lib/odis/bls-blinding-client'
 import { compressedPubKey } from '@celo/utils/lib/dataEncryptionKey'
 import { LocalWallet } from '@celo/wallet-local'
+import { Stopwatch } from 'ts-stopwatch'
 import { randomHex } from 'web3-utils'
 import { KomenciKit } from '../src'
-import { Stopwatch } from "ts-stopwatch";
 
 enum Env {
   local = 'local',
@@ -109,8 +109,8 @@ const run = async () => {
   const attestations = await contractKit.contracts.getAttestations()
   console.log('Attestations: ', attestations.address)
   console.log('Starting')
-  const stopwatch = new Stopwatch();
-  stopwatch.start();
+  const stopwatch = new Stopwatch()
+  stopwatch.start()
   const startSession = await komenciKit.startSession(captchaToken)
 
   console.log('StartSession: ', startSession)
@@ -137,7 +137,7 @@ const run = async () => {
       'komenci-test',
       blsBlindingClient
     )
-  ]);
+  ])
   console.log('DeployWallet: ', deployWallet)
   console.log(stopwatch.getTime())
   if (!deployWallet.ok) {
