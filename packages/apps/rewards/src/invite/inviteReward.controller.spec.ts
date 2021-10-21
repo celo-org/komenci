@@ -1,3 +1,4 @@
+import { StableToken } from '@celo/contractkit'
 import { Test, TestingModule } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
@@ -42,6 +43,7 @@ describe('InviteRewardController', () => {
       inviteeIdentifier: '0x3',
       rewardTxHash: txHash,
       state: RewardStatus.Completed,
+      inviteToken: StableToken.cUSD,
       createdAt: Date.now().toString()
     }
 
