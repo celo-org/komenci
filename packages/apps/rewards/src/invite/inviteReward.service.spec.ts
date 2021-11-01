@@ -1,4 +1,4 @@
-import { ContractKit } from '@celo/contractkit'
+import { ContractKit, StableToken } from '@celo/contractkit'
 import {
   AttestationStat,
   AttestationsWrapper
@@ -334,6 +334,7 @@ describe('InviteRewardService', () => {
             inviteeIdentifier: 'identifier',
             state: RewardStatus.Created,
             rewardTxHash: undefined,
+            inviteToken: StableToken.cUSD,
             createdAt: new Date(Date.now()).toISOString()
           }
         })

@@ -212,10 +212,8 @@ export class RewardSenderService {
     isRetry: boolean = false,
     repository: Repository<InviteReward> = this.inviteRewardRepository
   ) {
-    const cUsdToken = await this.contractKit.contracts.getStableToken(
-      StableToken.cUSD
-    )
-    const tx = await cUsdToken.transfer(
+    const stableToken = await this.contractKit.contracts.getStableToken(invite.inviteToken)
+    const tx = await stableToken.transfer(
       invite.inviter,
       new BigNumber(this.appCfg.inviteRewardAmountInCusd)
         .multipliedBy(WEI_PER_UNIT)
