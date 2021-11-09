@@ -12,7 +12,7 @@ export const appConfig = registerAs('app', () => ({
     parseInt(process.env.INVITE_REWARD_AMOUNT_IN_CUSD, 10) || 0.001,
   segmentApiKey: process.env.SEGMENT_API_KEY,
   shouldSendRewards: process.env.SHOULD_SEND_REWARDS || false,
-  fornoApiKey: process.env.FORNO_API_KEY,
+  fornoApiKey: process.env.FORNO_API_KEY ?? '',
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>
