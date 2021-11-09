@@ -13,6 +13,7 @@ export const appConfig = registerAs('app', () => ({
   callbackUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
   version: process.env.KOMENCI_VERSION || 'version-missing',
   service: process.env.KOMENCI_SERVICE || 'komenci-api',
+  fornoApiKey: process.env.FORNO_API_KEY,
 }))
 
 export type AppConfig = ConfigType<typeof appConfig>
