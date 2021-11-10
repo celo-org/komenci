@@ -30,7 +30,7 @@ describe('TxParserService', () => {
         BlockchainModule.forRootAsync({
           useFactory: () => {
             return {
-              node: { providerType: NodeProviderType.HTTP, url: "not-a-node" }
+              node: { providerType: NodeProviderType.HTTP, url: "not-a-node", nodeApiKey: '', }
             }
           }
         }),

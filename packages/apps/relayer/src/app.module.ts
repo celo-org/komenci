@@ -29,10 +29,12 @@ import { OdisService } from './odis/odis.service'
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const networkCfg = config.get<NetworkConfig>('network')
+        const appCfg = config.get<AppConfig>('app')
         return {
           node: {
             providerType: NodeProviderType.HTTP,
-            url: networkCfg.fornoURL
+            url: networkCfg.fornoURL,
+            nodeApiKey: appCfg.fornoApiKey,
           },
           wallet: config.get<WalletConfig>('wallet'),
         }

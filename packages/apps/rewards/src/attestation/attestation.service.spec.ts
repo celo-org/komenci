@@ -41,7 +41,8 @@ describe('AttestationService', () => {
             return {
               node: {
                 providerType: NodeProviderType.HTTP,
-                url: 'not-a-node'
+                url: 'not-a-node',
+                nodeApiKey: '',
               }
             }
           }
