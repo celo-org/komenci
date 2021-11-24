@@ -15,6 +15,7 @@ export const appConfig = registerAs('app', () => {
     gasPriceFallback: process.env.GAS_PRICE_FALLBACK || "1000000000", // 1 Gwei
     maxGasPrice: process.env.MAX_GAS_PRICE || "100000000000", // 50 Gwei
     odisTimeoutMs: parseInt(process.env.ODIS_TIMEOUT_MS, 10) || 10000, // 10s
+    fornoApiKey: process.env.FORNO_API_KEY ?? '',
   }
 })
 

@@ -37,7 +37,8 @@ import { fundConfig } from './fund.config'
         return {
           node: {
             providerType: NodeProviderType.HTTP,
-            url: networkCfg.fornoURL
+            url: networkCfg.fornoURL,
+            nodeApiKey: '',
           },
           wallet: fundCfg
         }

@@ -9,6 +9,7 @@ export enum NodeProviderType {
 export const nodeConfig = registerAs('node', () => {
   return {
     providerType: process.env.NODE_PROVIDER_TYPE as NodeProviderType,
+    nodeApiKey: process.env.NODE_API_KEY,
     url: process.env.NODE_URL
   }
 })

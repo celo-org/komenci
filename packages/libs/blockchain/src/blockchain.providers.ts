@@ -14,12 +14,17 @@ export const BLOCKCHAIN_MODULE_OPTIONS = 'BLOCKCHAIN_MODULE_OPTIONS'
 export const WEB3_PROVIDER = 'WEB3_PROVIDER'
 export const WALLET = 'WALLET'
 
+const API_KEY_HEADER = 'apikey'
+
 export const web3ProviderDef: FactoryProvider<provider> = {
   provide: WEB3_PROVIDER,
   useFactory: (options: BlockchainOptions) => {
     switch (options.node.providerType) {
       case NodeProviderType.HTTP:
-        return new Web3.providers.HttpProvider(options.node.url)
+        return new Web3.providers.HttpProvider(options.node.url, { headers: [{
+          name: API_KEY_HEADER,
+          value: options.node.nodeApiKey,
+        }]})
       case NodeProviderType.WS:
         return new Web3.providers.WebsocketProvider(options.node.url)
       case NodeProviderType.IPC:
