@@ -187,6 +187,7 @@ export class KomenciKit {
       return Ok({
         identifier: phoneNumberHashDetails.phoneHash,
         pepper: phoneNumberHashDetails.pepper,
+        unblindedSig: phoneNumberHashDetails.unblindedSignature
       })
     }
 
