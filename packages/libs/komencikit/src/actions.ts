@@ -110,6 +110,7 @@ export type GetCombinedSignatureResp = t.TypeOf<typeof GetCombinedSignatureResp>
 export const GetDistributedBlindedPepperResp = t.type({
   identifier: t.string,
   pepper: t.string,
+  unblindedSig: t.string
 })
 
 export type GetDistributedBlindedPepperResp = t.TypeOf<typeof GetDistributedBlindedPepperResp>
