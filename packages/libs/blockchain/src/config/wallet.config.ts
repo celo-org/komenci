@@ -27,7 +27,7 @@ export const walletConfig = registerAs('wallet', (): WalletConfig => {
   const baseConfig: BaseWalletConfig = {
     address: process.env.WALLET_ADDRESS,
   }
-
+  
   if (type === WalletType.AzureHSM) {
     return {
       ...baseConfig,

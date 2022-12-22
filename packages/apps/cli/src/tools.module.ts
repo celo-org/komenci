@@ -10,6 +10,7 @@ import { ConsoleModule } from 'nestjs-console'
 import { LoggerModule } from 'nestjs-pino'
 import { DeployerCommand } from './deployer.command'
 import { FundCommand } from './fund.command'
+import { WithdrawCommand } from './withdraw.command'
 import { fundConfig } from './fund.config'
 
 @Module({
@@ -59,6 +60,7 @@ import { fundConfig } from './fund.config'
     FundingService,
     FundCommand,
     DeployerCommand,
+    WithdrawCommand,
   ],
 })
 export class ToolsModule {}

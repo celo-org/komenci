@@ -32,8 +32,9 @@ export const fundConfig = registerAs<() => WalletConfig>('fund', () => {
     throw Error(`Unknown network: ${process.env.NETWORK}`)
   }
 
-  if (network === Network.rc1) {
+  if (network === Network.rc1 || network === Network.alfajores) {
     // For RC1 use HSM
+    console.log(`Using HSM for ${network} network`)
     return {
       type: WalletType.AzureHSM,
       address: process.env.FUND_ADDRESS,
